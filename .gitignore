@@ -1,0 +1,73 @@
+# ------------------------------------------------------------------
+# Repo público: nada de esto puede llegar a git, ni por error.
+# ------------------------------------------------------------------
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+*.local.json
+
+# Certificados y claves (TLS, firmas)
+*.crt
+*.cer
+*.key
+*.pem
+*.pfx
+*.p12
+*.csr
+
+# Datos reales de clientes: fotos o escaneos de cuadernos, exportaciones, copias de bases
+datos/
+exportaciones/
+*.xlsx
+*.tps
+*.TPS
+*.sqlite
+*.sqlite3
+*.db
+*.dump
+*.backup
+
+# Capturas de pruebas end to end (pueden mostrar datos)
+capturas/
+test-results/
+playwright-report/
+
+# ------------------------------------------------------------------
+# Python / Django
+# ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+staticfiles/
+media/
+
+# ------------------------------------------------------------------
+# Node / Vite / React
+# ------------------------------------------------------------------
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.vite/
+npm-debug.log*
+
+# ------------------------------------------------------------------
+# Editores y sistema operativo
+# ------------------------------------------------------------------
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
