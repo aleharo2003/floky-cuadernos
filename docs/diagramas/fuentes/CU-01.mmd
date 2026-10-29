@@ -1,0 +1,27 @@
+flowchart LR
+    subgraph Actores[" "]
+        direction TB
+        Consulta["Actor: Consulta"]
+        Carga["Actor: Carga<br/>también hace lo de Consulta"]
+        Dueno["Actor: Dueño<br/>también hace lo de Carga"]
+        Equipo["Actor: Equipo"]
+    end
+    subgraph Sistema["Cuadernos, en la nube"]
+        direction TB
+        C01(["C01 Ingresar"])
+        C03(["C03 Buscar y filtrar movimientos"])
+        C04(["C04 Ver historial de un movimiento"])
+        C05(["C05 Ver saldo y reporte del período"])
+        C07(["C07 Cargar movimiento"])
+        C08(["C08 Corregir o anular movimiento"])
+        C10(["C10 Administrar categorías"])
+        C12(["C12 Dar de alta locales,<br/>personas y membresías"])
+    end
+    Consulta --> C01
+    Consulta --> C03
+    Consulta --> C04
+    Consulta --> C05
+    Carga --> C07
+    Carga --> C08
+    Dueno --> C10
+    Equipo --> C12

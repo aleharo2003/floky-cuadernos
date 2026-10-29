@@ -1,0 +1,20 @@
+flowchart TB
+    subgraph Front["frontend: React"]
+        direction LR
+        Pantallas["Pantallas"] --> Contratos["Capa de servicios<br/>contratos tipados"]
+    end
+    subgraph Back["backend: Django"]
+        direction LR
+        Vistas["Vistas DRF<br/>serializers y permisos"] --> Servicios["Servicios<br/>cargar, corregir, anular,<br/>espejo, reportes"] --> Modelos["Modelos y consultas"]
+    end
+    subgraph Apps["Tres apps"]
+        direction LR
+        Notebooks["notebooks<br/>movimientos, categorías,<br/>reportes, exportación"]
+        Accounts["accounts<br/>personas, membresías, roles"]
+        Core["core<br/>locales, auditoría, dinero"]
+        Notebooks -->|"depende de"| Accounts
+        Accounts -->|"depende de"| Core
+        Notebooks -->|"depende de"| Core
+    end
+    Front -->|"HTTP JSON"| Back
+    Back --> Apps

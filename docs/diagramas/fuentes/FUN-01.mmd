@@ -1,0 +1,13 @@
+flowchart TD
+    A["Usuario y contraseña"] --> B{"¿Válidos?"}
+    B -->|"no"| C["Rechazo sin decir cuál falló<br/>auditado"]
+    B -->|"sí"| D{"¿Cuántas membresías activas?"}
+    D -->|"ninguna"| E["Mensaje: sin acceso a ningún local<br/>auditado"]
+    D -->|"una"| F["Entra directo a ese local<br/>sin pantalla de selección"]
+    D -->|"más de una"| G["Elegir local"]
+    G --> H["Entra al local elegido"]
+    F --> I["Pantalla inicial según su rol<br/>en ese local"]
+    H --> I
+    I --> J{"¿Tiene más de un local?"}
+    J -->|"sí"| K["Selector de local en la barra"] --> G
+    J -->|"no"| L["Sin selector"]

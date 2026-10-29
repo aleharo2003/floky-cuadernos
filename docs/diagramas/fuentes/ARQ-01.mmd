@@ -1,0 +1,14 @@
+flowchart TB
+    Dueno["Dueño<br/>carga, consulta y<br/>administra categorías"]
+    Carga["Personal con rol carga<br/>anota y corrige movimientos"]
+    Consulta["Personal con rol consulta<br/>mira y exporta reportes"]
+    Equipo["Equipo<br/>da de alta locales y personas"]
+    Sistema["Cuadernos<br/>en la nube, desde el navegador<br/>del celular o la PC"]
+    Archivos["PDF y Excel<br/>reportes exportados"]
+    Caja["Sistema de caja del local"]
+    Dueno --> Sistema
+    Carga --> Sistema
+    Consulta --> Sistema
+    Equipo --> Sistema
+    Sistema --> Archivos
+    Caja -.-|"sin conexión: no lee<br/>ni escribe nada"| Sistema

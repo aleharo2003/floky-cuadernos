@@ -1,0 +1,16 @@
+flowchart TD
+    A["Movimiento en la lista"] --> B{"¿Rol carga o dueño?"}
+    B -->|"no"| C["Ve el movimiento y su historial"]
+    B -->|"sí"| D{"¿Es una venta espejo?"}
+    D -->|"sí"| E["No se edita ni se anula sola:<br/>enlace a su gasto"]
+    D -->|"no"| F{"¿Qué hace?"}
+    F -->|"corregir"| G["Cambia datos y escribe el motivo"]
+    F -->|"anular"| H["Escribe el motivo"]
+    G --> I{"¿Después del cambio es un gasto<br/>que no es en efectivo?"}
+    I -->|"sí"| J["Se crea o se actualiza<br/>su venta espejo"]
+    I -->|"no"| K["Si tenía venta espejo, se anula"]
+    H --> L["Se anula el movimiento<br/>y su venta espejo si tiene"]
+    J --> M["Auditoría con antes, después y motivo<br/>en la misma transacción"]
+    K --> M
+    L --> M
+    M --> N["El cambio aparece en el historial<br/>del movimiento"]

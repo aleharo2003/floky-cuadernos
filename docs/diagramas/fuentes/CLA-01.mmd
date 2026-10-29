@@ -1,0 +1,51 @@
+classDiagram
+    class Local {
+        nombre
+        zonaHoraria
+    }
+    class Persona {
+        email
+        activa
+    }
+    class Membresia {
+        rol
+        activa
+        puede(permiso)
+    }
+    class Movimiento {
+        fecha
+        tipo
+        categoria
+        descripcion
+        importe
+        medio
+        espejoDe
+        anulado
+        motivoAnulacion
+        cargadoPor
+        corregir(datos, motivo)
+        anular(motivo)
+    }
+    class Categoria {
+        nombre
+        tipo
+        activa
+        delSistema
+    }
+    class EntradaAuditoria {
+        actor
+        accion
+        antes
+        despues
+        motivo
+        hora
+    }
+    Persona "1" --> "*" Membresia
+    Local "1" --> "*" Membresia
+    Local "1" --> "*" Movimiento
+    Local "1" --> "*" Categoria
+    Movimiento "*" --> "1" Categoria
+    Movimiento "0..1" --> "1" Movimiento : espejo de
+    Movimiento ..> EntradaAuditoria : genera
+    note for Movimiento "Un gasto que no es en efectivo genera su venta espejo. Nada se borra: se anula."
+    note for Membresia "El código pregunta puede(permiso), nunca el nombre del rol."

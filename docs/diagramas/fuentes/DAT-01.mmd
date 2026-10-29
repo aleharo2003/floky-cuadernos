@@ -1,0 +1,61 @@
+erDiagram
+    USER ||--o{ MEMBERSHIP : has
+    TENANT ||--o{ MEMBERSHIP : grants
+    TENANT ||--o{ NOTEBOOK_ENTRY : owns
+    TENANT ||--o{ NOTEBOOK_CATEGORY : owns
+    TENANT ||--o{ AUDIT_ENTRY : records
+    USER ||--o{ NOTEBOOK_ENTRY : creates
+    USER ||--o{ AUDIT_ENTRY : acts
+    NOTEBOOK_CATEGORY ||--o{ NOTEBOOK_ENTRY : classifies
+    NOTEBOOK_ENTRY |o--o| NOTEBOOK_ENTRY : mirrors
+    USER {
+        uuid id PK
+        string email UK
+        bool is_active
+    }
+    TENANT {
+        uuid id PK
+        string name
+        string timezone
+    }
+    MEMBERSHIP {
+        uuid user_id FK
+        uuid tenant_id FK
+        string role "owner, editor o viewer"
+        bool is_active
+    }
+    NOTEBOOK_ENTRY {
+        uuid id PK
+        uuid tenant_id FK "obligatorio, con RLS"
+        uuid category_id FK
+        uuid created_by FK
+        uuid mirror_of FK "solo en la venta espejo"
+        uuid idempotency_key UK
+        date date
+        string kind "income o expense, haber en P-01"
+        string payment_method
+        string description
+        numeric amount "numeric 14,2"
+        bool is_voided
+        string void_reason
+    }
+    NOTEBOOK_CATEGORY {
+        uuid id PK
+        uuid tenant_id FK "con RLS"
+        string name
+        string kind
+        bool is_active
+        bool is_system
+    }
+    AUDIT_ENTRY {
+        uuid id PK
+        uuid tenant_id FK "con RLS"
+        uuid actor_id FK
+        string action
+        string entity
+        uuid entity_id
+        json before
+        json after
+        string reason
+        timestamp created_at
+    }

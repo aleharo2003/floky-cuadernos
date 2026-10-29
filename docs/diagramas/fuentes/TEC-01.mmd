@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant P as Persona con rol carga
+    participant UI as Portal
+    participant V as Vista DRF
+    participant S as Servicio de cuadernos
+    participant DB as PostgreSQL
+    P->>UI: guarda un gasto de $ 20.000 por transferencia
+    UI->>V: POST de movimiento con clave de idempotencia
+    V->>V: valida datos y permiso de cargar en el local activo
+    V->>S: registrar gasto
+    Note over S,DB: una sola transacción
+    S->>DB: BEGIN y SET LOCAL app.tenant_ids
+    S->>DB: INSERT del gasto
+    S->>DB: INSERT de la venta espejo apuntando al gasto
+    S->>DB: INSERT de la auditoría
+    S->>DB: COMMIT
+    S-->>V: gasto y espejo
+    V-->>UI: 201 creado
+    UI-->>P: aparece en su día, en el saldo y en los totales
+    Note over UI,V: si el mismo POST llega dos veces, la clave de idempotencia devuelve el primero
