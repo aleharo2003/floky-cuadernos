@@ -1,0 +1,347 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Diagramas del sistema</title><style>html{scroll-behavior:smooth}body{margin:0;background:#f3f5f8;color:#1d2d40;font:16px/1.55 Arial,sans-serif}main{max-width:1280px;margin:auto;padding:32px 24px}h1,h2{line-height:1.2}h1{font-size:32px}h2{font-size:24px}a{color:#15599b}p{max-width:85ch}#indice{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px 24px;margin:24px 0 48px}#indice a{padding:8px;background:#fff;text-decoration:none;border-radius:6px}section{background:#fff;border-radius:10px;margin:0 0 32px;overflow:hidden;scroll-margin-top:16px}header{padding:20px 24px;background:#eaf0f7}header p{font-size:13px;margin:0}header nav{display:flex;gap:16px;flex-wrap:wrap}.drawing{padding:24px;overflow:auto}.drawing img{display:block;max-width:100%;height:auto;margin:auto}details{padding:12px 24px}pre{overflow:auto;font-size:13px}summary{cursor:pointer}.back{display:inline-block;margin:8px 24px 24px}a:focus-visible,summary:focus-visible{outline:3px solid #d18a11;outline-offset:3px}@media(max-width:600px){main{padding:20px 12px}h1{font-size:27px}.drawing{padding:12px}header{padding:16px}}</style></head><body><main id="inicio"><h1>Diagramas del sistema</h1><p>16 diagramas con explicaciones, fuentes editables e imágenes para adjuntar a stories. Arquitectura objetivo y modelos propuestos; todavía no representan código implementado. Los pendientes y escenarios están en los documentos enlazados.</p><p><a href="README.md">Índice y mapa de stories</a> · <a href="guia-para-aprender-y-ensenar.md">Guía didáctica</a> · <a href="../backlog/01-epicas-y-stories.md">Backlog</a> · <a href="../adr/">Decisiones (ADR)</a></p><nav id="indice" aria-label="Diagramas"><a href="#ARQ-01">ARQ-01 · Contexto y actores</a>
+<a href="#ARQ-02">ARQ-02 · Contenedores: qué corre y dónde</a>
+<a href="#ARQ-03">ARQ-03 · Capas y apps del backend</a>
+<a href="#ARQ-04">ARQ-04 · Locales como tenants</a>
+<a href="#ARQ-05">ARQ-05 · Entornos</a>
+<a href="#CU-01">CU-01 · Casos de uso de los cuadernos</a>
+<a href="#CU-02">CU-02 · Relaciones entre casos de uso</a>
+<a href="#CLA-01">CLA-01 · Locales, personas y cuadernos</a>
+<a href="#DAT-01">DAT-01 · Base de datos</a>
+<a href="#TEC-01">TEC-01 · Guardar un gasto con venta espejo</a>
+<a href="#TEC-02">TEC-02 · CI/CD de punta a punta</a>
+<a href="#FUN-01">FUN-01 · Ingresar y elegir local</a>
+<a href="#FUN-02">FUN-02 · Cargar un movimiento</a>
+<a href="#FUN-03">FUN-03 · Corregir o anular un movimiento</a>
+<a href="#EST-01">EST-01 · Estados de un movimiento</a>
+<a href="#OPS-01">OPS-01 · Backups y restauración probada</a></nav><section id="ARQ-01"><header><p>01-arquitectura.md · diseño objetivo o propuesta, sin implementación comprobada · HU-012, HU-013, HU-021, HU-027</p><h2>ARQ-01. Contexto y actores</h2><nav><a href="01-arquitectura.md#arq-01">Explicación y escenarios</a><a href="png/ARQ-01.png">PNG</a><a href="svg/ARQ-01.svg">SVG</a><a href="fuentes/ARQ-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/ARQ-01.svg" alt="ARQ-01. Contexto y actores" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TB
+    Dueno[&quot;Dueño&lt;br/&gt;carga, consulta y&lt;br/&gt;administra categorías&quot;]
+    Carga[&quot;Personal con rol carga&lt;br/&gt;anota y corrige movimientos&quot;]
+    Consulta[&quot;Personal con rol consulta&lt;br/&gt;mira y exporta reportes&quot;]
+    Equipo[&quot;Equipo&lt;br/&gt;da de alta locales y personas&quot;]
+    Sistema[&quot;Cuadernos&lt;br/&gt;en la nube, desde el navegador&lt;br/&gt;del celular o la PC&quot;]
+    Archivos[&quot;PDF y Excel&lt;br/&gt;reportes exportados&quot;]
+    Caja[&quot;Sistema de caja del local&quot;]
+    Dueno --&gt; Sistema
+    Carga --&gt; Sistema
+    Consulta --&gt; Sistema
+    Equipo --&gt; Sistema
+    Sistema --&gt; Archivos
+    Caja -.-|&quot;sin conexión: no lee&lt;br/&gt;ni escribe nada&quot;| Sistema</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="ARQ-02"><header><p>01-arquitectura.md · diseño objetivo o propuesta, sin implementación comprobada · HU-003, HU-005, HU-016</p><h2>ARQ-02. Contenedores: qué corre y dónde</h2><nav><a href="01-arquitectura.md#arq-02">Explicación y escenarios</a><a href="png/ARQ-02.png">PNG</a><a href="svg/ARQ-02.svg">SVG</a><a href="fuentes/ARQ-02.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/ARQ-02.svg" alt="ARQ-02. Contenedores: qué corre y dónde" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
+    Nav[&quot;Navegador&lt;br/&gt;celular o PC&quot;]
+    subgraph Nube[&quot;Nube&quot;]
+        Portal[&quot;Portal React&lt;br/&gt;Cloudflare Pages&quot;]
+        API[&quot;API Django + DRF&lt;br/&gt;Cloud Run&quot;]
+        PG[(&quot;PostgreSQL&lt;br/&gt;Neon, con RLS&quot;)]
+    end
+    GA[&quot;GitHub Actions&lt;br/&gt;backup nocturno&quot;]
+    R2[(&quot;Cloudflare R2&lt;br/&gt;backups cifrados&quot;)]
+    Nav --&gt;|&quot;HTTPS&quot;| Portal
+    Nav --&gt;|&quot;HTTPS, usuario&lt;br/&gt;y contraseña&quot;| API
+    API --&gt; PG
+    GA --&gt;|&quot;pg_dump&quot;| PG
+    GA --&gt; R2</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="ARQ-03"><header><p>01-arquitectura.md · diseño objetivo o propuesta, sin implementación comprobada · HU-001, HU-003, HU-020</p><h2>ARQ-03. Capas y apps del backend</h2><nav><a href="01-arquitectura.md#arq-03">Explicación y escenarios</a><a href="png/ARQ-03.png">PNG</a><a href="svg/ARQ-03.svg">SVG</a><a href="fuentes/ARQ-03.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/ARQ-03.svg" alt="ARQ-03. Capas y apps del backend" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TB
+    subgraph Front[&quot;frontend: React&quot;]
+        direction LR
+        Pantallas[&quot;Pantallas&quot;] --&gt; Contratos[&quot;Capa de servicios&lt;br/&gt;contratos tipados&quot;]
+    end
+    subgraph Back[&quot;backend: Django&quot;]
+        direction LR
+        Vistas[&quot;Vistas DRF&lt;br/&gt;serializers y permisos&quot;] --&gt; Servicios[&quot;Servicios&lt;br/&gt;cargar, corregir, anular,&lt;br/&gt;espejo, reportes&quot;] --&gt; Modelos[&quot;Modelos y consultas&quot;]
+    end
+    subgraph Apps[&quot;Tres apps&quot;]
+        direction LR
+        Notebooks[&quot;notebooks&lt;br/&gt;movimientos, categorías,&lt;br/&gt;reportes, exportación&quot;]
+        Accounts[&quot;accounts&lt;br/&gt;personas, membresías, roles&quot;]
+        Core[&quot;core&lt;br/&gt;locales, auditoría, dinero&quot;]
+        Notebooks --&gt;|&quot;depende de&quot;| Accounts
+        Accounts --&gt;|&quot;depende de&quot;| Core
+        Notebooks --&gt;|&quot;depende de&quot;| Core
+    end
+    Front --&gt;|&quot;HTTP JSON&quot;| Back
+    Back --&gt; Apps</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="ARQ-04"><header><p>01-arquitectura.md · diseño objetivo o propuesta, sin implementación comprobada · HU-010, HU-011, HU-012, HU-013</p><h2>ARQ-04. Locales como tenants</h2><nav><a href="01-arquitectura.md#arq-04">Explicación y escenarios</a><a href="png/ARQ-04.png">PNG</a><a href="svg/ARQ-04.svg">SVG</a><a href="fuentes/ARQ-04.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/ARQ-04.svg" alt="ARQ-04. Locales como tenants" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
+    Ana[&quot;Usuaria: Ana, consulta&quot;]
+    Lucia[&quot;Usuaria: Lucía, dueña&quot;]
+    Tomas[&quot;Usuario: Tomás, carga&quot;]
+    subgraph Membresias[&quot;Membresías&quot;]
+        M3[&quot;Ana · Local Centro · consulta&quot;]
+        M1[&quot;Lucía · Local Centro · dueña&quot;]
+        M2[&quot;Lucía · Local Norte · dueña&quot;]
+        M4[&quot;Tomás · Local Norte · carga&quot;]
+    end
+    subgraph Datos[&quot;Datos por tenant_id&quot;]
+        L1[(&quot;Local Centro&lt;br/&gt;movimientos y categorías&quot;)]
+        L2[(&quot;Local Norte&lt;br/&gt;movimientos y categorías&quot;)]
+    end
+    Ana --&gt; M3 --&gt;|&quot;solo ver y exportar&quot;| L1
+    Lucia --&gt; M1 --&gt; L1
+    Lucia --&gt; M2 --&gt; L2
+    Tomas --&gt; M4 --&gt;|&quot;cargar y corregir&quot;| L2</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="ARQ-05"><header><p>01-arquitectura.md · diseño objetivo o propuesta, sin implementación comprobada · HU-002, HU-005, HU-006, HU-007</p><h2>ARQ-05. Entornos</h2><nav><a href="01-arquitectura.md#arq-05">Explicación y escenarios</a><a href="png/ARQ-05.png">PNG</a><a href="svg/ARQ-05.svg">SVG</a><a href="fuentes/ARQ-05.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/ARQ-05.svg" alt="ARQ-05. Entornos" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
+    subgraph Dev[&quot;Desarrollo: PC de cada uno&quot;]
+        DC[&quot;Docker Compose&lt;br/&gt;Django + PostgreSQL + Vite&lt;br/&gt;seed inventado&quot;]
+    end
+    subgraph Pru[&quot;Pruebas&quot;]
+        PN[&quot;Cloud Run + Neon + Pages&lt;br/&gt;datos inventados&quot;]
+    end
+    subgraph Prod[&quot;Producción&quot;]
+        RN[&quot;Cloud Run + Neon + Pages&lt;br/&gt;datos reales&quot;]
+    end
+    GH[&quot;GitHub Actions&quot;]
+    DC --&gt;|&quot;pull request&quot;| GH
+    GH --&gt;|&quot;merge a main&quot;| PN
+    GH --&gt;|&quot;tag y aprobación&quot;| RN</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="CU-01"><header><p>02-casos-de-uso.md · diseño objetivo o propuesta, sin implementación comprobada · HU-010, HU-012, HU-013, HU-021, HU-022, HU-023, HU-024, HU-026, HU-028, HU-029</p><h2>CU-01. Casos de uso de los cuadernos</h2><nav><a href="02-casos-de-uso.md#cu-01">Explicación y escenarios</a><a href="png/CU-01.png">PNG</a><a href="svg/CU-01.svg">SVG</a><a href="fuentes/CU-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/CU-01.svg" alt="CU-01. Casos de uso de los cuadernos" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
+    subgraph Actores[&quot; &quot;]
+        direction TB
+        Consulta[&quot;Actor: Consulta&quot;]
+        Carga[&quot;Actor: Carga&lt;br/&gt;también hace lo de Consulta&quot;]
+        Dueno[&quot;Actor: Dueño&lt;br/&gt;también hace lo de Carga&quot;]
+        Equipo[&quot;Actor: Equipo&quot;]
+    end
+    subgraph Sistema[&quot;Cuadernos, en la nube&quot;]
+        direction TB
+        C01([&quot;C01 Ingresar&quot;])
+        C03([&quot;C03 Buscar y filtrar movimientos&quot;])
+        C04([&quot;C04 Ver historial de un movimiento&quot;])
+        C05([&quot;C05 Ver saldo y reporte del período&quot;])
+        C07([&quot;C07 Cargar movimiento&quot;])
+        C08([&quot;C08 Corregir o anular movimiento&quot;])
+        C10([&quot;C10 Administrar categorías&quot;])
+        C12([&quot;C12 Dar de alta locales,&lt;br/&gt;personas y membresías&quot;])
+    end
+    Consulta --&gt; C01
+    Consulta --&gt; C03
+    Consulta --&gt; C04
+    Consulta --&gt; C05
+    Carga --&gt; C07
+    Carga --&gt; C08
+    Dueno --&gt; C10
+    Equipo --&gt; C12</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="CU-02"><header><p>02-casos-de-uso.md · diseño objetivo o propuesta, sin implementación comprobada · HU-012, HU-014, HU-025, HU-027</p><h2>CU-02. Relaciones entre casos de uso</h2><nav><a href="02-casos-de-uso.md#cu-02">Explicación y escenarios</a><a href="png/CU-02.png">PNG</a><a href="svg/CU-02.svg">SVG</a><a href="fuentes/CU-02.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/CU-02.svg" alt="CU-02. Relaciones entre casos de uso" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
+    C02([&quot;C02 Elegir o cambiar de local&quot;]) -.-&gt;|&quot;extiende: tiene&lt;br/&gt;más de un local&quot;| C01([&quot;C01 Ingresar&quot;])
+    C06([&quot;C06 Exportar a PDF o Excel&quot;]) -.-&gt;|&quot;extiende&quot;| C05([&quot;C05 Ver saldo y reporte&quot;])
+    C09([&quot;C09 Generar venta espejo&quot;]) -.-&gt;|&quot;extiende: gasto que&lt;br/&gt;no es en efectivo&quot;| C07([&quot;C07 Cargar movimiento&quot;])
+    C09 -.-&gt;|&quot;extiende: gasto que&lt;br/&gt;no es en efectivo&quot;| C08([&quot;C08 Corregir o anular&quot;])
+    C07 -.-&gt;|&quot;incluye&quot;| C11([&quot;C11 Registrar en la auditoría&quot;])
+    C08 -.-&gt;|&quot;incluye&quot;| C11
+    C10([&quot;C10 Administrar categorías&quot;]) -.-&gt;|&quot;incluye&quot;| C11
+    C12([&quot;C12 Alta de locales y personas&quot;]) -.-&gt;|&quot;incluye&quot;| C11</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="CLA-01"><header><p>03-clases.md · diseño objetivo o propuesta, sin implementación comprobada · HU-013, HU-020, HU-022, HU-025</p><h2>CLA-01. Locales, personas y cuadernos</h2><nav><a href="03-clases.md#cla-01">Explicación y escenarios</a><a href="png/CLA-01.png">PNG</a><a href="svg/CLA-01.svg">SVG</a><a href="fuentes/CLA-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/CLA-01.svg" alt="CLA-01. Locales, personas y cuadernos" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>classDiagram
+    class Local {
+        nombre
+        zonaHoraria
+    }
+    class Persona {
+        email
+        activa
+    }
+    class Membresia {
+        rol
+        activa
+        puede(permiso)
+    }
+    class Movimiento {
+        fecha
+        tipo
+        categoria
+        descripcion
+        importe
+        medio
+        espejoDe
+        anulado
+        motivoAnulacion
+        cargadoPor
+        corregir(datos, motivo)
+        anular(motivo)
+    }
+    class Categoria {
+        nombre
+        tipo
+        activa
+        delSistema
+    }
+    class EntradaAuditoria {
+        actor
+        accion
+        antes
+        despues
+        motivo
+        hora
+    }
+    Persona &quot;1&quot; --&gt; &quot;*&quot; Membresia
+    Local &quot;1&quot; --&gt; &quot;*&quot; Membresia
+    Local &quot;1&quot; --&gt; &quot;*&quot; Movimiento
+    Local &quot;1&quot; --&gt; &quot;*&quot; Categoria
+    Movimiento &quot;*&quot; --&gt; &quot;1&quot; Categoria
+    Movimiento &quot;0..1&quot; --&gt; &quot;1&quot; Movimiento : espejo de
+    Movimiento ..&gt; EntradaAuditoria : genera
+    note for Movimiento &quot;Un gasto que no es en efectivo genera su venta espejo. Nada se borra: se anula.&quot;
+    note for Membresia &quot;El código pregunta puede(permiso), nunca el nombre del rol.&quot;</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="DAT-01"><header><p>04-datos.md · diseño objetivo o propuesta, sin implementación comprobada · HU-010, HU-011, HU-013, HU-014, HU-020, HU-025</p><h2>DAT-01. Base de datos</h2><nav><a href="04-datos.md#dat-01">Explicación y escenarios</a><a href="png/DAT-01.png">PNG</a><a href="svg/DAT-01.svg">SVG</a><a href="fuentes/DAT-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/DAT-01.svg" alt="DAT-01. Base de datos" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>erDiagram
+    USER ||--o{ MEMBERSHIP : has
+    TENANT ||--o{ MEMBERSHIP : grants
+    TENANT ||--o{ NOTEBOOK_ENTRY : owns
+    TENANT ||--o{ NOTEBOOK_CATEGORY : owns
+    TENANT ||--o{ AUDIT_ENTRY : records
+    USER ||--o{ NOTEBOOK_ENTRY : creates
+    USER ||--o{ AUDIT_ENTRY : acts
+    NOTEBOOK_CATEGORY ||--o{ NOTEBOOK_ENTRY : classifies
+    NOTEBOOK_ENTRY |o--o| NOTEBOOK_ENTRY : mirrors
+    USER {
+        uuid id PK
+        string email UK
+        bool is_active
+    }
+    TENANT {
+        uuid id PK
+        string name
+        string timezone
+    }
+    MEMBERSHIP {
+        uuid user_id FK
+        uuid tenant_id FK
+        string role &quot;owner, editor o viewer&quot;
+        bool is_active
+    }
+    NOTEBOOK_ENTRY {
+        uuid id PK
+        uuid tenant_id FK &quot;obligatorio, con RLS&quot;
+        uuid category_id FK
+        uuid created_by FK
+        uuid mirror_of FK &quot;solo en la venta espejo&quot;
+        uuid idempotency_key UK
+        date date
+        string kind &quot;income o expense, haber en P-01&quot;
+        string payment_method
+        string description
+        numeric amount &quot;numeric 14,2&quot;
+        bool is_voided
+        string void_reason
+    }
+    NOTEBOOK_CATEGORY {
+        uuid id PK
+        uuid tenant_id FK &quot;con RLS&quot;
+        string name
+        string kind
+        bool is_active
+        bool is_system
+    }
+    AUDIT_ENTRY {
+        uuid id PK
+        uuid tenant_id FK &quot;con RLS&quot;
+        uuid actor_id FK
+        string action
+        string entity
+        uuid entity_id
+        json before
+        json after
+        string reason
+        timestamp created_at
+    }</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="TEC-01"><header><p>05-secuencias-tecnicas.md · diseño objetivo o propuesta, sin implementación comprobada · HU-011, HU-014, HU-021, HU-025</p><h2>TEC-01. Guardar un gasto con venta espejo</h2><nav><a href="05-secuencias-tecnicas.md#tec-01">Explicación y escenarios</a><a href="png/TEC-01.png">PNG</a><a href="svg/TEC-01.svg">SVG</a><a href="fuentes/TEC-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/TEC-01.svg" alt="TEC-01. Guardar un gasto con venta espejo" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>sequenceDiagram
+    participant P as Persona con rol carga
+    participant UI as Portal
+    participant V as Vista DRF
+    participant S as Servicio de cuadernos
+    participant DB as PostgreSQL
+    P-&gt;&gt;UI: guarda un gasto de $ 20.000 por transferencia
+    UI-&gt;&gt;V: POST de movimiento con clave de idempotencia
+    V-&gt;&gt;V: valida datos y permiso de cargar en el local activo
+    V-&gt;&gt;S: registrar gasto
+    Note over S,DB: una sola transacción
+    S-&gt;&gt;DB: BEGIN y SET LOCAL app.tenant_ids
+    S-&gt;&gt;DB: INSERT del gasto
+    S-&gt;&gt;DB: INSERT de la venta espejo apuntando al gasto
+    S-&gt;&gt;DB: INSERT de la auditoría
+    S-&gt;&gt;DB: COMMIT
+    S--&gt;&gt;V: gasto y espejo
+    V--&gt;&gt;UI: 201 creado
+    UI--&gt;&gt;P: aparece en su día, en el saldo y en los totales
+    Note over UI,V: si el mismo POST llega dos veces, la clave de idempotencia devuelve el primero</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="TEC-02"><header><p>05-secuencias-tecnicas.md · diseño objetivo o propuesta, sin implementación comprobada · HU-004, HU-005, HU-006</p><h2>TEC-02. CI/CD de punta a punta</h2><nav><a href="05-secuencias-tecnicas.md#tec-02">Explicación y escenarios</a><a href="png/TEC-02.png">PNG</a><a href="svg/TEC-02.svg">SVG</a><a href="fuentes/TEC-02.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/TEC-02.svg" alt="TEC-02. CI/CD de punta a punta" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>sequenceDiagram
+    participant Dev as Desarrollador
+    participant GH as GitHub
+    participant CI as GitHub Actions
+    participant Rev as Revisor
+    participant Pru as Pruebas
+    participant Prod as Producción
+    Dev-&gt;&gt;GH: abre pull request
+    GH-&gt;&gt;CI: formato, lint, tipos, tests, build, SAST, dependencias, secretos
+    CI--&gt;&gt;GH: verde o rojo
+    Rev-&gt;&gt;GH: revisa y aprueba
+    Dev-&gt;&gt;GH: merge a main
+    GH-&gt;&gt;CI: imagen de la API y portal
+    CI-&gt;&gt;Pru: migraciones y despliegue
+    CI-&gt;&gt;Pru: smoke test
+    Dev-&gt;&gt;GH: tag vX.Y.Z
+    GH-&gt;&gt;CI: pipeline de producción
+    CI--&gt;&gt;Rev: pide aprobación del environment production
+    Rev-&gt;&gt;CI: aprueba
+    CI-&gt;&gt;Prod: mismo artefacto probado</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="FUN-01"><header><p>06-flujos-funcionales.md · diseño objetivo o propuesta, sin implementación comprobada · HU-011, HU-012, HU-013</p><h2>FUN-01. Ingresar y elegir local</h2><nav><a href="06-flujos-funcionales.md#fun-01">Explicación y escenarios</a><a href="png/FUN-01.png">PNG</a><a href="svg/FUN-01.svg">SVG</a><a href="fuentes/FUN-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/FUN-01.svg" alt="FUN-01. Ingresar y elegir local" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TD
+    A[&quot;Usuario y contraseña&quot;] --&gt; B{&quot;¿Válidos?&quot;}
+    B --&gt;|&quot;no&quot;| C[&quot;Rechazo sin decir cuál falló&lt;br/&gt;auditado&quot;]
+    B --&gt;|&quot;sí&quot;| D{&quot;¿Cuántas membresías activas?&quot;}
+    D --&gt;|&quot;ninguna&quot;| E[&quot;Mensaje: sin acceso a ningún local&lt;br/&gt;auditado&quot;]
+    D --&gt;|&quot;una&quot;| F[&quot;Entra directo a ese local&lt;br/&gt;sin pantalla de selección&quot;]
+    D --&gt;|&quot;más de una&quot;| G[&quot;Elegir local&quot;]
+    G --&gt; H[&quot;Entra al local elegido&quot;]
+    F --&gt; I[&quot;Pantalla inicial según su rol&lt;br/&gt;en ese local&quot;]
+    H --&gt; I
+    I --&gt; J{&quot;¿Tiene más de un local?&quot;}
+    J --&gt;|&quot;sí&quot;| K[&quot;Selector de local en la barra&quot;] --&gt; G
+    J --&gt;|&quot;no&quot;| L[&quot;Sin selector&quot;]</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="FUN-02"><header><p>06-flujos-funcionales.md · diseño objetivo o propuesta, sin implementación comprobada · HU-021, HU-024, HU-025</p><h2>FUN-02. Cargar un movimiento</h2><nav><a href="06-flujos-funcionales.md#fun-02">Explicación y escenarios</a><a href="png/FUN-02.png">PNG</a><a href="svg/FUN-02.svg">SVG</a><a href="fuentes/FUN-02.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/FUN-02.svg" alt="FUN-02. Cargar un movimiento" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TD
+    A[&quot;Persona dentro de un local&lt;br/&gt;(FUN-01)&quot;] --&gt; B{&quot;¿Rol carga o dueño?&quot;}
+    B --&gt;|&quot;no, consulta&quot;| C[&quot;Ve movimientos y reportes&lt;br/&gt;no ve el botón de cargar&lt;br/&gt;la API responde 403&quot;]
+    B --&gt;|&quot;sí&quot;| D[&quot;Fecha, tipo, categoría,&lt;br/&gt;descripción, importe y medio&quot;]
+    D --&gt; E{&quot;¿Datos válidos?&quot;}
+    E --&gt;|&quot;no&quot;| F[&quot;Error claro, no se guarda&quot;] --&gt; D
+    E --&gt;|&quot;sí&quot;| G{&quot;¿Es un gasto pagado con débito,&lt;br/&gt;crédito, QR o transferencia?&quot;}
+    G --&gt;|&quot;no&quot;| H[&quot;Movimiento y auditoría&lt;br/&gt;en una transacción&quot;]
+    G --&gt;|&quot;sí&quot;| I[&quot;Gasto, venta espejo del mismo importe&lt;br/&gt;y auditoría en una transacción&quot;]
+    H --&gt; J[&quot;Aparece en su día,&lt;br/&gt;en el saldo y en los totales&quot;]
+    I --&gt; J</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="FUN-03"><header><p>06-flujos-funcionales.md · diseño objetivo o propuesta, sin implementación comprobada · HU-024, HU-025, HU-026, HU-014</p><h2>FUN-03. Corregir o anular un movimiento</h2><nav><a href="06-flujos-funcionales.md#fun-03">Explicación y escenarios</a><a href="png/FUN-03.png">PNG</a><a href="svg/FUN-03.svg">SVG</a><a href="fuentes/FUN-03.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/FUN-03.svg" alt="FUN-03. Corregir o anular un movimiento" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TD
+    A[&quot;Movimiento en la lista&quot;] --&gt; B{&quot;¿Rol carga o dueño?&quot;}
+    B --&gt;|&quot;no&quot;| C[&quot;Ve el movimiento y su historial&quot;]
+    B --&gt;|&quot;sí&quot;| D{&quot;¿Es una venta espejo?&quot;}
+    D --&gt;|&quot;sí&quot;| E[&quot;No se edita ni se anula sola:&lt;br/&gt;enlace a su gasto&quot;]
+    D --&gt;|&quot;no&quot;| F{&quot;¿Qué hace?&quot;}
+    F --&gt;|&quot;corregir&quot;| G[&quot;Cambia datos y escribe el motivo&quot;]
+    F --&gt;|&quot;anular&quot;| H[&quot;Escribe el motivo&quot;]
+    G --&gt; I{&quot;¿Después del cambio es un gasto&lt;br/&gt;que no es en efectivo?&quot;}
+    I --&gt;|&quot;sí&quot;| J[&quot;Se crea o se actualiza&lt;br/&gt;su venta espejo&quot;]
+    I --&gt;|&quot;no&quot;| K[&quot;Si tenía venta espejo, se anula&quot;]
+    H --&gt; L[&quot;Se anula el movimiento&lt;br/&gt;y su venta espejo si tiene&quot;]
+    J --&gt; M[&quot;Auditoría con antes, después y motivo&lt;br/&gt;en la misma transacción&quot;]
+    K --&gt; M
+    L --&gt; M
+    M --&gt; N[&quot;El cambio aparece en el historial&lt;br/&gt;del movimiento&quot;]</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="EST-01"><header><p>07-estados.md · diseño objetivo o propuesta, sin implementación comprobada · HU-025, HU-026</p><h2>EST-01. Estados de un movimiento</h2><nav><a href="07-estados.md#est-01">Explicación y escenarios</a><a href="png/EST-01.png">PNG</a><a href="svg/EST-01.svg">SVG</a><a href="fuentes/EST-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/EST-01.svg" alt="EST-01. Estados de un movimiento" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>stateDiagram-v2
+    [*] --&gt; Vigente: cargar
+    Vigente --&gt; Vigente: corregir con motivo
+    Vigente --&gt; Anulado: anular con motivo
+    Anulado --&gt; [*]
+    note right of Vigente
+        Suma en saldo y totales.
+        Una venta espejo cambia de estado
+        solo junto con su gasto.
+    end note
+    note right of Anulado
+        No suma. Sigue visible
+        con su motivo y su historial.
+    end note</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+<section id="OPS-01"><header><p>08-operacion.md · diseño objetivo o propuesta, sin implementación comprobada · HU-016, HU-029</p><h2>OPS-01. Backups y restauración probada</h2><nav><a href="08-operacion.md#ops-01">Explicación y escenarios</a><a href="png/OPS-01.png">PNG</a><a href="svg/OPS-01.svg">SVG</a><a href="fuentes/OPS-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/OPS-01.svg" alt="OPS-01. Backups y restauración probada" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
+    PG[(&quot;PostgreSQL de producción&quot;)]
+    GA[&quot;GitHub Actions nocturno&lt;br/&gt;pg_dump cifrado&quot;]
+    R2[(&quot;Cloudflare R2&lt;br/&gt;retención documentada&quot;)]
+    Prueba[(&quot;Base aislada de prueba&quot;)]
+    Aviso[&quot;Aviso al equipo&quot;]
+    PG --&gt; GA --&gt; R2
+    R2 --&gt;|&quot;restauración mensual&quot;| Prueba
+    GA -.-&gt;|&quot;si falla&quot;| Aviso
+    Prueba -.-&gt;|&quot;si no levanta&quot;| Aviso</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section></main></body></html>

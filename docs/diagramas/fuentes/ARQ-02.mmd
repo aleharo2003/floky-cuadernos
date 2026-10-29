@@ -1,0 +1,14 @@
+flowchart LR
+    Nav["Navegador<br/>celular o PC"]
+    subgraph Nube["Nube"]
+        Portal["Portal React<br/>Cloudflare Pages"]
+        API["API Django + DRF<br/>Cloud Run"]
+        PG[("PostgreSQL<br/>Neon, con RLS")]
+    end
+    GA["GitHub Actions<br/>backup nocturno"]
+    R2[("Cloudflare R2<br/>backups cifrados")]
+    Nav -->|"HTTPS"| Portal
+    Nav -->|"HTTPS, usuario<br/>y contraseña"| API
+    API --> PG
+    GA -->|"pg_dump"| PG
+    GA --> R2

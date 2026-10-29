@@ -1,0 +1,10 @@
+flowchart LR
+    PG[("PostgreSQL de producción")]
+    GA["GitHub Actions nocturno<br/>pg_dump cifrado"]
+    R2[("Cloudflare R2<br/>retención documentada")]
+    Prueba[("Base aislada de prueba")]
+    Aviso["Aviso al equipo"]
+    PG --> GA --> R2
+    R2 -->|"restauración mensual"| Prueba
+    GA -.->|"si falla"| Aviso
+    Prueba -.->|"si no levanta"| Aviso

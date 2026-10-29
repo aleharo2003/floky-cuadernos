@@ -1,0 +1,230 @@
+{
+  "generatedAt": "2026-10-29T23:11:41.920Z",
+  "renderer": "Mermaid 11.12.0",
+  "diagrams": [
+    {
+      "id": "ARQ-01",
+      "title": "ARQ-01. Contexto y actores",
+      "document": "01-arquitectura.md",
+      "anchor": "arq-01",
+      "stories": [
+        "HU-012",
+        "HU-013",
+        "HU-021",
+        "HU-027"
+      ],
+      "width": 1326,
+      "height": 445
+    },
+    {
+      "id": "ARQ-02",
+      "title": "ARQ-02. Contenedores: qué corre y dónde",
+      "document": "01-arquitectura.md",
+      "anchor": "arq-02",
+      "stories": [
+        "HU-003",
+        "HU-005",
+        "HU-016"
+      ],
+      "width": 806,
+      "height": 401
+    },
+    {
+      "id": "ARQ-03",
+      "title": "ARQ-03. Capas y apps del backend",
+      "document": "01-arquitectura.md",
+      "anchor": "arq-03",
+      "stories": [
+        "HU-001",
+        "HU-003",
+        "HU-020"
+      ],
+      "width": 1124,
+      "height": 617
+    },
+    {
+      "id": "ARQ-04",
+      "title": "ARQ-04. Locales como tenants",
+      "document": "01-arquitectura.md",
+      "anchor": "arq-04",
+      "stories": [
+        "HU-010",
+        "HU-011",
+        "HU-012",
+        "HU-013"
+      ],
+      "width": 1000,
+      "height": 412
+    },
+    {
+      "id": "ARQ-05",
+      "title": "ARQ-05. Entornos",
+      "document": "01-arquitectura.md",
+      "anchor": "arq-05",
+      "stories": [
+        "HU-002",
+        "HU-005",
+        "HU-006",
+        "HU-007"
+      ],
+      "width": 1076,
+      "height": 288
+    },
+    {
+      "id": "CU-01",
+      "title": "CU-01. Casos de uso de los cuadernos",
+      "document": "02-casos-de-uso.md",
+      "anchor": "cu-01",
+      "stories": [
+        "HU-010",
+        "HU-012",
+        "HU-013",
+        "HU-021",
+        "HU-022",
+        "HU-023",
+        "HU-024",
+        "HU-026",
+        "HU-028",
+        "HU-029"
+      ],
+      "width": 637,
+      "height": 733
+    },
+    {
+      "id": "CU-02",
+      "title": "CU-02. Relaciones entre casos de uso",
+      "document": "02-casos-de-uso.md",
+      "anchor": "cu-02",
+      "stories": [
+        "HU-012",
+        "HU-014",
+        "HU-025",
+        "HU-027"
+      ],
+      "width": 993,
+      "height": 460
+    },
+    {
+      "id": "CLA-01",
+      "title": "CLA-01. Locales, personas y cuadernos",
+      "document": "03-clases.md",
+      "anchor": "cla-01",
+      "stories": [
+        "HU-013",
+        "HU-020",
+        "HU-022",
+        "HU-025"
+      ],
+      "width": 1433,
+      "height": 974
+    },
+    {
+      "id": "DAT-01",
+      "title": "DAT-01. Base de datos",
+      "document": "04-datos.md",
+      "anchor": "dat-01",
+      "stories": [
+        "HU-010",
+        "HU-011",
+        "HU-013",
+        "HU-014",
+        "HU-020",
+        "HU-025"
+      ],
+      "width": 1572,
+      "height": 1639
+    },
+    {
+      "id": "TEC-01",
+      "title": "TEC-01. Guardar un gasto con venta espejo",
+      "document": "05-secuencias-tecnicas.md",
+      "anchor": "tec-01",
+      "stories": [
+        "HU-011",
+        "HU-014",
+        "HU-021",
+        "HU-025"
+      ],
+      "width": 1033,
+      "height": 993
+    },
+    {
+      "id": "TEC-02",
+      "title": "TEC-02. CI/CD de punta a punta",
+      "document": "05-secuencias-tecnicas.md",
+      "anchor": "tec-02",
+      "stories": [
+        "HU-004",
+        "HU-005",
+        "HU-006"
+      ],
+      "width": 1228,
+      "height": 794
+    },
+    {
+      "id": "FUN-01",
+      "title": "FUN-01. Ingresar y elegir local",
+      "document": "06-flujos-funcionales.md",
+      "anchor": "fun-01",
+      "stories": [
+        "HU-011",
+        "HU-012",
+        "HU-013"
+      ],
+      "width": 879,
+      "height": 1470
+    },
+    {
+      "id": "FUN-02",
+      "title": "FUN-02. Cargar un movimiento",
+      "document": "06-flujos-funcionales.md",
+      "anchor": "fun-02",
+      "stories": [
+        "HU-021",
+        "HU-024",
+        "HU-025"
+      ],
+      "width": 815,
+      "height": 1418
+    },
+    {
+      "id": "FUN-03",
+      "title": "FUN-03. Corregir o anular un movimiento",
+      "document": "06-flujos-funcionales.md",
+      "anchor": "fun-03",
+      "stories": [
+        "HU-024",
+        "HU-025",
+        "HU-026",
+        "HU-014"
+      ],
+      "width": 912,
+      "height": 1722
+    },
+    {
+      "id": "EST-01",
+      "title": "EST-01. Estados de un movimiento",
+      "document": "07-estados.md",
+      "anchor": "est-01",
+      "stories": [
+        "HU-025",
+        "HU-026"
+      ],
+      "width": 755,
+      "height": 558
+    },
+    {
+      "id": "OPS-01",
+      "title": "OPS-01. Backups y restauración probada",
+      "document": "08-operacion.md",
+      "anchor": "ops-01",
+      "stories": [
+        "HU-016",
+        "HU-029"
+      ],
+      "width": 1409,
+      "height": 157
+    }
+  ],
+  "failures": []
+}

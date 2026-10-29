@@ -1,0 +1,14 @@
+flowchart LR
+    subgraph Dev["Desarrollo: PC de cada uno"]
+        DC["Docker Compose<br/>Django + PostgreSQL + Vite<br/>seed inventado"]
+    end
+    subgraph Pru["Pruebas"]
+        PN["Cloud Run + Neon + Pages<br/>datos inventados"]
+    end
+    subgraph Prod["Producción"]
+        RN["Cloud Run + Neon + Pages<br/>datos reales"]
+    end
+    GH["GitHub Actions"]
+    DC -->|"pull request"| GH
+    GH -->|"merge a main"| PN
+    GH -->|"tag y aprobación"| RN

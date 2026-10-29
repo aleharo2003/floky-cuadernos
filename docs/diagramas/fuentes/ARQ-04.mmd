@@ -1,0 +1,18 @@
+flowchart LR
+    Ana["Usuaria: Ana, consulta"]
+    Lucia["Usuaria: Lucía, dueña"]
+    Tomas["Usuario: Tomás, carga"]
+    subgraph Membresias["Membresías"]
+        M3["Ana · Local Centro · consulta"]
+        M1["Lucía · Local Centro · dueña"]
+        M2["Lucía · Local Norte · dueña"]
+        M4["Tomás · Local Norte · carga"]
+    end
+    subgraph Datos["Datos por tenant_id"]
+        L1[("Local Centro<br/>movimientos y categorías")]
+        L2[("Local Norte<br/>movimientos y categorías")]
+    end
+    Ana --> M3 -->|"solo ver y exportar"| L1
+    Lucia --> M1 --> L1
+    Lucia --> M2 --> L2
+    Tomas --> M4 -->|"cargar y corregir"| L2

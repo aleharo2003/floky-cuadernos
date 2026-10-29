@@ -1,0 +1,14 @@
+stateDiagram-v2
+    [*] --> Vigente: cargar
+    Vigente --> Vigente: corregir con motivo
+    Vigente --> Anulado: anular con motivo
+    Anulado --> [*]
+    note right of Vigente
+        Suma en saldo y totales.
+        Una venta espejo cambia de estado
+        solo junto con su gasto.
+    end note
+    note right of Anulado
+        No suma. Sigue visible
+        con su motivo y su historial.
+    end note

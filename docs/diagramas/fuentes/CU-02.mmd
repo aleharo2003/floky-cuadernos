@@ -1,0 +1,9 @@
+flowchart LR
+    C02(["C02 Elegir o cambiar de local"]) -.->|"extiende: tiene<br/>más de un local"| C01(["C01 Ingresar"])
+    C06(["C06 Exportar a PDF o Excel"]) -.->|"extiende"| C05(["C05 Ver saldo y reporte"])
+    C09(["C09 Generar venta espejo"]) -.->|"extiende: gasto que<br/>no es en efectivo"| C07(["C07 Cargar movimiento"])
+    C09 -.->|"extiende: gasto que<br/>no es en efectivo"| C08(["C08 Corregir o anular"])
+    C07 -.->|"incluye"| C11(["C11 Registrar en la auditoría"])
+    C08 -.->|"incluye"| C11
+    C10(["C10 Administrar categorías"]) -.->|"incluye"| C11
+    C12(["C12 Alta de locales y personas"]) -.->|"incluye"| C11

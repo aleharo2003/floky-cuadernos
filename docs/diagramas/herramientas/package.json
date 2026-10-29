@@ -1,0 +1,13 @@
+{
+  "name": "floky-cuadernos-diagramas",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Exportar los diagramas Mermaid a SVG, PNG y galería local",
+  "scripts": {
+    "exportar": "node exportar.cjs .."
+  },
+  "devDependencies": {
+    "mermaid": "11.12.0",
+    "playwright": "1.62.1"
+  }
+}
