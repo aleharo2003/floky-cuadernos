@@ -1,0 +1,96 @@
+/* Tokens de diseño de floky-cuadernos.
+   Única fuente de colores, tipografía, espaciados, radios y medidas de los controles.
+   Ningún componente escribe un color o un tamaño a mano: todo sale de acá. */
+
+:root {
+  color-scheme: light;
+
+  /* ---------- color: paleta "Petróleo profundo" ---------- */
+  --petroleo: #134b5f; /* barra superior */
+  --petroleo-oscuro: #0e3b4b; /* pestaña bajo el mouse, texto de la pestaña activa */
+  --accion: #1a7392; /* botones, enlaces, segmento activo */
+  --accion-fuerte: #135a73;
+  --accion-suave: #e1eff4;
+  --sobre-accion: #ffffff;
+  --sobre-barra-ok: #9be08a; /* punto de caja abierta, sobre la barra */
+  --sobre-barra-mal: #ffb4aa; /* punto de caja cerrada, sobre la barra */
+
+  --plano: #f3f5f4; /* fondo de la página */
+  --superficie: #ffffff; /* tarjetas */
+  --superficie-2: #f6f8f7; /* fila bajo el mouse, campos apagados */
+  --papel: #fffef8; /* tickets */
+  --tinta: #14242b;
+  --tinta-2: #51636b;
+  --linea: #dce2e2;
+  --borde-campo: #87989e;
+  --velo: rgba(20, 36, 43, 0.55); /* fondo detrás de un modal */
+
+  --positivo: #2f8f4e; /* cifras grandes, filetes y bordes: 4:1 sobre blanco */
+  --positivo-texto: #1f6b38; /* el verde para texto chico */
+  --positivo-suave: #e3f2e7;
+  --negativo: #c93a2b;
+  --negativo-texto: #b93425; /* el rojo para texto chico, también sobre el fondo suave */
+  --negativo-suave: #fae7e4;
+  --aviso: #a8650a;
+  --aviso-texto: #8a5206;
+  --aviso-suave: #faefd9;
+
+  /* Categórica de gráficos (validada para daltonismo). Orden fijo. */
+  --serie-1: #1a84a8;
+  --serie-2: #c97a0a;
+  --serie-3: #7a5aa6;
+  --serie-4: #4c8b14;
+  --serie-5: #b84a6e;
+
+  /* ---------- tipografía ---------- */
+  --fuente: 'Archivo Variable', 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fuente-ticket: ui-monospace, 'Cascadia Mono', 'Consolas', monospace;
+
+  --texto-xs: 12px;
+  --texto-s: 13px;
+  --texto: 15px;
+  --texto-l: 17px;
+  --texto-xl: 22px;
+  --texto-xxl: 28px;
+  --texto-cifra: 32px;
+
+  --peso-fino: 300;
+  --peso: 400;
+  --peso-medio: 600;
+  --peso-fuerte: 700;
+
+  --interlinea: 1.45;
+  --interlinea-ajustada: 1.15;
+
+  /* ---------- espaciado (base 4) ---------- */
+  --esp-1: 4px;
+  --esp-2: 8px;
+  --esp-3: 12px;
+  --esp-4: 16px;
+  --esp-5: 24px;
+  --esp-6: 32px;
+  --esp-7: 48px;
+
+  /* ---------- forma ---------- */
+  --r-s: 6px;
+  --r: 8px;
+  --r-l: 12px;
+  --filete: 3px; /* borde de color a la izquierda de los indicadores */
+  --sombra: 0 1px 2px rgba(20, 36, 43, 0.1);
+  --anillo: 0 0 0 3px var(--accion); /* elemento elegido con el teclado */
+  --sombra-media: 0 4px 12px rgba(20, 36, 43, 0.16); /* elemento bajo el mouse */
+  --sombra-alta: 0 12px 40px rgba(20, 36, 43, 0.28);
+
+  /* ---------- controles (mouse y teclado) ---------- */
+  --control: 40px; /* botones y campos */
+  --control-min: 32px; /* controles compactos: enlaces, segmentos, chips, filas */
+  --control-fila: 24px; /* acciones dentro de una fila de tabla */
+  --control-l: 48px; /* la acción principal de la pantalla */
+
+  /* ---------- página ---------- */
+  --ancho-max: 1600px;
+  --margen: clamp(24px, 3vw, 48px); /* aire a los costados: crece con la pantalla */
+  --alto-grafico: clamp(200px, 30vh, 340px);
+  --alto-barra: 56px;
+  --ancho-pedido: 420px; /* columna fija del pedido en la comanda */
+}
