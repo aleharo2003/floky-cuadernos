@@ -1,6 +1,6 @@
 # ADR-0003. Cada local es un tenant y se entra por membresía
 
-- **Estado:** propuesta, 29/10/2026. Viene de ADR-0004 de floky, con un cambio: los cuadernos pasan a ser del local y no del dueño.
+- **Estado:** aceptada el 29/10/2026 (PR #1). Viene de ADR-0004 de floky, con un cambio: los cuadernos pasan a ser del local y no del dueño.
 
 ## Contexto
 

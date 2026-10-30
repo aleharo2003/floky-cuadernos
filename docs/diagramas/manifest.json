@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T23:11:41.920Z",
+  "generatedAt": "2026-10-30T00:20:56.623Z",
   "renderer": "Mermaid 11.12.0",
   "diagrams": [
     {
@@ -26,8 +26,8 @@
         "HU-005",
         "HU-016"
       ],
-      "width": 806,
-      "height": 401
+      "width": 948,
+      "height": 325
     },
     {
       "id": "ARQ-03",
@@ -67,7 +67,7 @@
         "HU-006",
         "HU-007"
       ],
-      "width": 1076,
+      "width": 1012,
       "height": 288
     },
     {
@@ -158,8 +158,8 @@
         "HU-005",
         "HU-006"
       ],
-      "width": 1228,
-      "height": 794
+      "width": 1226,
+      "height": 811
     },
     {
       "id": "FUN-01",

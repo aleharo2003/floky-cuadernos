@@ -30,15 +30,13 @@
 <section id="ARQ-02"><header><p>01-arquitectura.md · diseño objetivo o propuesta, sin implementación comprobada · HU-003, HU-005, HU-016</p><h2>ARQ-02. Contenedores: qué corre y dónde</h2><nav><a href="01-arquitectura.md#arq-02">Explicación y escenarios</a><a href="png/ARQ-02.png">PNG</a><a href="svg/ARQ-02.svg">SVG</a><a href="fuentes/ARQ-02.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/ARQ-02.svg" alt="ARQ-02. Contenedores: qué corre y dónde" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
     Nav[&quot;Navegador&lt;br/&gt;celular o PC&quot;]
     subgraph Nube[&quot;Nube&quot;]
-        Portal[&quot;Portal React&lt;br/&gt;Cloudflare Pages&quot;]
-        API[&quot;API Django + DRF&lt;br/&gt;Cloud Run&quot;]
+        App[&quot;Django + DRF en Cloud Run&lt;br/&gt;API en /api y portal React compilado&quot;]
         PG[(&quot;PostgreSQL&lt;br/&gt;Neon, con RLS&quot;)]
     end
     GA[&quot;GitHub Actions&lt;br/&gt;backup nocturno&quot;]
     R2[(&quot;Cloudflare R2&lt;br/&gt;backups cifrados&quot;)]
-    Nav --&gt;|&quot;HTTPS&quot;| Portal
-    Nav --&gt;|&quot;HTTPS, usuario&lt;br/&gt;y contraseña&quot;| API
-    API --&gt; PG
+    Nav --&gt;|&quot;HTTPS, sesión con cookie&quot;| App
+    App --&gt; PG
     GA --&gt;|&quot;pg_dump&quot;| PG
     GA --&gt; R2</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
 <section id="ARQ-03"><header><p>01-arquitectura.md · diseño objetivo o propuesta, sin implementación comprobada · HU-001, HU-003, HU-020</p><h2>ARQ-03. Capas y apps del backend</h2><nav><a href="01-arquitectura.md#arq-03">Explicación y escenarios</a><a href="png/ARQ-03.png">PNG</a><a href="svg/ARQ-03.svg">SVG</a><a href="fuentes/ARQ-03.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/ARQ-03.svg" alt="ARQ-03. Capas y apps del backend" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TB
@@ -84,10 +82,10 @@
         DC[&quot;Docker Compose&lt;br/&gt;Django + PostgreSQL + Vite&lt;br/&gt;seed inventado&quot;]
     end
     subgraph Pru[&quot;Pruebas&quot;]
-        PN[&quot;Cloud Run + Neon + Pages&lt;br/&gt;datos inventados&quot;]
+        PN[&quot;Cloud Run + Neon&lt;br/&gt;datos inventados&quot;]
     end
     subgraph Prod[&quot;Producción&quot;]
-        RN[&quot;Cloud Run + Neon + Pages&lt;br/&gt;datos reales&quot;]
+        RN[&quot;Cloud Run + Neon&lt;br/&gt;datos reales&quot;]
     end
     GH[&quot;GitHub Actions&quot;]
     DC --&gt;|&quot;pull request&quot;| GH
@@ -273,7 +271,7 @@
     CI--&gt;&gt;GH: verde o rojo
     Rev-&gt;&gt;GH: revisa y aprueba
     Dev-&gt;&gt;GH: merge a main
-    GH-&gt;&gt;CI: imagen de la API y portal
+    GH-&gt;&gt;CI: imagen con la API y el portal compilado
     CI-&gt;&gt;Pru: migraciones y despliegue
     CI-&gt;&gt;Pru: smoke test
     Dev-&gt;&gt;GH: tag vX.Y.Z

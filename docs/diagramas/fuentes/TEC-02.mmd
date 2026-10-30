@@ -10,7 +10,7 @@ sequenceDiagram
     CI-->>GH: verde o rojo
     Rev->>GH: revisa y aprueba
     Dev->>GH: merge a main
-    GH->>CI: imagen de la API y portal
+    GH->>CI: imagen con la API y el portal compilado
     CI->>Pru: migraciones y despliegue
     CI->>Pru: smoke test
     Dev->>GH: tag vX.Y.Z

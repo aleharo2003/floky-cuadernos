@@ -1,6 +1,6 @@
 # ADR-0002. Django + DRF + React, solo en la nube
 
-- **Estado:** propuesta, 29/10/2026. Viene de ADR-0002 de floky, sin el modo local.
+- **Estado:** aceptada el 29/10/2026 (PR #1). Viene de ADR-0002 de floky, sin el modo local. La autenticación la define [ADR-0006](0006-react-servido-por-django.md).
 
 ## Contexto
 
@@ -18,7 +18,7 @@ Somos dos desarrolladores y Django y React son el stack que el equipo ya domina.
 | `accounts` | Personas, membresías, roles y permisos | `core` |
 | `notebooks` | Movimientos, categorías, venta espejo, reportes y exportación | `core`, `accounts` |
 
-- **Autenticación:** con el `User` de Django y la autenticación de DRF. Si es sesión con cookie o token se decide en el esqueleto (HU-003). Sin proveedores externos de identidad.
+- **Autenticación:** con el `User` de Django y la autenticación de DRF. Sesión con cookie ([ADR-0006](0006-react-servido-por-django.md)). Sin proveedores externos de identidad.
 - **Tareas en segundo plano:** ninguna en R1. Las exportaciones son sincrónicas mientras tarden menos de 10 segundos (HU-027). El backup nocturno corre en GitHub Actions ([ADR-0004](0004-entornos-hosting-ci-cd.md)).
 
 ## Consecuencias

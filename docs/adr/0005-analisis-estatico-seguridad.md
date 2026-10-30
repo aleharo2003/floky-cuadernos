@@ -1,6 +1,6 @@
 # ADR-0005. Análisis estático de seguridad (SAST) en CI
 
-- **Estado:** propuesta, 29/10/2026. Viene de ADR-0009 de floky, sin cambios de fondo.
+- **Estado:** aceptada el 29/10/2026 (PR #1). Viene de ADR-0009 de floky, sin cambios de fondo.
 
 ## Contexto
 

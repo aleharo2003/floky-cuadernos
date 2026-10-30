@@ -8,7 +8,7 @@ Cada pregunta dice a quién hay que hacérsela y qué bloquea. Cuando se resuelv
 |---|---|---|
 | P-01 | ¿Cómo son los cuadernos de papel? Ver un ejemplo de cada uno: campos, categorías, qué es el haber y cómo afecta el saldo, si el saldo se arrastra de un período a otro y si el local lleva uno o varios cuadernos. | HU-020, HU-022, HU-023, HU-025, HU-029 |
 | P-02 | Con el espejo solo para gastos, una venta cobrada con débito, crédito, QR o transferencia suma al saldo aunque esa plata no esté en el cajón. En la primera charla se mencionó que esas ventas también se restan como gasto. ¿Cómo lo llevan en el papel? | HU-023, HU-025 |
-| P-04 | ¿A nombre de quién se abren las cuentas de hosting y de dominio? El cliente las paga directo al proveedor, y Cloud Run pide una cuenta de facturación aunque el uso sea gratis. De eso depende quién recibe los avisos y quién puede borrar el proyecto. | HU-005, HU-006, HU-016, HU-029 |
+| P-04 | ¿A nombre de quién se abren las cuentas de hosting y de dominio? El cliente las paga directo al proveedor, y Cloud Run pide una cuenta de facturación aunque el uso sea gratis. De eso depende quién recibe los avisos y quién puede borrar el proyecto. Mientras tanto, R1a se publica en cuentas del equipo. | HU-005, HU-006, HU-016, HU-029 |
 
 ## Del equipo
 

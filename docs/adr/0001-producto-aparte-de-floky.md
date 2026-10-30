@@ -1,6 +1,6 @@
 # ADR-0001. Los cuadernos son un producto aparte de floky
 
-- **Estado:** propuesta, 29/10/2026.
+- **Estado:** aceptada el 29/10/2026 (PR #1).
 
 ## Contexto
 
