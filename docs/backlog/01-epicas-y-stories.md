@@ -49,7 +49,7 @@ Como equipo, queremos un recorrido mínimo que atraviese todas las piezas, para 
 - Dado el portal, cuando una persona de prueba ingresa y escribe un saludo, entonces la API lo guarda en la base bajo su local y lo muestra con su hora.
 - Dado una persona de otro local, cuando entra, entonces no ve ese saludo.
 - Dado este recorrido, cuando se mergea a `main`, entonces queda en pruebas sin pasos manuales.
-- Dado el esqueleto, cuando termina, entonces está decidido y escrito si la autenticación es por sesión con cookie o por token (ADR-0002).
+- Dado el esqueleto, cuando una persona ingresa, entonces la sesión es por cookie y toda escritura lleva el token CSRF (ADR-0006).
 
 > Tip: esta story es la que más enseña. Obliga a resolver despliegue, configuración, autenticación, aislamiento entre locales y CI antes de que haya presión por funcionalidades.
 
@@ -70,7 +70,7 @@ Como revisor, quiero que CI valide cada PR, para revisar diseño y lógica en lu
 
 Como equipo, queremos que cada merge a `main` quede en pruebas, para que el cliente pueda probar siempre la última versión.
 
-- Dado un merge a `main`, cuando CI pasa, entonces se despliegan la API, las migraciones y el portal al entorno de pruebas.
+- Dado un merge a `main`, cuando CI pasa, entonces se despliegan la API con el portal compilado y las migraciones al entorno de pruebas.
 - Dado el despliegue, cuando termina, entonces corre un smoke test (salud, ingreso de prueba, lectura de un dato) y avisa si falla.
 - Dado pruebas, cuando se usa, entonces tiene su propia base, con datos inventados.
 

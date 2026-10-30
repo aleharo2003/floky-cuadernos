@@ -41,22 +41,20 @@ flowchart TB
 flowchart LR
     Nav["Navegador<br/>celular o PC"]
     subgraph Nube["Nube"]
-        Portal["Portal React<br/>Cloudflare Pages"]
-        API["API Django + DRF<br/>Cloud Run"]
+        App["Django + DRF en Cloud Run<br/>API en /api y portal React compilado"]
         PG[("PostgreSQL<br/>Neon, con RLS")]
     end
     GA["GitHub Actions<br/>backup nocturno"]
     R2[("Cloudflare R2<br/>backups cifrados")]
-    Nav -->|"HTTPS"| Portal
-    Nav -->|"HTTPS, usuario<br/>y contraseña"| API
-    API --> PG
+    Nav -->|"HTTPS, sesión con cookie"| App
+    App --> PG
     GA -->|"pg_dump"| PG
     GA --> R2
 ```
 
 **Archivos ARQ-02:** [SVG](svg/ARQ-02.svg) · [PNG](png/ARQ-02.png) · [Mermaid](fuentes/ARQ-02.mmd).
 
-**Lectura:** tres piezas en la nube y un backup que vive en otro proveedor. La base es la única copia de los cuadernos (ADR-0004): por eso el backup no está en Neon sino en R2.
+**Lectura:** dos piezas en la nube (el servicio que sirve la API y el portal, y la base) y un backup que vive en otro proveedor (ADR-0006). La base es la única copia de los cuadernos (ADR-0004): por eso el backup no está en Neon sino en R2.
 
 <a id="arq-03"></a>
 
@@ -137,10 +135,10 @@ flowchart LR
         DC["Docker Compose<br/>Django + PostgreSQL + Vite<br/>seed inventado"]
     end
     subgraph Pru["Pruebas"]
-        PN["Cloud Run + Neon + Pages<br/>datos inventados"]
+        PN["Cloud Run + Neon<br/>datos inventados"]
     end
     subgraph Prod["Producción"]
-        RN["Cloud Run + Neon + Pages<br/>datos reales"]
+        RN["Cloud Run + Neon<br/>datos reales"]
     end
     GH["GitHub Actions"]
     DC -->|"pull request"| GH

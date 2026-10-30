@@ -53,6 +53,7 @@ Tres principios mandan en cada decisión técnica. Cuando propongas una solució
 2. Commits chicos con [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, `ci:`.
 3. Pull request contra `main`, con la plantilla completa. El título sigue Conventional Commits y termina con la clave de Jira entre paréntesis: `ci: add CI pipeline (FLC-5)`. Se mergea con squash, así que ese título es el mensaje que queda en `main`: revisalo antes de mergear.
 4. **Nadie mergea su propio PR.** La otra persona revisa y aprueba.
+   > Excepción temporal, hasta mostrar la primera versión (R1a): trabaja una sola persona, así que mergea sus propios PRs. Todo entra igual por PR y con CI en verde, para que quede el historial. Al terminar R1a se vuelve a la regla.
 5. CI tiene que estar en verde para mergear.
 
 ## Entornos

@@ -47,8 +47,25 @@ R0 y R1 tienen que entrar en el plazo acordado con el primer cliente. Si en la p
 | Release | Contenido | Por qué en este orden |
 |---|---|---|
 | R0. Esqueleto | E01 menos HU-008 | Que el camino a pruebas y a producción funcione solo antes de escribir negocio |
+| R1a. Primera versión | Versión corta de HU-001 a HU-005; HU-010, HU-012 a HU-014, HU-016, HU-020, HU-021, HU-023 a HU-028 | Mostrarle al cliente algo usable en una semana. Ver el detalle abajo |
 | R1. Cuadernos | E02 y E03 | Lo que contrató el cliente. Primero locales, ingreso y permisos, porque todo lo demás se apoya en eso |
 | Después | HU-008 y lo que pidan los clientes | Por ejemplo, que el dueño invite gente desde el portal |
+
+### Qué trae y qué no trae R1a
+
+Es una primera versión para mostrar, no la entrega final. La hace una sola persona en una semana.
+
+| Trae | No trae todavía (va en R1) |
+|---|---|
+| Ingreso con usuario y contraseña, elegir local, roles dueño, carga y consulta | Recuperar la contraseña por email: la resetea el equipo (HU-012) |
+| Cargar, corregir y anular con historial; venta espejo | Row Level Security: el aislamiento lo hace la app, con tests de fuga (HU-011) |
+| Filtros, saldo, reporte por mes y por categoría | Entorno de pruebas y promoción con aprobación (HU-005, HU-006) |
+| Exportar a Excel; PDF con la hoja de impresión del navegador | PDF generado en el servidor, si el de impresión no alcanza (HU-027) |
+| Backup nocturno | Restauración mensual automática: la primera se hace a mano (HU-016) |
+| CI con lint, tests y build | SAST, auditoría de dependencias y chequeo de migraciones (HU-004) |
+| | Capacitación y guías (HU-029) |
+
+Se publica en cuentas del equipo hasta que se acuerde a nombre de quién quedan las del cliente (P-04). Si P-01 no está resuelta, sale solo con ingreso y gasto; el haber se agrega al ver los cuadernos.
 
 ## Cómo usamos Jira
 

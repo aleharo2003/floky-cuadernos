@@ -1,6 +1,6 @@
 # ADR-0004. Entornos, hosting de bajo costo y CI/CD
 
-- **Estado:** propuesta, 29/10/2026. Viene de ADR-0008 de floky, sin servidor local ni ARCA. Los precios y límites de los planes gratuitos cambian seguido: se verifican el día que se contrata.
+- **Estado:** aceptada el 29/10/2026 (PR #1). Viene de ADR-0008 de floky, sin servidor local ni ARCA. Los precios y límites de los planes gratuitos cambian seguido: se verifican el día que se contrata. La fila del portal la reemplaza [ADR-0006](0006-react-servido-por-django.md): el portal lo sirve Django.
 
 ## Contexto
 
