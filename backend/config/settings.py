@@ -107,6 +107,8 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    # Login attempts per client. Many failed tries slow the attacker down (HU-012).
+    "DEFAULT_THROTTLE_RATES": {"login": os.environ.get("LOGIN_RATE", "10/min")},
 }
 
 # Session cookie (ADR-0006). Secure flags are on unless DEBUG.

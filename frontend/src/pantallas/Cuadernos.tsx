@@ -11,6 +11,7 @@ import Modal from '../componentes/Modal';
 import SegmentedControl from '../componentes/SegmentedControl';
 import { rangoEsteMes, rangoValido } from '../lib/fechas';
 import { diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros } from '../lib/formato';
+import { useSesion } from '../estado/Sesion';
 import { useConsulta } from '../lib/useConsulta';
 import { servicios } from '../services';
 import type { EventoAuditoria, MedioPago, Movimiento, RangoFechas, ResumenCuadernos, TipoMovimiento } from '../types';
@@ -40,6 +41,10 @@ const enBlanco = (): Borrador => ({
 
 /** Los cuadernos del local: cargar, corregir y mirar los movimientos del período. */
 export default function Cuadernos() {
+  const { puede } = useSesion();
+  const puedeCargar = puede('notebooks.add_entry');
+  const puedeCorregir = puede('notebooks.change_entry');
+  const puedeAnular = puede('notebooks.void_entry');
   const [rango, setRango] = useState<RangoFechas>(rangoEsteMes);
   const [vuelta, setVuelta] = useState(0);
   // Con una fecha a medio escribir se sigue mostrando lo último que se pidió.
@@ -139,73 +144,76 @@ export default function Cuadernos() {
           />
         </div>
 
-        <Card titulo={editando ? 'Editar movimiento' : 'Cargar movimiento'}>
-          <form className="formulario" onSubmit={guardar}>
-            <label className="campo">
-              <span>Fecha</span>
-              <input
-                ref={campoFecha}
-                className="campo-texto"
-                type="date"
-                required
-                value={borrador.fecha}
-                onChange={(e) => cambiar({ fecha: e.target.value })}
-              />
-            </label>
-            <div className="campo">
-              <span>Tipo</span>
-              <SegmentedControl
-                etiqueta="Tipo"
-                opciones={TIPOS}
-                valor={borrador.tipo}
-                onChange={(tipo) => cambiar({ tipo, categoria: '' })}
-                bloque
-              />
-            </div>
-            <label className="campo">
-              <span>Categoría</span>
-              <select required value={borrador.categoria} onChange={(e) => cambiar({ categoria: e.target.value })}>
-                <option value="">Elegí una categoría</option>
-                {categorias[borrador.tipo].map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-            </label>
-            <label className="campo">
-              <span>Descripción</span>
-              <input
-                className="campo-texto"
-                type="text"
-                maxLength={80}
-                value={borrador.descripcion}
-                placeholder="Por ejemplo: alquiler de octubre"
-                onChange={(e) => cambiar({ descripcion: e.target.value })}
-              />
-            </label>
-            <CampoMonto rotulo="Monto" valor={borrador.monto} onChange={(monto) => cambiar({ monto })} />
-            <label className="campo">
-              <span>Medio de pago</span>
-              <select value={borrador.medioPago} onChange={(e) => cambiar({ medioPago: e.target.value as MedioPago })}>
-                {MEDIOS.map((m) => (
-                  <option key={m}>{m}</option>
-                ))}
-              </select>
-            </label>
-            <p className="login-error" role="alert">
-              {aviso}
-            </p>
-            <div className="acciones">
-              <Button type="submit" variante="primario">
-                {editando ? 'Guardar cambios' : 'Guardar movimiento'} <Tecla id="confirmar" />
-              </Button>
-              {editando && (
-                <Button onClick={cancelar}>
-                  Cancelar <Tecla id="volver" />
+        {/* Consulta no carga ni corrige: el formulario no aparece (HU-024). */}
+        {(puedeCargar || puedeCorregir) && (
+          <Card titulo={editando ? 'Editar movimiento' : 'Cargar movimiento'}>
+            <form className="formulario" onSubmit={guardar}>
+              <label className="campo">
+                <span>Fecha</span>
+                <input
+                  ref={campoFecha}
+                  className="campo-texto"
+                  type="date"
+                  required
+                  value={borrador.fecha}
+                  onChange={(e) => cambiar({ fecha: e.target.value })}
+                />
+              </label>
+              <div className="campo">
+                <span>Tipo</span>
+                <SegmentedControl
+                  etiqueta="Tipo"
+                  opciones={TIPOS}
+                  valor={borrador.tipo}
+                  onChange={(tipo) => cambiar({ tipo, categoria: '' })}
+                  bloque
+                />
+              </div>
+              <label className="campo">
+                <span>Categoría</span>
+                <select required value={borrador.categoria} onChange={(e) => cambiar({ categoria: e.target.value })}>
+                  <option value="">Elegí una categoría</option>
+                  {categorias[borrador.tipo].map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="campo">
+                <span>Descripción</span>
+                <input
+                  className="campo-texto"
+                  type="text"
+                  maxLength={80}
+                  value={borrador.descripcion}
+                  placeholder="Por ejemplo: alquiler de octubre"
+                  onChange={(e) => cambiar({ descripcion: e.target.value })}
+                />
+              </label>
+              <CampoMonto rotulo="Monto" valor={borrador.monto} onChange={(monto) => cambiar({ monto })} />
+              <label className="campo">
+                <span>Medio de pago</span>
+                <select value={borrador.medioPago} onChange={(e) => cambiar({ medioPago: e.target.value as MedioPago })}>
+                  {MEDIOS.map((m) => (
+                    <option key={m}>{m}</option>
+                  ))}
+                </select>
+              </label>
+              <p className="login-error" role="alert">
+                {aviso}
+              </p>
+              <div className="acciones">
+                <Button type="submit" variante="primario">
+                  {editando ? 'Guardar cambios' : 'Guardar movimiento'} <Tecla id="confirmar" />
                 </Button>
-              )}
-            </div>
-          </form>
-        </Card>
+                {editando && (
+                  <Button onClick={cancelar}>
+                    Cancelar <Tecla id="volver" />
+                  </Button>
+                )}
+              </div>
+            </form>
+          </Card>
+        )}
 
         <Card titulo={`Movimientos ${periodo}`} className="panel-ancho">
           <DataTable<Movimiento>
@@ -225,16 +233,21 @@ export default function Cuadernos() {
               { titulo: 'Monto', numerica: true, render: (m) => pesos(m.tipo === 'egreso' ? -m.monto : m.monto) },
               {
                 titulo: '',
-                render: (m) => (
-                  <span className="acciones-fila">
-                    <Button tamano="chico" aria-label={`Editar ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => editar(m)}>
-                      Editar
-                    </Button>
-                    <Button tamano="chico" variante="peligro" aria-label={`Borrar ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => setPorBorrar(m)}>
-                      Borrar
-                    </Button>
-                  </span>
-                ),
+                render: (m) =>
+                  puedeCorregir || puedeAnular ? (
+                    <span className="acciones-fila">
+                      {puedeCorregir && (
+                        <Button tamano="chico" aria-label={`Editar ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => editar(m)}>
+                          Editar
+                        </Button>
+                      )}
+                      {puedeAnular && (
+                        <Button tamano="chico" variante="peligro" aria-label={`Borrar ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => setPorBorrar(m)}>
+                          Borrar
+                        </Button>
+                      )}
+                    </span>
+                  ) : null,
               },
             ]}
           />

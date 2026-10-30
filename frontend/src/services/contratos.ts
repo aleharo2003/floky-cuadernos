@@ -1,4 +1,12 @@
-import type { EventoAuditoria, Movimiento, MovimientoNuevo, RangoFechas, ResumenCuadernos, TipoMovimiento } from '../types';
+import type { EventoAuditoria, Movimiento, MovimientoNuevo, RangoFechas, ResumenCuadernos, Sesion, TipoMovimiento } from '../types';
+
+/** Ingreso, salida y local activo. Cada método devuelve la sesión como quedó. */
+export interface SesionService {
+  actual(): Promise<Sesion>;
+  ingresar(usuario: string, clave: string): Promise<Sesion>;
+  salir(): Promise<Sesion>;
+  elegirLocal(id: string): Promise<Sesion>;
+}
 
 /**
  * Lo que las pantallas le piden a los cuadernos. Hoy lo cumple una implementación en memoria;
@@ -16,5 +24,6 @@ export interface CuadernosService {
 }
 
 export interface Servicios {
+  sesion: SesionService;
   cuadernos: CuadernosService;
 }
