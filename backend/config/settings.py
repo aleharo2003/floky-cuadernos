@@ -70,7 +70,10 @@ TEMPLATES = [
     },
 ]
 
-DATABASES = {"default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=60)}
+# Neon suspends the database after a few minutes without use: check the connection before reusing it.
+DATABASES = {
+    "default": dj_database_url.parse(os.environ["DATABASE_URL"], conn_max_age=60, conn_health_checks=True)
+}
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_PASSWORD_VALIDATORS = [

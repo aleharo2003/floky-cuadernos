@@ -18,6 +18,7 @@ Un ADR registra una decisión importante: el contexto, las opciones que se mirar
 | [0004](0004-entornos-hosting-ci-cd.md) | Entornos, hosting de bajo costo y CI/CD | Aceptada | ADR-0008, sin servidor local ni ARCA |
 | [0005](0005-analisis-estatico-seguridad.md) | Análisis estático de seguridad (SAST) en CI | Aceptada | ADR-0009 |
 | [0006](0006-react-servido-por-django.md) | El portal React lo sirve Django, con sesión por cookie | Propuesta | Nueva |
+| [0007](0007-deploy-r1a.md) | Cómo se publica R1a: San Pablo, un solo entorno, tag con aprobación | Propuesta | Nueva |
 
 
 ## Cómo escribir uno nuevo

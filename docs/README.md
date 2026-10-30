@@ -18,7 +18,7 @@ Toda la documentación del sistema vive acá, junto al código, y se revisa en l
 | `adr/` | Decisiones de arquitectura (ADR), numeradas y con estado |
 | `backlog/` | Épicas, stories, preguntas abiertas y el CSV para Jira |
 | `diagramas/` | Diagramas Mermaid con SVG, PNG y [galería](diagramas/galeria.html) |
-| `operacion/` | Runbooks: despliegue, vuelta atrás, backups (cuando existan) |
+| `operacion/` | [Puesta en marcha](operacion/puesta-en-marcha.md) (cuentas, publicar, volver atrás) y [backups](operacion/backups.md) |
 
 ## De dónde viene
 

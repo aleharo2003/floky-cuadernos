@@ -1,6 +1,6 @@
 # ADR-0004. Entornos, hosting de bajo costo y CI/CD
 
-- **Estado:** aceptada el 29/10/2026 (PR #1). Viene de ADR-0008 de floky, sin servidor local ni ARCA. Los precios y límites de los planes gratuitos cambian seguido: se verifican el día que se contrata. La fila del portal la reemplaza [ADR-0006](0006-react-servido-por-django.md): el portal lo sirve Django.
+- **Estado:** aceptada el 29/10/2026 (PR #1). Viene de ADR-0008 de floky, sin servidor local ni ARCA. Los precios y límites de los planes gratuitos cambian seguido: se verifican el día que se contrata. La fila del portal la reemplaza [ADR-0006](0006-react-servido-por-django.md): el portal lo sirve Django. Cómo se publica la primera versión (región, un solo entorno, tag con aprobación) está en [ADR-0007](0007-deploy-r1a.md). Corrección del 30/10/2026: Neon Free tiene 0,5 GB por proyecto, no 1 GB.
 
 ## Contexto
 

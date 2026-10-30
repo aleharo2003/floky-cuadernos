@@ -59,12 +59,12 @@ Es lo mismo que corre el CI.
 
 ## Desplegar
 
-La imagen se construye con el `Dockerfile` de la raíz e incluye el portal compilado. Las migraciones van en un paso aparte, antes de cada despliegue, nunca al arrancar el contenedor:
+Se publica con un tag: `git tag v0.1.0 && git push origin v0.1.0`. GitHub corre los mismos chequeos del CI, pide aprobación, construye la imagen, corre las migraciones, publica en Cloud Run y hace una prueba de humo. Mergear a `main` no publica nada.
 
-```text
-python manage.py migrate
-```
+- Primera vez (cuentas, secretos, primer usuario): [docs/operacion/puesta-en-marcha.md](docs/operacion/puesta-en-marcha.md).
+- Backups y cómo restaurar: [docs/operacion/backups.md](docs/operacion/backups.md).
+- Por qué es así: [ADR-0007](docs/adr/0007-deploy-r1a.md).
 
-Variables que necesita en cada entorno: `DJANGO_SECRET_KEY`, `DATABASE_URL`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS` y `APP_VERSION`. Ver `.env.example`.
+Las migraciones corren en un paso aparte, antes de cada despliegue, nunca al arrancar el contenedor.
 
 Todos los derechos reservados. Este repositorio es público, pero no otorga licencia de uso, copia ni distribución del código.

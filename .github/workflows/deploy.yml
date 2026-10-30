@@ -1,0 +1,117 @@
+# Publishes a version to production (ADR-0007).
+#
+# How: push a tag like v0.1.0. The same checks as CI run first, then GitHub
+# waits for a reviewer to approve the "production" environment, then:
+# build the image, run migrations, deploy, and check that the new version answers.
+#
+# Nothing secret lives here. GitHub logs in to Google Cloud with Workload Identity
+# Federation (no key files), and the app reads its secrets from Secret Manager.
+name: Deploy
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  checks:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      REGION: ${{ vars.GCP_REGION }}
+      SERVICE: cuadernos
+      MIGRATE_JOB: cuadernos-migrate
+      VERSION: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Log in to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Work out the image name and the public address
+        env:
+          EXTRA_HOSTS: ${{ vars.APP_EXTRA_HOSTS }}
+        run: |
+          host="${SERVICE}-${{ vars.GCP_PROJECT_NUMBER }}.${REGION}.run.app"
+          image="${REGION}-docker.pkg.dev/${PROJECT_ID}/cuadernos/app:${VERSION}"
+          hosts="$host"
+          if [ -n "$EXTRA_HOSTS" ]; then hosts="$hosts,$EXTRA_HOSTS"; fi
+          {
+            echo "IMAGE=$image"
+            echo "APP_URL=https://$host"
+            echo "APP_HOSTS=$hosts"
+          } >> "$GITHUB_ENV"
+
+      - name: Build and push the image
+        run: |
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      # Migrations run once, before the new version takes traffic, never at container start.
+      - name: Run migrations
+        run: |
+          gcloud run jobs deploy "$MIGRATE_JOB" \
+            --region "$REGION" \
+            --image "$IMAGE" \
+            --service-account "${{ vars.GCP_RUNTIME_SA }}" \
+            --set-secrets "DATABASE_URL=database-url:latest,DJANGO_SECRET_KEY=django-secret-key:latest" \
+            --set-env-vars "APP_VERSION=${VERSION}" \
+            --command python \
+            --args manage.py,migrate,--noinput \
+            --max-retries 0 \
+            --task-timeout 300s \
+            --quiet
+          gcloud run jobs execute "$MIGRATE_JOB" --region "$REGION" --wait
+
+      - name: Deploy the new version
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --region "$REGION" \
+            --image "$IMAGE" \
+            --service-account "${{ vars.GCP_RUNTIME_SA }}" \
+            --set-secrets "DATABASE_URL=database-url:latest,DJANGO_SECRET_KEY=django-secret-key:latest" \
+            --set-env-vars "^;^APP_VERSION=${VERSION};DJANGO_ALLOWED_HOSTS=${APP_HOSTS}" \
+            --allow-unauthenticated \
+            --min-instances 0 \
+            --max-instances 2 \
+            --memory 512Mi \
+            --cpu 1 \
+            --concurrency 40 \
+            --timeout 60 \
+            --quiet
+
+      # Smoke test: the public address answers, the database is reachable and the version is the new one.
+      - name: Smoke test
+        run: |
+          for i in 1 2 3 4 5 6; do
+            body=$(curl -fsS --max-time 20 "$APP_URL/api/health/" || true)
+            echo "attempt $i: $body"
+            if echo "$body" | grep -q "\"version\":\"${VERSION}\"" && echo "$body" | grep -q '"database":"ok"'; then
+              curl -fsS --max-time 20 -o /dev/null "$APP_URL/ingresar"
+              echo "Published ${VERSION} at $APP_URL" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "The new version did not answer as expected." >&2
+          exit 1
