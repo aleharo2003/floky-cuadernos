@@ -2604,3 +2604,25 @@ textarea:focus-visible {
     width: 100%;
   }
 }
+
+/* ---------- Ingreso, elegir local y barra de los cuadernos ---------- */
+
+.login-cuerpo-simple {
+  width: min(100%, 440px);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.login-cuerpo-simple .campo {
+  margin-bottom: var(--esp-4);
+}
+
+.barra-local,
+.barra-local-nombre {
+  font-weight: var(--peso-fuerte);
+}
+
+.barra-local {
+  max-width: 220px;
+  padding: var(--esp-1) var(--esp-2);
+  border-radius: var(--r);
+}
