@@ -6,6 +6,8 @@ from notebooks.views import (
     EntryHistoryView,
     EntryListView,
     EntryVoidView,
+    ExportView,
+    MonthlyView,
     RecentChangesView,
     SummaryView,
 )
@@ -18,4 +20,6 @@ urlpatterns = [
     path("entries/<uuid:entry_id>/history/", EntryHistoryView.as_view()),
     path("changes/", RecentChangesView.as_view()),
     path("summary/", SummaryView.as_view()),
+    path("monthly/", MonthlyView.as_view()),
+    path("export/", ExportView.as_view()),
 ]

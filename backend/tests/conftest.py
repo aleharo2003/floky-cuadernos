@@ -5,6 +5,7 @@ from rest_framework.test import APIClient
 
 from accounts.models import Membership, Role
 from core.models import Tenant
+from notebooks.models import Category, Kind
 
 PASSWORD = "una-clave-de-prueba-larga"  # noqa: S105 - test data, not a secret
 
@@ -62,3 +63,28 @@ def api() -> APIClient:
 
 def log_in(client: APIClient, username: str, password: str = PASSWORD):
     return client.post("/api/auth/login/", {"username": username, "password": password}, format="json")
+
+
+@pytest.fixture
+def categories(centro, norte):
+    made = {}
+    for tenant in (centro, norte):
+        made[tenant.name, Kind.INCOME] = Category.objects.create(
+            tenant=tenant, kind=Kind.INCOME, name="Ventas"
+        )
+        made[tenant.name, Kind.EXPENSE] = Category.objects.create(
+            tenant=tenant, kind=Kind.EXPENSE, name="Proveedores"
+        )
+    return made
+
+
+@pytest.fixture
+def as_role(api, make_person, norte, categories):
+    """Logs in a person with the given role in Local Norte only."""
+
+    def login(role: str):
+        make_person(f"u-{role}", (norte, role, True))
+        log_in(api, f"u-{role}")
+        return api
+
+    return login

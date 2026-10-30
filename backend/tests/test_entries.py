@@ -14,31 +14,6 @@ pytestmark = pytest.mark.django_db
 RANGE = {"from": "2026-10-01", "to": "2026-10-31"}
 
 
-@pytest.fixture
-def categories(centro, norte):
-    made = {}
-    for tenant in (centro, norte):
-        made[tenant.name, Kind.INCOME] = Category.objects.create(
-            tenant=tenant, kind=Kind.INCOME, name="Ventas"
-        )
-        made[tenant.name, Kind.EXPENSE] = Category.objects.create(
-            tenant=tenant, kind=Kind.EXPENSE, name="Proveedores"
-        )
-    return made
-
-
-@pytest.fixture
-def as_role(api, make_person, norte, categories):
-    """Logs in a person with the given role in Local Norte only."""
-
-    def login(role: str):
-        make_person(f"u-{role}", (norte, role, True))
-        log_in(api, f"u-{role}")
-        return api
-
-    return login
-
-
 def entry_body(categories, tenant="Local Norte", kind=Kind.EXPENSE, **overrides):
     body = {
         "date": "2026-10-10",
