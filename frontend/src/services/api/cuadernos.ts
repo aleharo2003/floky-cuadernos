@@ -1,6 +1,6 @@
-import type { Cambio, Categoria, MedioPago, Movimiento, MovimientoNuevo, RangoFechas, TipoMovimiento } from '../../types';
+import type { Cambio, Categoria, FiltrosMovimientos, MedioPago, Movimiento, MovimientoNuevo, RangoFechas, TipoMovimiento } from '../../types';
 import type { CuadernosService } from '../contratos';
-import { pedir } from '../http';
+import { BASE_API, pedir } from '../http';
 
 /* La API habla en inglés y con importes en texto ("45000.50"); las pantallas, en español y con números. */
 
@@ -74,7 +74,16 @@ const cuerpo = (m: MovimientoNuevo) => ({
   payment_method: m.medioPago,
 });
 
-const periodo = (r: RangoFechas) => `from=${r.desde}&to=${r.hasta}`;
+/** Período y filtros a query string. Lo vacío no viaja. */
+function consulta(r: RangoFechas, f: FiltrosMovimientos): string {
+  const q = new URLSearchParams({ from: r.desde, to: r.hasta });
+  if (f.tipo) q.set('kind', aKind(f.tipo));
+  if (f.categoriaId) q.set('category_id', f.categoriaId);
+  if (f.medioPago) q.set('payment_method', f.medioPago);
+  if (f.texto.trim()) q.set('q', f.texto.trim());
+  if (f.verAnulados) q.set('voided', '1');
+  return q.toString();
+}
 
 export const cuadernosApi: CuadernosService = {
   async categorias() {
@@ -84,23 +93,35 @@ export const cuadernosApi: CuadernosService = {
     return porTipo;
   },
 
-  async movimientos(rango) {
-    return (await pedir<EntryApi[]>('GET', `/notebooks/entries/?${periodo(rango)}`)).map(aMovimiento);
+  async movimientos(rango, filtros) {
+    return (await pedir<EntryApi[]>('GET', `/notebooks/entries/?${consulta(rango, filtros)}`)).map(aMovimiento);
   },
 
-  async resumen(rango) {
+  async resumen(rango, filtros) {
     const r = await pedir<{
       income: string;
       expense: string;
       balance: string;
       by_category: { category: string; kind: Kind; total: string; count: number }[];
-    }>('GET', `/notebooks/summary/?${periodo(rango)}`);
+    }>('GET', `/notebooks/summary/?${consulta(rango, filtros)}`);
     return {
       ingresos: Number(r.income),
       egresos: Number(r.expense),
       saldo: Number(r.balance),
       porCategoria: r.by_category.map((c) => ({ categoria: c.category, tipo: aTipo(c.kind), monto: Number(c.total), movimientos: c.count })),
     };
+  },
+
+  async anual(anio) {
+    const r = await pedir<{ months: { month: number; income: string; expense: string; balance: string }[] }>(
+      'GET',
+      `/notebooks/monthly/?year=${anio}`,
+    );
+    return r.months.map((m) => ({ mes: m.month, ingresos: Number(m.income), egresos: Number(m.expense), saldo: Number(m.balance) }));
+  },
+
+  urlExcel(rango, filtros) {
+    return `${BASE_API}/notebooks/export/?${consulta(rango, filtros)}`;
   },
 
   async crear(movimiento, clave) {

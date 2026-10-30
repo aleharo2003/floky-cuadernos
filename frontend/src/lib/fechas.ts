@@ -24,11 +24,27 @@ export const rangoEsteMes = (): RangoFechas => {
   return { desde: fechaIso(new Date(hoy.getFullYear(), hoy.getMonth(), 1)), hasta: fechaIso(hoy) };
 };
 
+/** El mes calendario anterior completo, para comparar con el actual. */
+export const rangoMesPasado = (): RangoFechas => {
+  const hoy = new Date();
+  return {
+    desde: fechaIso(new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1)),
+    hasta: fechaIso(new Date(hoy.getFullYear(), hoy.getMonth(), 0)),
+  };
+};
+
+/** Del primero al último día de un mes (1 a 12). */
+export const rangoDelMes = (anio: number, mes: number): RangoFechas => ({
+  desde: fechaIso(new Date(anio, mes - 1, 1)),
+  hasta: fechaIso(new Date(anio, mes, 0)),
+});
+
 /** Los atajos de un toque de los filtros de fechas. Las fechas se pueden ajustar a mano después. */
 export const periodosRapidos = (): PeriodoRapido[] => [
   { etiqueta: 'Hoy', rango: rangoHoy() },
   { etiqueta: 'Esta semana', rango: rangoEstaSemana() },
   { etiqueta: 'Este mes', rango: rangoEsteMes() },
+  { etiqueta: 'Mes pasado', rango: rangoMesPasado() },
 ];
 
 export const rangoValido = (r: RangoFechas): boolean => !!r.desde && !!r.hasta && r.desde <= r.hasta;
