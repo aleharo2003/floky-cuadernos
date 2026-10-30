@@ -2626,3 +2626,129 @@ textarea:focus-visible {
   padding: var(--esp-1) var(--esp-2);
   border-radius: var(--r);
 }
+
+/* ---------- Filtros, resumen del año e impresión (día 4) ---------- */
+
+.boton-texto {
+  border-color: transparent;
+  background: none;
+  color: var(--accion);
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.boton-texto:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.filtros-panel {
+  margin-bottom: var(--esp-4);
+}
+
+.filtros-panel > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: var(--control-min);
+  cursor: pointer;
+  font-weight: var(--peso-fuerte);
+}
+
+.filtros-panel[open] > summary {
+  margin-bottom: var(--esp-3);
+}
+
+.filtros-panel .filtros {
+  margin-bottom: 0;
+}
+
+.filtros-cuenta {
+  padding: 0 var(--esp-2);
+  border-radius: var(--r);
+  background: var(--accion-suave);
+  color: var(--accion);
+  font-size: var(--texto-xs);
+}
+
+.tachado {
+  color: var(--tinta-2);
+  text-decoration: line-through;
+}
+
+.texto-negativo {
+  color: var(--negativo-texto);
+}
+
+.tabla tfoot th {
+  border-top: 2px solid var(--tinta);
+  text-align: left;
+}
+
+@media (max-width: 700px) {
+  .tabla tfoot th {
+    display: block;
+    padding-top: var(--esp-2);
+  }
+
+  .tabla tfoot td[data-titulo]::before {
+    content: attr(data-titulo);
+  }
+}
+
+.solo-impresion {
+  display: none;
+}
+
+@media print {
+  .no-imprimir,
+  .barra,
+  .boton {
+    display: none !important;
+  }
+
+  .solo-impresion {
+    display: block;
+  }
+
+  .encabezado {
+    display: none;
+  }
+
+  .encabezado-impreso h1 {
+    margin: 0 0 var(--esp-2);
+  }
+
+  .encabezado-impreso p {
+    margin: 0;
+  }
+
+  .encabezado-impreso {
+    margin-bottom: var(--esp-4);
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .tarjeta {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+
+  .tabla-scroll {
+    overflow: visible;
+  }
+}
+
+.tabla tfoot th {
+  border-bottom: none;
+}
+
+/* En el celular los cuatro atajos de período van en dos filas, sin quedar cortados. */
+@media (max-width: 700px) {
+  .filtro-fechas .segmentado {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+}

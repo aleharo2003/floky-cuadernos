@@ -56,6 +56,26 @@ export interface ResumenCuadernos {
   porCategoria: { categoria: string; tipo: TipoMovimiento; monto: number; movimientos: number }[];
 }
 
+/** Lo que se puede filtrar además del período (HU-028). Lo vacío no filtra. */
+export interface FiltrosMovimientos {
+  tipo: TipoMovimiento | '';
+  categoriaId: string;
+  medioPago: MedioPago | '';
+  texto: string;
+  verAnulados: boolean;
+}
+
+export const SIN_FILTROS: FiltrosMovimientos = { tipo: '', categoriaId: '', medioPago: '', texto: '', verAnulados: false };
+
+/** Un mes del reporte anual (HU-023). */
+export interface MesDelAnio {
+  /** 1 a 12 */
+  mes: number;
+  ingresos: number;
+  egresos: number;
+  saldo: number;
+}
+
 /** Un cambio de un movimiento, tal como lo guarda la auditoría. */
 export interface Cambio {
   id: string;

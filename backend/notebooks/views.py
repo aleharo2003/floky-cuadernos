@@ -1,6 +1,9 @@
 from decimal import Decimal
 
 from django.db.models import Count, Q, Sum
+from django.db.models.functions import ExtractMonth
+from django.http import HttpResponse
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.request import Request
@@ -11,13 +14,14 @@ from accounts.models import Perm
 from accounts.permissions import HasTenantPermission
 from core.models import AuditEntry
 from notebooks import services
+from notebooks.export import build_workbook
+from notebooks.filters import apply_filters
 from notebooks.models import Category, Entry, Kind
 from notebooks.serializers import (
     CategorySerializer,
     CorrectionSerializer,
     EntryInputSerializer,
     EntrySerializer,
-    RangeSerializer,
     VoidSerializer,
 )
 
@@ -31,11 +35,6 @@ class TenantView(APIView):
         return Entry.objects.filter(tenant=self.request.membership.tenant).select_related(
             "category", "created_by"
         )
-
-    def range(self) -> tuple:
-        params = RangeSerializer(data=self.request.query_params)
-        params.is_valid(raise_exception=True)
-        return params.range
 
 
 def rule_error(exc: services.RuleError) -> ValidationError:
@@ -56,10 +55,7 @@ class EntryListView(TenantView):
     required_permissions = {"GET": Perm.VIEW, "POST": Perm.ADD_ENTRY}
 
     def get(self, request: Request) -> Response:
-        start, end = self.range()
-        entries = self.entries().filter(date__range=(start, end))
-        if request.query_params.get("voided") != "1":
-            entries = entries.filter(is_voided=False)
+        entries, _ = apply_filters(self.entries(), request.query_params)
         return Response(EntrySerializer(entries, many=True).data)
 
     def post(self, request: Request) -> Response:
@@ -153,8 +149,7 @@ class SummaryView(TenantView):
     required_permissions = {"GET": Perm.VIEW}
 
     def get(self, request: Request) -> Response:
-        start, end = self.range()
-        live = self.entries().filter(date__range=(start, end), is_voided=False)
+        live, _ = apply_filters(self.entries(), request.query_params, voided=False)
         totals = live.aggregate(
             income=Sum("amount", filter=Q(kind=Kind.INCOME), default=0),
             expense=Sum("amount", filter=Q(kind=Kind.EXPENSE), default=0),
@@ -173,10 +168,76 @@ class SummaryView(TenantView):
                     {
                         "category": r["category__name"],
                         "kind": r["kind"],
-                        "total": r["total"],
+                        "total": money(r["total"]),
                         "count": r["count"],
                     }
                     for r in by_category
                 ],
             }
         )
+
+
+class MonthlyView(TenantView):
+    """The year month by month: income, expense and balance (HU-023)."""
+
+    required_permissions = {"GET": Perm.VIEW}
+
+    def get(self, request: Request) -> Response:
+        try:
+            year = int(request.query_params.get("year", ""))
+        except ValueError as exc:
+            raise ValidationError({"year": "Indicá el año."}) from exc
+        if not 2000 <= year <= 2100:
+            raise ValidationError({"year": "Año fuera de rango."})
+        rows = (
+            self.entries()
+            .filter(date__year=year, is_voided=False)
+            .annotate(month=ExtractMonth("date"))
+            .values("month")
+            .annotate(
+                income=Sum("amount", filter=Q(kind=Kind.INCOME), default=0),
+                expense=Sum("amount", filter=Q(kind=Kind.EXPENSE), default=0),
+            )
+        )
+        by_month = {r["month"]: r for r in rows}
+        months = []
+        for month in range(1, 13):
+            r = by_month.get(month, {"income": 0, "expense": 0})
+            months.append(
+                {
+                    "month": month,
+                    "income": money(r["income"]),
+                    "expense": money(r["expense"]),
+                    "balance": money(r["income"] - r["expense"]),
+                }
+            )
+        return Response({"year": year, "months": months})
+
+
+class ExportView(TenantView):
+    """Excel file of exactly what is on screen (HU-027). Voided entries, if shown, never add up."""
+
+    required_permissions = {"GET": Perm.EXPORT}
+
+    def get(self, request: Request) -> HttpResponse:
+        entries, filters = apply_filters(self.entries(), request.query_params)
+        shop = request.membership.tenant
+        category = ""
+        if filters.get("category_id"):
+            names = Category.objects.filter(tenant=shop, id=filters["category_id"]).values_list(
+                "name", flat=True
+            )
+            category = names.first() or ""
+        content = build_workbook(
+            shop=shop.name,
+            filters=filters,
+            entries=entries,
+            issued_at=timezone.localtime(),
+            category=category,
+        )
+        name = f"cuadernos-{filters['from']:%Y%m%d}-{filters['to']:%Y%m%d}.xlsx"
+        response = HttpResponse(
+            content, content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response["Content-Disposition"] = f'attachment; filename="{name}"'
+        return response

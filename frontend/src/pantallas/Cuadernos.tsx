@@ -6,15 +6,28 @@ import { CampoMonto } from '../componentes/Campos';
 import Card from '../componentes/Card';
 import DataTable from '../componentes/DataTable';
 import FiltroFechas from '../componentes/FiltroFechas';
+import FiltrosMovimientos, { describirFiltros } from '../componentes/FiltrosMovimientos';
 import KpiCard from '../componentes/KpiCard';
 import Modal from '../componentes/Modal';
+import ResumenAnual from '../componentes/ResumenAnual';
 import SegmentedControl from '../componentes/SegmentedControl';
 import { useSesion } from '../estado/Sesion';
-import { rangoEsteMes, rangoValido } from '../lib/fechas';
+import { rangoDelMes, rangoEsteMes, rangoValido } from '../lib/fechas';
 import { diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros } from '../lib/formato';
 import { useConsulta } from '../lib/useConsulta';
+import { useDemorado } from '../lib/useDemorado';
 import { servicios } from '../services';
-import { NOMBRE_MEDIO, type Cambio, type MedioPago, type Movimiento, type RangoFechas, type ResumenCuadernos, type TipoMovimiento } from '../types';
+import {
+  NOMBRE_MEDIO,
+  SIN_FILTROS,
+  type Cambio,
+  type FiltrosMovimientos as Filtros,
+  type MedioPago,
+  type Movimiento,
+  type RangoFechas,
+  type ResumenCuadernos,
+  type TipoMovimiento,
+} from '../types';
 
 const MEDIOS = Object.keys(NOMBRE_MEDIO) as MedioPago[];
 const TIPOS: { valor: TipoMovimiento; etiqueta: string }[] = [
@@ -58,20 +71,29 @@ function detalle(c: Cambio): string {
 
 /** Los cuadernos del local: cargar, corregir, anular y mirar los movimientos del período. */
 export default function Cuadernos() {
-  const { puede } = useSesion();
+  const { puede, sesion } = useSesion();
+  const puedeExportar = puede('notebooks.export');
   const puedeCargar = puede('notebooks.add_entry');
   const puedeCorregir = puede('notebooks.change_entry');
   const puedeAnular = puede('notebooks.void_entry');
   const [rango, setRango] = useState<RangoFechas>(rangoEsteMes);
+  const [filtros, setFiltros] = useState<Filtros>(SIN_FILTROS);
+  // El texto se busca cuando se deja de tipear, no en cada tecla.
+  const texto = useDemorado(filtros.texto);
+  const aplicados: Filtros = { ...filtros, texto };
+  const [anio, setAnio] = useState(() => new Date().getFullYear());
   const [vuelta, setVuelta] = useState(0);
   // Con una fecha a medio escribir se sigue mostrando lo último que se pidió.
-  const pedido = [rango.desde, rango.hasta, vuelta];
+  const pedido = [rango.desde, rango.hasta, aplicados.tipo, aplicados.categoriaId, aplicados.medioPago, texto, aplicados.verAnulados, vuelta];
   const { datos: categorias } = useConsulta(() => servicios.cuadernos.categorias(), []);
   const { datos: movimientos, error } = useConsulta(
-    () => (rangoValido(rango) ? servicios.cuadernos.movimientos(rango) : Promise.resolve([])),
+    () => (rangoValido(rango) ? servicios.cuadernos.movimientos(rango, aplicados) : Promise.resolve([])),
     pedido,
   );
-  const { datos: resumen } = useConsulta(() => (rangoValido(rango) ? servicios.cuadernos.resumen(rango) : Promise.resolve(RESUMEN_VACIO)), pedido);
+  const { datos: resumen } = useConsulta(
+    () => (rangoValido(rango) ? servicios.cuadernos.resumen(rango, aplicados) : Promise.resolve(RESUMEN_VACIO)),
+    pedido,
+  );
   const { datos: cambios } = useConsulta(() => servicios.cuadernos.cambiosRecientes(), [vuelta]);
 
   const [borrador, setBorrador] = useState<Borrador>(enBlanco);
@@ -105,6 +127,15 @@ export default function Cuadernos() {
       ? `del ${diaLegible(rango.desde)}`
       : `del ${diaLegible(rango.desde)} al ${diaLegible(rango.hasta)}`
     : '';
+
+  const local = sesion?.active_tenant?.name ?? '';
+  const textoFiltros = describirFiltros(aplicados, categorias);
+  const proporcion = resumen.ingresos > 0 ? Math.round((resumen.egresos / resumen.ingresos) * 100) : null;
+
+  const verMes = (mes: number) => {
+    setRango(rangoDelMes(anio, mes));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const guardar = async (e: FormEvent) => {
     e.preventDefault();
@@ -172,9 +203,30 @@ export default function Cuadernos() {
           <h1>Cuadernos</h1>
           <p className="encabezado-dato">Ingresos y gastos del local.</p>
         </div>
+        {puedeExportar && rangoValido(rango) && (
+          <div className="acciones no-imprimir">
+            {/* El Excel lo arma el servidor con el mismo período y filtros que se ven (HU-027). */}
+            <a className="boton boton-secundario boton-normal" href={servicios.cuadernos.urlExcel(rango, aplicados)} download>
+              Bajar Excel
+            </a>
+            {/* El PDF sale de la impresión del navegador: "Guardar como PDF" en el diálogo. */}
+            <Button onClick={() => window.print()}>PDF / Imprimir</Button>
+          </div>
+        )}
       </div>
 
-      <FiltroFechas valor={rango} onChange={setRango} />
+      {/* Solo en papel o PDF: qué local, qué período y con qué filtros (HU-027). */}
+      <div className="solo-impresion encabezado-impreso">
+        <h1>Cuadernos de {local}</h1>
+        <p>Período: {periodo.replace(/^del /, '')}</p>
+        <p>Filtros: {textoFiltros}</p>
+        <p>Emitido el {fechaHora(new Date())}</p>
+      </div>
+
+      <div className="no-imprimir">
+        <FiltroFechas valor={rango} onChange={setRango} />
+      </div>
+      <FiltrosMovimientos valor={filtros} onChange={setFiltros} categorias={categorias} />
 
       <div className="panel">
         {/* Los tres indicadores van en su propia fila, a todo el ancho, en cualquier pantalla. */}
@@ -185,13 +237,13 @@ export default function Cuadernos() {
             titulo="Saldo del período"
             valor={pesosEnteros(resumen.saldo)}
             variante={resumen.saldo >= 0 ? 'positiva' : 'negativa'}
-            pie="Ingresos menos gastos"
+            pie={proporcion === null ? 'Ingresos menos gastos' : `Los gastos son el ${proporcion} % de los ingresos`}
           />
         </div>
 
         {/* Consulta no carga ni corrige: el formulario no aparece (HU-024). */}
         {(puedeCargar || (puedeCorregir && editando)) && (
-          <Card titulo={editando ? 'Corregir movimiento' : 'Cargar movimiento'}>
+          <Card titulo={editando ? 'Corregir movimiento' : 'Cargar movimiento'} className="no-imprimir">
             <form className="formulario" onSubmit={guardar}>
               <label className="campo">
                 <span>Fecha</span>
@@ -283,24 +335,40 @@ export default function Cuadernos() {
             filas={movimientos}
             clave={(m) => m.id}
             seleccionada={editando?.id}
-            vacio="No hay movimientos cargados en este período."
+            vacio={textoFiltros === 'Ninguno' ? 'No hay movimientos cargados en este período.' : 'Ningún movimiento coincide con los filtros.'}
             columnas={[
               { titulo: 'Fecha', render: (m) => diaLegible(m.fecha) },
-              { titulo: 'Tipo', render: (m) => <Badge tono={m.tipo === 'ingreso' ? 'positivo' : 'negativo'}>{nombreTipo(m.tipo)}</Badge> },
+              {
+                titulo: 'Tipo',
+                render: (m) =>
+                  m.anulado ? (
+                    <Badge tono="neutro">Anulado</Badge>
+                  ) : (
+                    <Badge tono={m.tipo === 'ingreso' ? 'positivo' : 'negativo'}>{nombreTipo(m.tipo)}</Badge>
+                  ),
+              },
               { titulo: 'Categoría', render: (m) => m.categoria },
-              { titulo: 'Descripción', flexible: true, render: (m) => m.descripcion },
+              {
+                titulo: 'Descripción',
+                flexible: true,
+                render: (m) => (m.anulado ? `${m.descripcion}${m.descripcion ? '. ' : ''}Anulado: ${m.motivoAnulacion}` : m.descripcion),
+              },
               { titulo: 'Medio', render: (m) => NOMBRE_MEDIO[m.medioPago] },
-              { titulo: 'Monto', numerica: true, render: (m) => pesos(m.tipo === 'egreso' ? -m.monto : m.monto) },
+              {
+                titulo: 'Monto',
+                numerica: true,
+                render: (m) => <span className={m.anulado ? 'tachado' : undefined}>{pesos(m.tipo === 'egreso' ? -m.monto : m.monto)}</span>,
+              },
               {
                 titulo: '',
                 render: (m) => (
-                  <span className="acciones-fila">
-                    {puedeCorregir && (
+                  <span className="acciones-fila no-imprimir">
+                    {puedeCorregir && !m.anulado && (
                       <Button tamano="chico" aria-label={`Corregir ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => editar(m)}>
                         Corregir
                       </Button>
                     )}
-                    {puedeAnular && (
+                    {puedeAnular && !m.anulado && (
                       <Button
                         tamano="chico"
                         variante="peligro"
@@ -338,7 +406,13 @@ export default function Cuadernos() {
           />
         </Card>
 
-        <Card titulo="Últimos cambios" nota="Cada alta, corrección o anulación queda anotada. No se puede modificar." className="panel-ancho">
+        <ResumenAnual anio={anio} onAnio={setAnio} onVerMes={verMes} vuelta={vuelta} />
+
+        <Card
+          titulo="Últimos cambios"
+          nota="Cada alta, corrección o anulación queda anotada. No se puede modificar."
+          className="panel-ancho no-imprimir"
+        >
           <DataTable<Cambio>
             filas={cambios.slice(0, 8)}
             clave={(c) => c.id}

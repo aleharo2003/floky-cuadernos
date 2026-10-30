@@ -13,6 +13,9 @@ export class ErrorDeApi extends Error {
   }
 }
 
+/** La API vive en el mismo origen que la página (ADR-0006). */
+export const BASE_API = '/api';
+
 const SIN_DETALLE = 'No pudimos completar la operación. Probá de nuevo.';
 
 function leerCookie(nombre: string): string | undefined {
@@ -47,7 +50,7 @@ export async function pedir<T>(
   try {
     const opciones: RequestInit = { method: metodo, headers: cabeceras, credentials: 'same-origin' };
     if (cuerpo !== undefined) opciones.body = JSON.stringify(cuerpo);
-    respuesta = await fetch(`/api${ruta}`, opciones);
+    respuesta = await fetch(`${BASE_API}${ruta}`, opciones);
   } catch {
     throw new ErrorDeApi('No hay conexión con el servidor. Revisá internet y probá de nuevo.', 0);
   }
