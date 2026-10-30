@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useConsulta } from '../lib/useConsulta';
+import { usePantallaChica } from '../lib/usePantallaChica';
 import { pesos } from '../lib/formato';
 import { servicios } from '../services';
 import type { MesDelAnio } from '../types';
@@ -29,11 +31,17 @@ export default function ResumenAnual({ anio, onAnio, onVerMes, vuelta }: Props) 
     { ingresos: 0, egresos: 0, saldo: 0 },
   );
   const esteAnio = new Date().getFullYear();
+  // En el celular, doce fichas son muchas: se muestran los meses con movimientos y, a pedido, todos.
+  const chica = usePantallaChica();
+  const [todos, setTodos] = useState(false);
+  const conMovimientos = (meses ?? []).filter((m) => m.ingresos > 0 || m.egresos > 0);
+  const filas = chica && !todos ? conMovimientos : (meses ?? []);
+  const vacios = (meses?.length ?? 0) - conMovimientos.length;
 
   return (
     <Card
       titulo={`Resumen del año ${anio}`}
-      nota="Mes por mes. Tocá un mes para verlo en detalle."
+      nota={chica && !todos ? 'Los meses con movimientos. Tocá uno para verlo en detalle.' : 'Mes por mes. Tocá un mes para verlo en detalle.'}
       className="panel-ancho no-imprimir"
       accion={
         <span className="acciones-fila">
@@ -50,7 +58,8 @@ export default function ResumenAnual({ anio, onAnio, onVerMes, vuelta }: Props) 
       {!meses && !error && <p className="cargando">Cargando…</p>}
       {meses && (
         <DataTable<MesDelAnio>
-          filas={meses}
+          filas={filas}
+          vacio={`Sin movimientos en ${anio}.`}
           clave={(m) => String(m.mes)}
           columnas={[
             {
@@ -76,6 +85,13 @@ export default function ResumenAnual({ anio, onAnio, onVerMes, vuelta }: Props) 
             </tr>
           }
         />
+      )}
+      {meses && chica && vacios > 0 && (
+        <div className="acciones resumen-anual-mas">
+          <Button variante="texto" onClick={() => setTodos((t) => !t)}>
+            {todos ? 'Ver solo los meses con movimientos' : `Ver los 12 meses (${vacios} sin movimientos)`}
+          </Button>
+        </div>
       )}
     </Card>
   );
