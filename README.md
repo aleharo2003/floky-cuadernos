@@ -24,6 +24,14 @@ docker compose up
 
 Portal en http://localhost:5173, API y admin en http://localhost:8000. La primera vez tarda porque instala las dependencias.
 
+Para tener datos de prueba (dos locales inventados y una persona de cada rol):
+
+```text
+docker compose exec api python manage.py seed_demo
+```
+
+Usuarios `lucia` (dueña de los dos locales), `tomas` (carga en uno), `ana` (consulta en uno) y `admin` (para el admin de Django), todos con la clave `clave-de-prueba-123`. Solo corre con la base vacía.
+
 Sin Docker (con PostgreSQL instalado):
 
 ```text

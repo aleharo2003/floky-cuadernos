@@ -33,8 +33,13 @@ function mensajeDe(cuerpo: unknown): { mensaje: string; codigo?: string } {
   return { mensaje: SIN_DETALLE };
 }
 
-export async function pedir<T>(metodo: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE', ruta: string, cuerpo?: unknown): Promise<T> {
-  const cabeceras: Record<string, string> = { Accept: 'application/json' };
+export async function pedir<T>(
+  metodo: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+  ruta: string,
+  cuerpo?: unknown,
+  extra: Record<string, string> = {},
+): Promise<T> {
+  const cabeceras: Record<string, string> = { Accept: 'application/json', ...extra };
   if (cuerpo !== undefined) cabeceras['Content-Type'] = 'application/json';
   if (metodo !== 'GET') cabeceras['X-CSRFToken'] = leerCookie('csrftoken') ?? '';
 

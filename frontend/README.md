@@ -11,7 +11,7 @@ Las pantallas, los componentes y los estilos salen de la demo navegable del sist
 
 ## Cómo hablan las pantallas con los datos
 
-Las pantallas no llaman a la API directo: piden todo a `servicios` (`src/services/index.ts`), que cumple los contratos de `src/services/contratos.ts`. La sesión ya habla con la API (`src/services/api/`). Los cuadernos siguen en memoria (`src/services/mock/`) hasta que exista su API; se cambian en `index.ts` sin tocar las pantallas.
+Las pantallas no llaman a la API directo: piden todo a `servicios` (`src/services/index.ts`), que cumple los contratos de `src/services/contratos.ts`. Las implementaciones hablan con la API (`src/services/api/`) y traducen sus nombres e importes a los de las pantallas. Si una pantalla necesita algo nuevo, primero va al contrato.
 
 ## Comandos
 
