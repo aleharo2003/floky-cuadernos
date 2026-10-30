@@ -1,4 +1,4 @@
-import type { EventoAuditoria, Movimiento, MovimientoNuevo, RangoFechas, ResumenCuadernos, Sesion, TipoMovimiento } from '../types';
+import type { Cambio, Categoria, Movimiento, MovimientoNuevo, RangoFechas, ResumenCuadernos, Sesion, TipoMovimiento } from '../types';
 
 /** Ingreso, salida y local activo. Cada método devuelve la sesión como quedó. */
 export interface SesionService {
@@ -8,19 +8,17 @@ export interface SesionService {
   elegirLocal(id: string): Promise<Sesion>;
 }
 
-/**
- * Lo que las pantallas le piden a los cuadernos. Hoy lo cumple una implementación en memoria;
- * cuando esté la API se cambia en `services/index.ts` y las pantallas no se tocan.
- */
+/** Lo que las pantallas le piden a los cuadernos del local activo. */
 export interface CuadernosService {
-  categorias(): Promise<Record<TipoMovimiento, string[]>>;
+  categorias(): Promise<Record<TipoMovimiento, Categoria[]>>;
   movimientos(rango: RangoFechas): Promise<Movimiento[]>;
   resumen(rango: RangoFechas): Promise<ResumenCuadernos>;
-  crear(movimiento: MovimientoNuevo): Promise<Movimiento>;
-  editar(id: string, movimiento: MovimientoNuevo): Promise<Movimiento>;
-  /** Se reemplaza por anular con motivo en HU-026. */
-  borrar(id: string): Promise<void>;
-  auditoria(): Promise<EventoAuditoria[]>;
+  /** La misma clave dos veces guarda un solo movimiento (doble toque, reintento de red). */
+  crear(movimiento: MovimientoNuevo, clave: string): Promise<Movimiento>;
+  corregir(id: string, movimiento: MovimientoNuevo, motivo: string): Promise<Movimiento>;
+  anular(id: string, motivo: string): Promise<Movimiento>;
+  historial(id: string): Promise<Cambio[]>;
+  cambiosRecientes(): Promise<Cambio[]>;
 }
 
 export interface Servicios {

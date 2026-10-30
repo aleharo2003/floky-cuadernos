@@ -9,37 +9,54 @@ import FiltroFechas from '../componentes/FiltroFechas';
 import KpiCard from '../componentes/KpiCard';
 import Modal from '../componentes/Modal';
 import SegmentedControl from '../componentes/SegmentedControl';
+import { useSesion } from '../estado/Sesion';
 import { rangoEsteMes, rangoValido } from '../lib/fechas';
 import { diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros } from '../lib/formato';
-import { useSesion } from '../estado/Sesion';
 import { useConsulta } from '../lib/useConsulta';
 import { servicios } from '../services';
-import type { EventoAuditoria, MedioPago, Movimiento, RangoFechas, ResumenCuadernos, TipoMovimiento } from '../types';
+import { NOMBRE_MEDIO, type Cambio, type MedioPago, type Movimiento, type RangoFechas, type ResumenCuadernos, type TipoMovimiento } from '../types';
 
-const MEDIOS: MedioPago[] = ['Efectivo', 'Débito', 'Crédito', 'QR', 'Transferencia'];
+const MEDIOS = Object.keys(NOMBRE_MEDIO) as MedioPago[];
 const TIPOS: { valor: TipoMovimiento; etiqueta: string }[] = [
   { valor: 'egreso', etiqueta: 'Gasto' },
   { valor: 'ingreso', etiqueta: 'Ingreso' },
 ];
+const nombreTipo = (t: TipoMovimiento) => (t === 'ingreso' ? 'Ingreso' : 'Gasto');
+const RESUMEN_VACIO: ResumenCuadernos = { ingresos: 0, egresos: 0, saldo: 0, porCategoria: [] };
 
 interface Borrador {
   fecha: string;
   tipo: TipoMovimiento;
-  categoria: string;
+  categoriaId: string;
   descripcion: string;
   monto: string;
   medioPago: MedioPago;
+  motivo: string;
 }
 const enBlanco = (): Borrador => ({
   fecha: fechaIso(new Date()),
   tipo: 'egreso',
-  categoria: '',
+  categoriaId: '',
   descripcion: '',
   monto: '',
-  medioPago: 'Efectivo',
+  medioPago: 'cash',
+  motivo: '',
 });
 
-/** Los cuadernos del local: cargar, corregir y mirar los movimientos del período. */
+/** Una línea legible de lo que cambió entre antes y después, para el historial. */
+function detalle(c: Cambio): string {
+  const d = (c.despues ?? {}) as Record<string, string>;
+  const a = (c.antes ?? {}) as Record<string, string>;
+  const fila = (x: Record<string, string>) =>
+    `${x.kind === 'income' ? 'Ingreso' : 'Gasto'} del ${diaLegible(x.date)}, ${x.category}${x.description ? ` (${x.description})` : ''}, ${pesos(
+      Number(x.amount),
+    )}, ${NOMBRE_MEDIO[x.payment_method as MedioPago] ?? x.payment_method}`;
+  if (c.accion === 'Alta') return fila(d);
+  if (c.accion === 'Anulación') return `${fila(a)}. Motivo: ${c.motivo}`;
+  return `Antes: ${fila(a)}. Después: ${fila(d)}. Motivo: ${c.motivo}`;
+}
+
+/** Los cuadernos del local: cargar, corregir, anular y mirar los movimientos del período. */
 export default function Cuadernos() {
   const { puede } = useSesion();
   const puedeCargar = puede('notebooks.add_entry');
@@ -54,17 +71,19 @@ export default function Cuadernos() {
     () => (rangoValido(rango) ? servicios.cuadernos.movimientos(rango) : Promise.resolve([])),
     pedido,
   );
-  const { datos: resumen } = useConsulta(
-    () => (rangoValido(rango) ? servicios.cuadernos.resumen(rango) : Promise.resolve({ ingresos: 0, egresos: 0, saldo: 0, porCategoria: [] })),
-    pedido,
-  );
-  const { datos: auditoria } = useConsulta(() => servicios.cuadernos.auditoria(), [vuelta]);
+  const { datos: resumen } = useConsulta(() => (rangoValido(rango) ? servicios.cuadernos.resumen(rango) : Promise.resolve(RESUMEN_VACIO)), pedido);
+  const { datos: cambios } = useConsulta(() => servicios.cuadernos.cambiosRecientes(), [vuelta]);
 
   const [borrador, setBorrador] = useState<Borrador>(enBlanco);
-  const [editando, setEditando] = useState<string | null>(null);
-  const [porBorrar, setPorBorrar] = useState<Movimiento | null>(null);
+  const [editando, setEditando] = useState<Movimiento | null>(null);
+  const [porAnular, setPorAnular] = useState<Movimiento | null>(null);
+  const [motivoAnulacion, setMotivoAnulacion] = useState('');
+  const [verHistorial, setVerHistorial] = useState<Movimiento | null>(null);
   const [aviso, setAviso] = useState('');
+  const [guardando, setGuardando] = useState(false);
   const campoFecha = useRef<HTMLInputElement>(null);
+  // Una clave por intento de carga: si el mismo envío llega dos veces, se guarda uno solo (HU-021).
+  const clave = useRef(crypto.randomUUID());
 
   const cambiar = (parte: Partial<Borrador>) => {
     setBorrador((b) => ({ ...b, ...parte }));
@@ -79,7 +98,7 @@ export default function Cuadernos() {
   useAtajo('volver', cancelar, { activo: editando !== null });
 
   if (error) return <p className="vacio">{error}</p>;
-  if (!categorias || !movimientos || !resumen || !auditoria) return <p className="cargando">Cargando los cuadernos…</p>;
+  if (!categorias || !movimientos || !resumen || !cambios) return <p className="cargando">Cargando los cuadernos…</p>;
 
   const periodo = rangoValido(rango)
     ? rango.desde === rango.hasta
@@ -89,14 +108,26 @@ export default function Cuadernos() {
 
   const guardar = async (e: FormEvent) => {
     e.preventDefault();
-    const datos = { ...borrador, monto: leerMonto(borrador.monto) };
+    if (guardando) return;
+    const datos = {
+      fecha: borrador.fecha,
+      tipo: borrador.tipo,
+      categoriaId: borrador.categoriaId,
+      descripcion: borrador.descripcion,
+      monto: leerMonto(borrador.monto),
+      medioPago: borrador.medioPago,
+    };
+    setGuardando(true);
     try {
-      if (editando) await servicios.cuadernos.editar(editando, datos);
-      else await servicios.cuadernos.crear(datos);
+      if (editando) await servicios.cuadernos.corregir(editando.id, datos, borrador.motivo);
+      else await servicios.cuadernos.crear(datos, clave.current);
     } catch (err) {
       setAviso((err as Error).message);
       return;
+    } finally {
+      setGuardando(false);
     }
+    clave.current = crypto.randomUUID();
     // Si el movimiento guardado cae fuera del período, se lo estira para que no "desaparezca".
     if (datos.fecha < rango.desde) setRango({ ...rango, desde: datos.fecha });
     else if (datos.fecha > rango.hasta) setRango({ ...rango, hasta: datos.fecha });
@@ -106,17 +137,31 @@ export default function Cuadernos() {
   };
 
   const editar = (m: Movimiento) => {
-    setEditando(m.id);
-    setBorrador({ ...m, monto: m.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }) });
+    setEditando(m);
+    setBorrador({
+      fecha: m.fecha,
+      tipo: m.tipo,
+      categoriaId: m.categoriaId,
+      descripcion: m.descripcion,
+      monto: m.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }),
+      medioPago: m.medioPago,
+      motivo: '',
+    });
     setAviso('');
     campoFecha.current?.focus();
   };
 
-  const borrar = async () => {
-    if (!porBorrar) return;
-    await servicios.cuadernos.borrar(porBorrar.id);
-    if (editando === porBorrar.id) cancelar();
-    setPorBorrar(null);
+  const anular = async () => {
+    if (!porAnular) return;
+    try {
+      await servicios.cuadernos.anular(porAnular.id, motivoAnulacion);
+    } catch (err) {
+      setAviso((err as Error).message);
+      return;
+    }
+    if (editando?.id === porAnular.id) cancelar();
+    setPorAnular(null);
+    setMotivoAnulacion('');
     setVuelta((v) => v + 1);
   };
 
@@ -145,8 +190,8 @@ export default function Cuadernos() {
         </div>
 
         {/* Consulta no carga ni corrige: el formulario no aparece (HU-024). */}
-        {(puedeCargar || puedeCorregir) && (
-          <Card titulo={editando ? 'Editar movimiento' : 'Cargar movimiento'}>
+        {(puedeCargar || (puedeCorregir && editando)) && (
+          <Card titulo={editando ? 'Corregir movimiento' : 'Cargar movimiento'}>
             <form className="formulario" onSubmit={guardar}>
               <label className="campo">
                 <span>Fecha</span>
@@ -165,16 +210,18 @@ export default function Cuadernos() {
                   etiqueta="Tipo"
                   opciones={TIPOS}
                   valor={borrador.tipo}
-                  onChange={(tipo) => cambiar({ tipo, categoria: '' })}
+                  onChange={(tipo) => cambiar({ tipo, categoriaId: '' })}
                   bloque
                 />
               </div>
               <label className="campo">
                 <span>Categoría</span>
-                <select required value={borrador.categoria} onChange={(e) => cambiar({ categoria: e.target.value })}>
+                <select required value={borrador.categoriaId} onChange={(e) => cambiar({ categoriaId: e.target.value })}>
                   <option value="">Elegí una categoría</option>
                   {categorias[borrador.tipo].map((c) => (
-                    <option key={c}>{c}</option>
+                    <option key={c.id} value={c.id}>
+                      {c.nombre}
+                    </option>
                   ))}
                 </select>
               </label>
@@ -183,9 +230,9 @@ export default function Cuadernos() {
                 <input
                   className="campo-texto"
                   type="text"
-                  maxLength={80}
+                  maxLength={120}
                   value={borrador.descripcion}
-                  placeholder="Por ejemplo: alquiler de octubre"
+                  placeholder="Por ejemplo: verdura"
                   onChange={(e) => cambiar({ descripcion: e.target.value })}
                 />
               </label>
@@ -194,16 +241,32 @@ export default function Cuadernos() {
                 <span>Medio de pago</span>
                 <select value={borrador.medioPago} onChange={(e) => cambiar({ medioPago: e.target.value as MedioPago })}>
                   {MEDIOS.map((m) => (
-                    <option key={m}>{m}</option>
+                    <option key={m} value={m}>
+                      {NOMBRE_MEDIO[m]}
+                    </option>
                   ))}
                 </select>
               </label>
+              {editando && (
+                <label className="campo">
+                  <span>Motivo de la corrección</span>
+                  <input
+                    className="campo-texto"
+                    type="text"
+                    required
+                    maxLength={200}
+                    value={borrador.motivo}
+                    placeholder="Por ejemplo: el monto era otro"
+                    onChange={(e) => cambiar({ motivo: e.target.value })}
+                  />
+                </label>
+              )}
               <p className="login-error" role="alert">
                 {aviso}
               </p>
               <div className="acciones">
-                <Button type="submit" variante="primario">
-                  {editando ? 'Guardar cambios' : 'Guardar movimiento'} <Tecla id="confirmar" />
+                <Button type="submit" variante="primario" disabled={guardando}>
+                  {editando ? 'Guardar corrección' : 'Guardar movimiento'} <Tecla id="confirmar" />
                 </Button>
                 {editando && (
                   <Button onClick={cancelar}>
@@ -219,35 +282,43 @@ export default function Cuadernos() {
           <DataTable<Movimiento>
             filas={movimientos}
             clave={(m) => m.id}
-            seleccionada={editando ?? undefined}
+            seleccionada={editando?.id}
             vacio="No hay movimientos cargados en este período."
             columnas={[
               { titulo: 'Fecha', render: (m) => diaLegible(m.fecha) },
-              {
-                titulo: 'Tipo',
-                render: (m) => <Badge tono={m.tipo === 'ingreso' ? 'positivo' : 'negativo'}>{m.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}</Badge>,
-              },
+              { titulo: 'Tipo', render: (m) => <Badge tono={m.tipo === 'ingreso' ? 'positivo' : 'negativo'}>{nombreTipo(m.tipo)}</Badge> },
               { titulo: 'Categoría', render: (m) => m.categoria },
               { titulo: 'Descripción', flexible: true, render: (m) => m.descripcion },
-              { titulo: 'Medio', render: (m) => m.medioPago },
+              { titulo: 'Medio', render: (m) => NOMBRE_MEDIO[m.medioPago] },
               { titulo: 'Monto', numerica: true, render: (m) => pesos(m.tipo === 'egreso' ? -m.monto : m.monto) },
               {
                 titulo: '',
-                render: (m) =>
-                  puedeCorregir || puedeAnular ? (
-                    <span className="acciones-fila">
-                      {puedeCorregir && (
-                        <Button tamano="chico" aria-label={`Editar ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => editar(m)}>
-                          Editar
-                        </Button>
-                      )}
-                      {puedeAnular && (
-                        <Button tamano="chico" variante="peligro" aria-label={`Borrar ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => setPorBorrar(m)}>
-                          Borrar
-                        </Button>
-                      )}
-                    </span>
-                  ) : null,
+                render: (m) => (
+                  <span className="acciones-fila">
+                    {puedeCorregir && (
+                      <Button tamano="chico" aria-label={`Corregir ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => editar(m)}>
+                        Corregir
+                      </Button>
+                    )}
+                    {puedeAnular && (
+                      <Button
+                        tamano="chico"
+                        variante="peligro"
+                        aria-label={`Anular ${m.categoria} del ${diaLegible(m.fecha)}`}
+                        onClick={() => {
+                          setPorAnular(m);
+                          setMotivoAnulacion('');
+                          setAviso('');
+                        }}
+                      >
+                        Anular
+                      </Button>
+                    )}
+                    <Button tamano="chico" aria-label={`Historial de ${m.categoria} del ${diaLegible(m.fecha)}`} onClick={() => setVerHistorial(m)}>
+                      Historial
+                    </Button>
+                  </span>
+                ),
               },
             ]}
           />
@@ -260,50 +331,90 @@ export default function Cuadernos() {
             vacio="Sin movimientos en este período."
             columnas={[
               { titulo: 'Categoría', render: (c) => c.categoria },
-              { titulo: 'Tipo', render: (c) => (c.tipo === 'ingreso' ? 'Ingreso' : 'Gasto') },
+              { titulo: 'Tipo', render: (c) => nombreTipo(c.tipo) },
               { titulo: 'Movimientos', numerica: true, render: (c) => c.movimientos },
               { titulo: 'Total', numerica: true, render: (c) => pesos(c.monto) },
             ]}
           />
         </Card>
 
-        <Card titulo="Registro de cambios" nota="Cada alta, edición o borrado queda anotado. No se puede modificar." className="panel-ancho">
-          <DataTable<EventoAuditoria>
-            filas={auditoria.slice(0, 8)}
-            clave={(a) => a.id}
-            vacio="Todavía no hubo cambios en esta sesión."
+        <Card titulo="Últimos cambios" nota="Cada alta, corrección o anulación queda anotada. No se puede modificar." className="panel-ancho">
+          <DataTable<Cambio>
+            filas={cambios.slice(0, 8)}
+            clave={(c) => c.id}
+            vacio="Todavía no hubo cambios."
             columnas={[
-              { titulo: 'Cuándo', render: (a) => fechaHora(a.fecha) },
-              { titulo: 'Quién', render: (a) => a.usuario },
-              { titulo: 'Qué', render: (a) => a.accion },
-              { titulo: 'Detalle', flexible: true, render: (a) => a.detalle },
+              { titulo: 'Cuándo', render: (c) => fechaHora(c.fecha) },
+              { titulo: 'Quién', render: (c) => c.usuario },
+              { titulo: 'Qué', render: (c) => c.accion },
+              { titulo: 'Detalle', flexible: true, render: (c) => detalle(c) },
             ]}
           />
         </Card>
       </div>
 
-      {porBorrar && (
+      {porAnular && (
         <Modal
-          titulo="¿Borrás este movimiento?"
-          onCerrar={() => setPorBorrar(null)}
-          onConfirmar={borrar}
+          titulo="¿Anulás este movimiento?"
+          onCerrar={() => setPorAnular(null)}
+          onConfirmar={anular}
           acciones={
             <>
-              <Button onClick={() => setPorBorrar(null)}>
+              <Button onClick={() => setPorAnular(null)}>
                 No, dejarlo <Tecla id="volver" />
               </Button>
-              <Button variante="peligro" onClick={borrar}>
-                Sí, borrar <Tecla id="confirmar" />
+              <Button variante="peligro" onClick={anular} disabled={!motivoAnulacion.trim()}>
+                Sí, anular <Tecla id="confirmar" />
               </Button>
             </>
           }
         >
           <p>
-            {porBorrar.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'} del {diaLegible(porBorrar.fecha)}, {porBorrar.categoria}, por{' '}
-            <strong>{pesos(porBorrar.monto)}</strong>. El borrado queda en el registro de cambios.
+            {nombreTipo(porAnular.tipo)} del {diaLegible(porAnular.fecha)}, {porAnular.categoria}, por <strong>{pesos(porAnular.monto)}</strong>. Deja de
+            sumar en los saldos, pero sigue visible en el historial.
+          </p>
+          <label className="campo">
+            <span>Motivo</span>
+            <input
+              className="campo-texto"
+              autoFocus
+              maxLength={200}
+              value={motivoAnulacion}
+              placeholder="Por ejemplo: cargado dos veces"
+              onChange={(e) => setMotivoAnulacion(e.target.value)}
+            />
+          </label>
+          <p className="login-error" role="alert">
+            {aviso}
           </p>
         </Modal>
       )}
+
+      {verHistorial && <Historial movimiento={verHistorial} onCerrar={() => setVerHistorial(null)} />}
     </>
+  );
+}
+
+/** Qué le pasó a un movimiento, en orden: alta, correcciones y anulación (HU-026). */
+function Historial({ movimiento, onCerrar }: { movimiento: Movimiento; onCerrar(): void }) {
+  const { datos: cambios, error } = useConsulta(() => servicios.cuadernos.historial(movimiento.id), [movimiento.id]);
+  return (
+    <Modal titulo="Historial del movimiento" onCerrar={onCerrar} ancho="ancho" acciones={<Button onClick={onCerrar}>Cerrar <Tecla id="volver" /></Button>}>
+      {error && <p className="vacio">{error}</p>}
+      {!cambios && !error && <p className="cargando">Cargando…</p>}
+      {cambios && (
+        <DataTable<Cambio>
+          filas={cambios}
+          clave={(c) => c.id}
+          vacio="Sin cambios."
+          columnas={[
+            { titulo: 'Cuándo', render: (c) => fechaHora(c.fecha) },
+            { titulo: 'Quién', render: (c) => c.usuario },
+            { titulo: 'Qué', render: (c) => c.accion },
+            { titulo: 'Detalle', flexible: true, render: (c) => detalle(c) },
+          ]}
+        />
+      )}
+    </Modal>
   );
 }
