@@ -8,7 +8,7 @@
 |---|---|---|
 | E01. Cimientos y entrega continua | Repo, entornos, CI/CD y documentación | R0 |
 | E02. Locales, identidad y seguridad | Tenants, aislamiento, ingreso, permisos, auditoría y backups | R1 |
-| E03. Cuadernos | Cargar, corregir, venta espejo, reportes, filtros, exportación y puesta en marcha | R1 |
+| E03. Cuadernos | Cargar, corregir, caja por turno, reportes, filtros, exportación y puesta en marcha | R1 |
 
 ```mermaid
 graph LR
@@ -38,7 +38,7 @@ Como desarrollador, quiero un repositorio con estructura y reglas claras, para q
 Como desarrollador, quiero levantar todo en mi PC con pocos comandos, para empezar a trabajar sin pedir ayuda.
 
 - Dado una PC con Docker, cuando sigo el README, entonces en menos de 15 minutos tengo corriendo la API, el portal y la base.
-- Dado el entorno levantado, cuando corro el seed, entonces tengo dos locales ficticios, una persona con dos locales, una con uno solo, una de cada rol, categorías y movimientos de ejemplo, incluidas ventas espejo.
+- Dado el entorno levantado, cuando corro el seed, entonces tengo dos locales ficticios, una persona con dos locales, una con uno solo, una de cada rol, categorías, movimientos de ejemplo en los dos turnos y un haber inicial.
 - Dado el seed, cuando lo reviso, entonces no tiene datos reales de clientes.
 
 ### HU-003. Esqueleto que camina: un saludo de punta a punta
@@ -197,20 +197,20 @@ Como dueño, quiero que los cuadernos no se pierdan nunca, porque solo viven en 
 
 Reemplazan a los cuadernos de papel del local: ingresos, gastos y haber cargados a mano. Viven **solo en la nube** y son **de cada local** (ADR-0003). No leen ni escriben nada del sistema de caja. Todas sus pantallas se usan desde un celular de 390 px y desde la PC.
 
-> Los campos y las categorías se ajustan después de ver un ejemplo de cada cuaderno de papel (P-01).
+> Los cuadernos de Comedor TJ se vieron el 30/10/2026 y el cliente explicó el haber el 02/11/2026 (P-01, P-02, ADR-0008).
 
 ### HU-020. Modelo de movimientos y categorías
 **Prioridad:** Must · **Etiquetas:** `backend`, `db`, `cuadernos` · **Diagramas:** ARQ-03, CLA-01, DAT-01
 
 Como desarrollador, quiero las tablas de los cuadernos de cada local, para representar bien ingresos, gastos, haber y saldo.
 
-- Dado un movimiento, cuando se crea, entonces tiene local, fecha, tipo, categoría, descripción, importe, medio de pago y quién lo cargó.
+- Dado un movimiento, cuando se crea, entonces tiene local, fecha, turno (mañana o noche), tipo, categoría, descripción, importe, medio de pago y quién lo cargó.
 - Dado un movimiento o una categoría, cuando se guarda, entonces tiene `tenant_id` obligatorio y la base aplica Row Level Security (HU-011).
 - Dado un importe, cuando se guarda, entonces es `numeric(14,2)`, nunca punto flotante.
-- Dado una venta espejo, cuando se crea, entonces apunta al gasto que la generó (`mirror_of`), para corregirlos y anularlos juntos (HU-025).
-- Dado movimientos en el tiempo, cuando se consultan, entonces se puede calcular el saldo de cualquier período.
+- Dado un local, cuando arranca a usar el sistema, entonces tiene un haber inicial (fecha, turno e importe), uno solo por local.
+- Dado movimientos en el tiempo, cuando se consultan, entonces se puede calcular el resultado de cualquier período y el haber de cualquier turno.
 
-> Pendiente P-01: qué es el haber, cómo afecta el saldo y si un local lleva uno o varios cuadernos. El tipo de movimiento queda como una lista cerrada que se pueda ampliar sin migrar datos.
+> El haber no es un tipo de movimiento: se calcula (ADR-0008). Por eso el tipo sigue siendo ingreso o gasto.
 
 ### HU-021. Cargar un movimiento
 **Prioridad:** Must · **Etiquetas:** `backend`, `frontend`, `cuadernos` · **Diagramas:** ARQ-01, FUN-02, TEC-01, CU-01
@@ -232,21 +232,18 @@ Como dueño, quiero administrar las categorías de los cuadernos de mi local, pa
 - Dado categorías de ingreso y de gasto, cuando creo, edito o desactivo una, entonces se refleja en el formulario y en los reportes, y los movimientos pasados conservan la suya.
 - Dado una categoría con movimientos, cuando intento borrarla, entonces no se puede: se desactiva.
 - Dado dos locales del mismo dueño, cuando creo una categoría en uno, entonces no aparece en el otro.
-- Dado la categoría del sistema de las ventas espejo, cuando intento editarla o desactivarla, entonces no se permite.
 - Dado los roles carga y consulta, cuando buscan cómo administrar categorías, entonces no lo ven y la API responde 403.
 
 ### HU-023. Saldo y reporte del período
 **Prioridad:** Must · **Etiquetas:** `backend`, `frontend`, `cuadernos`, `reportes` · **Diagramas:** CU-01
 
-Como dueño, quiero el saldo del período y los totales por mes y por categoría, para ver cómo va el local.
+Como dueño, quiero el resultado del período, el efectivo en la caja y los totales por mes y por categoría, para ver cómo va el local.
 
-- Dado un período, cuando lo abro, entonces veo total de ingresos, total de gastos, saldo y la comparación de ingresos contra gastos.
+- Dado un período, cuando lo abro, entonces veo total de ingresos, total de gastos, resultado, la comparación de ingresos contra gastos y la caja al cierre del período.
 - Dado un mes, cuando miro el reporte, entonces veo el total y la cantidad de movimientos de cada categoría.
 - Dado un año, cuando miro el reporte, entonces veo los totales de ingresos y gastos de cada mes uno al lado del otro.
-- Dado ventas espejo y movimientos anulados, cuando se calculan los totales, entonces los espejos suman como cualquier venta y los anulados no suman.
+- Dado movimientos anulados, cuando se calculan los totales y la caja, entonces no suman.
 - Dado un celular, cuando abro el reporte, entonces se lee sin desplazarse hacia el costado.
-
-> Cómo suma el haber se define con P-01.
 
 ### HU-024. Permisos por rol
 **Prioridad:** Must · **Etiquetas:** `seguridad`, `auditoria`, `cuadernos` · **Diagramas:** FUN-02, FUN-03, CU-01
@@ -260,20 +257,22 @@ Como dueño, quiero que cada persona haga solo lo que su rol permite y solo en l
 - Dado una persona sin membresía en un local, cuando pide un movimiento de ese local por su id, entonces recibe 404 (HU-011).
 - Dado un alta, una corrección o una anulación, cuando ocurre, entonces se escribe una entrada de auditoría en la misma transacción con actor, acción, motivo, antes y después.
 
-### HU-025. Venta espejo para gastos que no son en efectivo
+### HU-025. Caja en efectivo (haber) por turno
 **Prioridad:** Must · **Etiquetas:** `backend`, `frontend`, `cuadernos`, `dinero` · **Diagramas:** CLA-01, DAT-01, TEC-01, FUN-02, FUN-03, EST-01, CU-02
 
-Como dueño, quiero que un gasto pagado con débito, crédito, QR o transferencia no baje el saldo, para que el cuaderno refleje la plata que hay, igual que lo anoto en papel.
+Como dueño, quiero ver cuánto efectivo hay en la caja al cerrar cada turno, como en el cuaderno, para saber si la plata cierra.
 
-- Dado un gasto con medio débito, crédito, QR o transferencia, cuando se guarda, entonces en la misma transacción el sistema crea una venta espejo del mismo importe, fecha y local, en la categoría del sistema y con la descripción del gasto.
-- Dado un gasto en efectivo, cuando se guarda, entonces no se crea ninguna venta espejo.
-- Dado una venta (ingreso) con cualquier medio, cuando se guarda, entonces no genera espejo.
-- Dado una venta espejo, cuando alguien intenta editarla o anularla directamente, entonces no se permite: sigue siempre a su gasto (HU-026).
-- Dado la lista, cuando muestra una venta espejo, entonces la marca como espejo y enlaza a su gasto.
-- Dado el saldo y los totales del período, cuando se calculan, entonces la venta espejo suma como cualquier venta.
-- Dado el cálculo del espejo, cuando corren los tests, entonces hay casos para cada medio, para el efectivo y para importes con centavos.
+- Dado el haber inicial y los movimientos posteriores, cuando miro la caja, entonces cada turno muestra haber anterior, ventas, cobrado sin efectivo, gastos en efectivo y haber, del más nuevo al más viejo.
+- Dado una venta cobrada con Mercado Pago, tarjeta o transferencia, cuando se guarda, entonces suma en las ventas y en el resultado, pero no en el haber.
+- Dado un gasto pagado por transferencia o tarjeta, cuando se guarda, entonces suma en los gastos, pero no baja el haber.
+- Dado un movimiento corregido o anulado, cuando miro la caja, entonces el haber de su turno y de los siguientes ya está recalculado.
+- Dado un haber que queda negativo, cuando miro la caja, entonces el turno aparece en rojo con un aviso para revisar la carga. No se bloquea, porque los gastos se pueden cargar antes que las ventas.
+- Dado el haber inicial, cuando lo carga el dueño, entonces queda con fecha, turno, importe y quién lo cargó. Cambiarlo pide motivo y queda en la auditoría. Carga y consulta no pueden.
+- Dado los filtros de la lista, cuando filtro, entonces la caja no cambia: es la caja entera del local.
+- Dado el Excel, cuando exporto con haber inicial, entonces hay una hoja "Caja" con los cierres del período.
+- Dado el cálculo, cuando corren los tests, entonces hay un caso que reproduce la cuenta del cuaderno en papel (venta total, menos costos y "MP") y da lo mismo.
 
-> Decisión del equipo: el espejo es solo para gastos y suma en los totales, como en el cuaderno de papel. Consecuencias: los totales de ventas y gastos incluyen los espejos, y el saldo incluye las ventas cobradas con medios que no son efectivo. Se valida con el ejemplo del cuaderno (P-02). La lista de medios que generan espejo es configurable por local, por si otro cliente trabaja distinto.
+> Reemplaza a la venta espejo (ADR-0008). El cliente lleva en papel ventas totales y resta lo de Mercado Pago como costo; el resultado es el mismo que calcularlo desde el medio de pago.
 
 ### HU-026. Corregir y anular con historial
 **Prioridad:** Must · **Etiquetas:** `backend`, `frontend`, `cuadernos`, `auditoria` · **Diagramas:** FUN-03, EST-01, CU-01
@@ -283,8 +282,7 @@ Como persona con rol carga o dueño, quiero corregir o anular un movimiento con 
 - Dado un movimiento, cuando lo corrijo con motivo, entonces se aplica y la auditoría guarda quién, cuándo, motivo, antes y después, en la misma transacción.
 - Dado un movimiento cargado por error, cuando lo anulo con motivo, entonces deja de sumar en saldos y totales y sigue visible como anulado. No hay borrado.
 - Dado una corrección o anulación sin motivo, cuando la guardo, entonces se rechaza.
-- Dado un gasto con venta espejo, cuando lo corrijo, entonces su espejo copia el importe, la fecha y la descripción nuevos; si pasa a efectivo, el espejo se anula; si pasa de efectivo a otro medio, el espejo se crea. Todo en la misma transacción.
-- Dado un gasto con venta espejo, cuando lo anulo, entonces su espejo se anula con el mismo motivo.
+- Dado un movimiento corregido o anulado, cuando cambia, entonces la caja se recalcula sola, sin tocar otras filas (HU-025).
 - Dado un movimiento anulado, cuando intento corregirlo o reactivarlo, entonces no se permite: si fue un error, se carga de nuevo (EST-01).
 - Dado cualquier movimiento y cualquier rol, cuando abro "Historial", entonces veo cada cambio con fecha, persona, motivo y los valores anteriores y nuevos.
 
@@ -296,7 +294,7 @@ Como persona con acceso a un local, quiero exportar el reporte del período, par
 - Dado un período y los filtros aplicados, cuando exporto a PDF, entonces el archivo tiene el nombre del local, el período, los filtros, los totales por tipo y por categoría, la comparación de ingresos y gastos, el saldo, el detalle de movimientos y la fecha y hora de emisión.
 - Dado lo mismo, cuando exporto a Excel, entonces cada movimiento es una fila, las fechas son fechas y los importes son números (no texto), y hay una hoja aparte con los totales.
 - Dado movimientos anulados, cuando exporto, entonces no suman en los totales y aparecen marcados como anulados.
-- Dado ventas espejo, cuando exporto, entonces aparecen marcadas como espejo.
+- Dado un haber inicial cargado, cuando exporto a Excel, entonces hay una hoja "Caja" con el haber de cada turno (HU-025).
 - Dado cualquier rol, cuando exporta, entonces puede, y solo del local activo.
 - Dado un año de movimientos, cuando exporto, entonces el archivo sale en menos de 10 segundos.
 
@@ -307,7 +305,7 @@ Como persona con acceso a un local, quiero filtrar por fechas, categoría y tipo
 
 - Dado la lista o el reporte, cuando elijo hoy, esta semana (desde el lunes) o este mes, entonces la lista, los totales y el resumen siguen la elección.
 - Dado dos fechas escritas a mano, cuando el rango es válido, entonces pasa lo mismo. Cuando no lo es, entonces queda en pantalla el último período válido.
-- Dado los filtros, cuando filtro por categoría, tipo (ingreso, gasto, haber), medio de pago o texto de la descripción, entonces la lista, los totales y la exportación (HU-027) siguen los filtros.
+- Dado los filtros, cuando filtro por categoría, tipo (ingreso o gasto), medio de pago o texto de la descripción, entonces la lista, los totales y la exportación (HU-027) siguen los filtros.
 - Dado los filtros, cuando pido ver los anulados, entonces aparecen marcados; por defecto no se muestran.
 - Dado un movimiento guardado fuera del período en pantalla, cuando se guarda, entonces el período se estira para incluirlo.
 - Dado un celular, cuando abro los filtros, entonces se despliegan en un panel que no tapa los totales.

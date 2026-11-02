@@ -71,7 +71,7 @@ flowchart TB
     end
     subgraph Back["backend: Django"]
         direction LR
-        Vistas["Vistas DRF<br/>serializers y permisos"] --> Servicios["Servicios<br/>cargar, corregir, anular,<br/>espejo, reportes"] --> Modelos["Modelos y consultas"]
+        Vistas["Vistas DRF<br/>serializers y permisos"] --> Servicios["Servicios<br/>cargar, corregir, anular,<br/>caja, reportes"] --> Modelos["Modelos y consultas"]
     end
     subgraph Apps["Tres apps"]
         direction LR

@@ -28,7 +28,7 @@ Una persona puede tener acceso a varios locales, con un rol distinto en cada uno
 
 - No se conecta con el sistema de caja, ni lee, ni sincroniza, ni modifica sus datos.
 - No factura, no lleva stock y no liquida sueldos.
-- No maneja cuentas corrientes por persona ni pagos parciales: el haber es un registro simple.
+- No maneja cuentas corrientes por persona ni pagos parciales: el haber es el efectivo de la caja, nada más.
 - No funciona sin internet y no tiene app nativa para Android o iPhone.
 - No incluye la carga de cuadernos viejos.
 
@@ -45,7 +45,7 @@ Cualquiera de estas cosas se evalúa aparte.
 | Versión | Qué trae |
 |---|---|
 | R0. Esqueleto | Repositorio, CI/CD, entornos y un recorrido mínimo de punta a punta |
-| R1. Cuadernos | Locales, ingreso, permisos, auditoría, backups, carga, corrección, venta espejo, reportes, filtros, exportación y puesta en marcha |
+| R1. Cuadernos | Locales, ingreso, permisos, auditoría, backups, carga, corrección, caja por turno, reportes, filtros, exportación y puesta en marcha |
 | Después | Que el dueño invite gente desde el portal, documentación generada, lo que pidan los clientes |
 
 ## Relación con floky

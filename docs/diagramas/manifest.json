@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-30T00:20:56.623Z",
+  "generatedAt": "2026-11-02T20:53:01.633Z",
   "renderer": "Mermaid 11.12.0",
   "diagrams": [
     {
@@ -83,12 +83,13 @@
         "HU-022",
         "HU-023",
         "HU-024",
+        "HU-025",
         "HU-026",
         "HU-028",
         "HU-029"
       ],
       "width": 637,
-      "height": 733
+      "height": 775
     },
     {
       "id": "CU-02",
@@ -101,8 +102,8 @@
         "HU-025",
         "HU-027"
       ],
-      "width": 993,
-      "height": 460
+      "width": 965,
+      "height": 534
     },
     {
       "id": "CLA-01",
@@ -115,8 +116,8 @@
         "HU-022",
         "HU-025"
       ],
-      "width": 1433,
-      "height": 974
+      "width": 1389,
+      "height": 1129
     },
     {
       "id": "DAT-01",
@@ -131,12 +132,12 @@
         "HU-020",
         "HU-025"
       ],
-      "width": 1572,
-      "height": 1639
+      "width": 2127,
+      "height": 1458
     },
     {
       "id": "TEC-01",
-      "title": "TEC-01. Guardar un gasto con venta espejo",
+      "title": "TEC-01. Guardar un gasto y ver la caja",
       "document": "05-secuencias-tecnicas.md",
       "anchor": "tec-01",
       "stories": [
@@ -145,8 +146,8 @@
         "HU-021",
         "HU-025"
       ],
-      "width": 1033,
-      "height": 993
+      "width": 1031,
+      "height": 1132
     },
     {
       "id": "TEC-02",
@@ -184,8 +185,8 @@
         "HU-024",
         "HU-025"
       ],
-      "width": 815,
-      "height": 1418
+      "width": 937,
+      "height": 1282
     },
     {
       "id": "FUN-03",
@@ -198,8 +199,8 @@
         "HU-026",
         "HU-014"
       ],
-      "width": 912,
-      "height": 1722
+      "width": 755,
+      "height": 1183
     },
     {
       "id": "EST-01",
@@ -210,8 +211,8 @@
         "HU-025",
         "HU-026"
       ],
-      "width": 755,
-      "height": 558
+      "width": 742,
+      "height": 534
     },
     {
       "id": "OPS-01",

@@ -1,4 +1,5 @@
 import type {
+  Caja,
   Cambio,
   Categoria,
   FiltrosMovimientos,
@@ -9,6 +10,7 @@ import type {
   ResumenCuadernos,
   Sesion,
   TipoMovimiento,
+  Turno,
 } from '../types';
 
 /** Ingreso, salida y local activo. Cada método devuelve la sesión como quedó. */
@@ -28,6 +30,10 @@ export interface CuadernosService {
   resumen(rango: RangoFechas, filtros: FiltrosMovimientos): Promise<ResumenCuadernos>;
   /** Los doce meses del año, con ingresos, gastos y saldo de cada uno. */
   anual(anio: number): Promise<MesDelAnio[]>;
+  /** La caja por turno en el período. No sigue los filtros: es la caja entera. */
+  caja(rango: RangoFechas): Promise<Caja>;
+  /** Solo el dueño. Cambiarlo pide motivo, porque mueve todos los haberes siguientes. */
+  cargarHaberInicial(fecha: string, turno: Turno, monto: number, motivo: string): Promise<void>;
   /** Dirección del Excel del período y filtros en pantalla. Lo baja el navegador. */
   urlExcel(rango: RangoFechas, filtros: FiltrosMovimientos): string;
   /** La misma clave dos veces guarda un solo movimiento (doble toque, reintento de red). */

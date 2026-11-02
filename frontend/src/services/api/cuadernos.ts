@@ -1,4 +1,4 @@
-import type { Cambio, Categoria, FiltrosMovimientos, MedioPago, Movimiento, MovimientoNuevo, RangoFechas, TipoMovimiento } from '../../types';
+import type { Caja, Cambio, Categoria, FiltrosMovimientos, MedioPago, Movimiento, MovimientoNuevo, RangoFechas, TipoMovimiento, Turno } from '../../types';
 import type { CuadernosService } from '../contratos';
 import { BASE_API, pedir } from '../http';
 
@@ -17,6 +17,7 @@ interface EntryApi {
   description: string;
   amount: string;
   payment_method: MedioPago;
+  shift: Turno;
   is_voided: boolean;
   void_reason: string;
   created_by: string;
@@ -48,6 +49,7 @@ const aMovimiento = (e: EntryApi): Movimiento => ({
   descripcion: e.description,
   monto: Number(e.amount),
   medioPago: e.payment_method,
+  turno: e.shift,
   anulado: e.is_voided,
   motivoAnulacion: e.void_reason,
   cargadoPor: e.created_by,
@@ -72,6 +74,45 @@ const cuerpo = (m: MovimientoNuevo) => ({
   // El importe viaja como texto con dos decimales: nunca como número con coma flotante.
   amount: m.monto.toFixed(2),
   payment_method: m.medioPago,
+  shift: m.turno,
+});
+
+interface CashApi {
+  opening: { date: string; shift: Turno; amount: string; updated_by: string; updated_at: string } | null;
+  haber_at_end: string | null;
+  closes: {
+    date: string;
+    shift: Turno;
+    sales: string;
+    sales_not_cash: string;
+    expenses_cash: string;
+    expenses_not_cash: string;
+    before: string;
+    after: string;
+    negative: boolean;
+  }[];
+}
+
+const aCaja = (c: CashApi): Caja => ({
+  inicial: c.opening && {
+    fecha: c.opening.date,
+    turno: c.opening.shift,
+    monto: Number(c.opening.amount),
+    cargadoPor: c.opening.updated_by,
+    cargadoEl: c.opening.updated_at,
+  },
+  haberAlFinal: c.haber_at_end === null ? null : Number(c.haber_at_end),
+  cierres: c.closes.map((x) => ({
+    fecha: x.date,
+    turno: x.shift,
+    ventas: Number(x.sales),
+    sinEfectivo: Number(x.sales_not_cash),
+    gastosEfectivo: Number(x.expenses_cash),
+    gastosSinEfectivo: Number(x.expenses_not_cash),
+    antes: Number(x.before),
+    despues: Number(x.after),
+    negativo: x.negative,
+  })),
 });
 
 /** Período y filtros a query string. Lo vacío no viaja. */
@@ -118,6 +159,14 @@ export const cuadernosApi: CuadernosService = {
       `/notebooks/monthly/?year=${anio}`,
     );
     return r.months.map((m) => ({ mes: m.month, ingresos: Number(m.income), egresos: Number(m.expense), saldo: Number(m.balance) }));
+  },
+
+  async caja(rango) {
+    return aCaja(await pedir<CashApi>('GET', `/notebooks/cash/?from=${rango.desde}&to=${rango.hasta}`));
+  },
+
+  async cargarHaberInicial(fecha, turno, monto, motivo) {
+    await pedir('PUT', '/notebooks/cash/opening/', { date: fecha, shift: turno, amount: monto.toFixed(2), reason: motivo });
   },
 
   urlExcel(rango, filtros) {

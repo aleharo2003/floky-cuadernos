@@ -20,6 +20,17 @@ class PaymentMethod(models.TextChoices):
     TRANSFER = "transfer", "Transferencia"
 
 
+class Shift(models.TextChoices):
+    """The shop closes the cash box twice a day (P-01). A night shift that ends after midnight
+    keeps the date it started on."""
+
+    MORNING = "morning", "Mañana"
+    NIGHT = "night", "Noche"
+
+
+SHIFT_ORDER = {Shift.MORNING: 0, Shift.NIGHT: 1}
+
+
 class Category(models.Model):
     """Each shop has its own categories (ADR-0003). One with entries is deactivated, never deleted."""
 
@@ -59,16 +70,7 @@ class Entry(models.Model):
     description = models.CharField("descripción", max_length=120, blank=True)
     amount = models.DecimalField("importe", max_digits=14, decimal_places=2)
     payment_method = models.CharField("medio de pago", max_length=10, choices=PaymentMethod.choices)
-
-    # Mirror sale for expenses that do not leave the cash box (HU-025). The rule waits for P-02.
-    mirror_of = models.OneToOneField(
-        "self",
-        null=True,
-        blank=True,
-        on_delete=models.PROTECT,
-        related_name="mirror",
-        verbose_name="espejo de",
-    )
+    shift = models.CharField("turno", max_length=10, choices=Shift.choices)
 
     is_voided = models.BooleanField("anulado", default=False)
     void_reason = models.CharField("motivo de anulación", max_length=200, blank=True)
@@ -104,5 +106,39 @@ class Entry(models.Model):
             "description": self.description,
             "amount": str(self.amount),
             "payment_method": self.payment_method,
+            "shift": self.shift,
             "is_voided": self.is_voided,
         }
+
+
+class CashOpening(models.Model):
+    """The cash on hand when the shop starts using the system: the last haber written on paper (P-01).
+
+    Only entries after that shift count for the cash box. One per shop; changing it is audited.
+    """
+
+    tenant = models.OneToOneField(
+        Tenant, on_delete=models.PROTECT, primary_key=True, related_name="cash_opening", verbose_name="local"
+    )
+    date = models.DateField("fecha")
+    shift = models.CharField("turno", max_length=10, choices=Shift.choices)
+    amount = models.DecimalField("haber", max_digits=14, decimal_places=2)
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", verbose_name="cargado por"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "haber inicial"
+        verbose_name_plural = "haberes iniciales"
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(amount__gte=Decimal("0")), name="cash_opening_not_negative"
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.tenant} {self.date} {self.get_shift_display()} {self.amount}"
+
+    def snapshot(self) -> dict:
+        return {"date": self.date.isoformat(), "shift": self.shift, "amount": str(self.amount)}

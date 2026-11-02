@@ -13,15 +13,17 @@ from rest_framework.views import APIView
 from accounts.models import Perm
 from accounts.permissions import HasTenantPermission
 from core.models import AuditEntry
-from notebooks import services
+from notebooks import cash, services
 from notebooks.export import build_workbook
 from notebooks.filters import apply_filters
-from notebooks.models import Category, Entry, Kind
+from notebooks.models import CashOpening, Category, Entry, Kind
 from notebooks.serializers import (
+    CashOpeningInputSerializer,
     CategorySerializer,
     CorrectionSerializer,
     EntryInputSerializer,
     EntrySerializer,
+    RangeSerializer,
     VoidSerializer,
 )
 
@@ -228,12 +230,18 @@ class ExportView(TenantView):
                 "name", flat=True
             )
             category = names.first() or ""
+        # The cash sheet is the whole box for the period: it does not follow the list filters.
+        opening = CashOpening.objects.filter(tenant=shop).first()
+        closes = None
+        if opening is not None:
+            closes = [c for c in cash.closes(shop, opening, until=filters["to"]) if c.date >= filters["from"]]
         content = build_workbook(
             shop=shop.name,
             filters=filters,
             entries=entries,
             issued_at=timezone.localtime(),
             category=category,
+            closes=closes,
         )
         name = f"cuadernos-{filters['from']:%Y%m%d}-{filters['to']:%Y%m%d}.xlsx"
         response = HttpResponse(
@@ -241,3 +249,78 @@ class ExportView(TenantView):
         )
         response["Content-Disposition"] = f'attachment; filename="{name}"'
         return response
+
+
+def opening_payload(opening: CashOpening | None) -> dict | None:
+    if opening is None:
+        return None
+    return {
+        "date": opening.date,
+        "shift": opening.shift,
+        "amount": money(opening.amount),
+        "updated_by": opening.updated_by.get_full_name() or opening.updated_by.get_username(),
+        "updated_at": opening.updated_at,
+    }
+
+
+class CashView(TenantView):
+    """The cash box by shift for the period on screen (P-01, ADR-0008).
+
+    It does not follow the list filters: the haber is the whole box, whatever the filters show.
+    """
+
+    required_permissions = {"GET": Perm.VIEW}
+
+    def get(self, request: Request) -> Response:
+        period = RangeSerializer(data=request.query_params)
+        period.is_valid(raise_exception=True)
+        start, end = period.range
+        opening = (
+            CashOpening.objects.select_related("updated_by").filter(tenant=request.membership.tenant).first()
+        )
+        if opening is None:
+            return Response({"opening": None, "closes": [], "haber_at_end": None})
+        rows = cash.closes(request.membership.tenant, opening, until=end)
+        # The haber when the period ends: the last close up to the end, or the opening if none yet.
+        haber_at_end = rows[-1].after if rows else opening.amount
+        if opening.date > end:
+            haber_at_end = None
+        return Response(
+            {
+                "opening": opening_payload(opening),
+                "haber_at_end": None if haber_at_end is None else money(haber_at_end),
+                "closes": [
+                    {
+                        "date": c.date,
+                        "shift": c.shift,
+                        "sales": money(c.sales),
+                        "sales_not_cash": money(c.sales_not_cash),
+                        "expenses_cash": money(c.expenses_cash),
+                        "expenses_not_cash": money(c.expenses_not_cash),
+                        "before": money(c.before),
+                        "after": money(c.after),
+                        "negative": c.negative,
+                    }
+                    for c in rows
+                    if c.date >= start
+                ],
+            }
+        )
+
+
+class CashOpeningView(TenantView):
+    """Load or change the opening haber. Only the owner (Perm.SET_CASH_OPENING)."""
+
+    required_permissions = {"PUT": Perm.SET_CASH_OPENING}
+
+    def put(self, request: Request) -> Response:
+        data = CashOpeningInputSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        v = data.validated_data
+        try:
+            opening = cash.set_opening(
+                request.membership, day=v["date"], shift=v["shift"], amount=v["amount"], reason=v["reason"]
+            )
+        except services.RuleError as exc:
+            raise rule_error(exc) from exc
+        return Response(opening_payload(opening))

@@ -33,53 +33,49 @@ flowchart TD
 
 ## FUN-02. Cargar un movimiento
 
-**Propósito:** seguir la carga desde el permiso hasta que aparece en el saldo. **Stories:** HU-021, HU-024, HU-025. **Viene de floky:** FUN-06, sin segunda clave y con venta espejo.
+**Propósito:** seguir la carga desde el permiso hasta que aparece en los totales y en la caja. **Stories:** HU-021, HU-024, HU-025. **Viene de floky:** FUN-06, sin segunda clave.
 
 <!-- diagram: FUN-02 -->
 ```mermaid
 flowchart TD
     A["Persona dentro de un local<br/>(FUN-01)"] --> B{"¿Rol carga o dueño?"}
     B -->|"no, consulta"| C["Ve movimientos y reportes<br/>no ve el botón de cargar<br/>la API responde 403"]
-    B -->|"sí"| D["Fecha, tipo, categoría,<br/>descripción, importe y medio"]
+    B -->|"sí"| D["Fecha, turno, tipo, categoría,<br/>descripción, importe y medio"]
     D --> E{"¿Datos válidos?"}
     E -->|"no"| F["Error claro, no se guarda"] --> D
-    E -->|"sí"| G{"¿Es un gasto pagado con débito,<br/>crédito, QR o transferencia?"}
-    G -->|"no"| H["Movimiento y auditoría<br/>en una transacción"]
-    G -->|"sí"| I["Gasto, venta espejo del mismo importe<br/>y auditoría en una transacción"]
-    H --> J["Aparece en su día,<br/>en el saldo y en los totales"]
-    I --> J
+    E -->|"sí"| H["Movimiento y auditoría<br/>en una transacción"]
+    H --> J["Aparece en la lista<br/>y en los totales del período"]
+    H --> G{"¿Es en efectivo?"}
+    G -->|"sí"| K["Mueve el haber de su turno:<br/>la venta suma, el gasto resta"]
+    G -->|"no: Mercado Pago,<br/>tarjeta o transferencia"| L["Cuenta como venta o gasto,<br/>pero la caja no se mueve"]
 ```
 
 **Archivos FUN-02:** [SVG](svg/FUN-02.svg) · [PNG](png/FUN-02.png) · [Mermaid](fuentes/FUN-02.mmd).
 
-**Lectura:** la venta espejo la crea el sistema, no la persona, y en la misma transacción que el gasto (TEC-01). Los espejos suman en los totales, igual que en el cuaderno de papel (HU-025). Una venta cobrada con débito no genera espejo (P-02).
+**Lectura:** la persona carga cada movimiento una sola vez, con su medio de pago, y el sistema decide si toca la caja. En papel, el local suma todas las ventas y después resta como "costo" lo cobrado por Mercado Pago, para que el haber dé el efectivo. Acá no se escribe esa resta: se calcula (ADR-0008, HU-025).
 
 <a id="fun-03"></a>
 
 ## FUN-03. Corregir o anular un movimiento
 
-**Propósito:** definir qué pasa con la venta espejo cuando su gasto cambia. **Stories:** HU-024, HU-025, HU-026. **Viene de floky:** nueva.
+**Propósito:** definir qué pasa al corregir o anular, y con la caja. **Stories:** HU-024, HU-025, HU-026. **Viene de floky:** nueva.
 
 <!-- diagram: FUN-03 -->
 ```mermaid
 flowchart TD
     A["Movimiento en la lista"] --> B{"¿Rol carga o dueño?"}
     B -->|"no"| C["Ve el movimiento y su historial"]
-    B -->|"sí"| D{"¿Es una venta espejo?"}
-    D -->|"sí"| E["No se edita ni se anula sola:<br/>enlace a su gasto"]
+    B -->|"sí"| D{"¿Está anulado?"}
+    D -->|"sí"| E["No se toca más:<br/>se ve con su motivo"]
     D -->|"no"| F{"¿Qué hace?"}
     F -->|"corregir"| G["Cambia datos y escribe el motivo"]
     F -->|"anular"| H["Escribe el motivo"]
-    G --> I{"¿Después del cambio es un gasto<br/>que no es en efectivo?"}
-    I -->|"sí"| J["Se crea o se actualiza<br/>su venta espejo"]
-    I -->|"no"| K["Si tenía venta espejo, se anula"]
-    H --> L["Se anula el movimiento<br/>y su venta espejo si tiene"]
-    J --> M["Auditoría con antes, después y motivo<br/>en la misma transacción"]
-    K --> M
-    L --> M
+    G --> M["Auditoría con antes, después y motivo<br/>en la misma transacción"]
+    H --> M
     M --> N["El cambio aparece en el historial<br/>del movimiento"]
+    M --> O["La caja se recalcula sola<br/>desde el turno del movimiento"]
 ```
 
 **Archivos FUN-03:** [SVG](svg/FUN-03.svg) · [PNG](png/FUN-03.png) · [Mermaid](fuentes/FUN-03.mmd).
 
-**Lectura:** nada se borra: se corrige o se anula, siempre con motivo. El gasto y su venta espejo se mueven juntos en una sola transacción; si se tocaran por separado, tarde o temprano el saldo dejaría de cerrar. El historial que ve la persona se arma con la auditoría (HU-014): no hace falta otra tabla.
+**Lectura:** nada se borra: se corrige o se anula, siempre con motivo. Como el haber se calcula y no se guarda, no hay nada más que mantener en orden: si un gasto en efectivo pasa a ser por transferencia, la caja de ese turno y de los siguientes cambia sola. El historial que ve la persona se arma con la auditoría (HU-014): no hace falta otra tabla.

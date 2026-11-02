@@ -17,8 +17,8 @@ stateDiagram-v2
     Anulado --> [*]
     note right of Vigente
         Suma en saldo y totales.
-        Una venta espejo cambia de estado
-        solo junto con su gasto.
+        Si es en efectivo, también
+        mueve la caja de su turno.
     end note
     note right of Anulado
         No suma. Sigue visible

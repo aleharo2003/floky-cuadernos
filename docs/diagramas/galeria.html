@@ -7,7 +7,7 @@
 <a href="#CU-02">CU-02 · Relaciones entre casos de uso</a>
 <a href="#CLA-01">CLA-01 · Locales, personas y cuadernos</a>
 <a href="#DAT-01">DAT-01 · Base de datos</a>
-<a href="#TEC-01">TEC-01 · Guardar un gasto con venta espejo</a>
+<a href="#TEC-01">TEC-01 · Guardar un gasto y ver la caja</a>
 <a href="#TEC-02">TEC-02 · CI/CD de punta a punta</a>
 <a href="#FUN-01">FUN-01 · Ingresar y elegir local</a>
 <a href="#FUN-02">FUN-02 · Cargar un movimiento</a>
@@ -46,7 +46,7 @@
     end
     subgraph Back[&quot;backend: Django&quot;]
         direction LR
-        Vistas[&quot;Vistas DRF&lt;br/&gt;serializers y permisos&quot;] --&gt; Servicios[&quot;Servicios&lt;br/&gt;cargar, corregir, anular,&lt;br/&gt;espejo, reportes&quot;] --&gt; Modelos[&quot;Modelos y consultas&quot;]
+        Vistas[&quot;Vistas DRF&lt;br/&gt;serializers y permisos&quot;] --&gt; Servicios[&quot;Servicios&lt;br/&gt;cargar, corregir, anular,&lt;br/&gt;caja, reportes&quot;] --&gt; Modelos[&quot;Modelos y consultas&quot;]
     end
     subgraph Apps[&quot;Tres apps&quot;]
         direction LR
@@ -91,7 +91,7 @@
     DC --&gt;|&quot;pull request&quot;| GH
     GH --&gt;|&quot;merge a main&quot;| PN
     GH --&gt;|&quot;tag y aprobación&quot;| RN</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
-<section id="CU-01"><header><p>02-casos-de-uso.md · diseño objetivo o propuesta, sin implementación comprobada · HU-010, HU-012, HU-013, HU-021, HU-022, HU-023, HU-024, HU-026, HU-028, HU-029</p><h2>CU-01. Casos de uso de los cuadernos</h2><nav><a href="02-casos-de-uso.md#cu-01">Explicación y escenarios</a><a href="png/CU-01.png">PNG</a><a href="svg/CU-01.svg">SVG</a><a href="fuentes/CU-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/CU-01.svg" alt="CU-01. Casos de uso de los cuadernos" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
+<section id="CU-01"><header><p>02-casos-de-uso.md · diseño objetivo o propuesta, sin implementación comprobada · HU-010, HU-012, HU-013, HU-021, HU-022, HU-023, HU-024, HU-025, HU-026, HU-028, HU-029</p><h2>CU-01. Casos de uso de los cuadernos</h2><nav><a href="02-casos-de-uso.md#cu-01">Explicación y escenarios</a><a href="png/CU-01.png">PNG</a><a href="svg/CU-01.svg">SVG</a><a href="fuentes/CU-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/CU-01.svg" alt="CU-01. Casos de uso de los cuadernos" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
     subgraph Actores[&quot; &quot;]
         direction TB
         Consulta[&quot;Actor: Consulta&quot;]
@@ -104,10 +104,11 @@
         C01([&quot;C01 Ingresar&quot;])
         C03([&quot;C03 Buscar y filtrar movimientos&quot;])
         C04([&quot;C04 Ver historial de un movimiento&quot;])
-        C05([&quot;C05 Ver saldo y reporte del período&quot;])
+        C05([&quot;C05 Ver saldo, caja y reporte del período&quot;])
         C07([&quot;C07 Cargar movimiento&quot;])
         C08([&quot;C08 Corregir o anular movimiento&quot;])
         C10([&quot;C10 Administrar categorías&quot;])
+        C13([&quot;C13 Cargar el haber inicial&quot;])
         C12([&quot;C12 Dar de alta locales,&lt;br/&gt;personas y membresías&quot;])
     end
     Consulta --&gt; C01
@@ -117,16 +118,17 @@
     Carga --&gt; C07
     Carga --&gt; C08
     Dueno --&gt; C10
+    Dueno --&gt; C13
     Equipo --&gt; C12</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
 <section id="CU-02"><header><p>02-casos-de-uso.md · diseño objetivo o propuesta, sin implementación comprobada · HU-012, HU-014, HU-025, HU-027</p><h2>CU-02. Relaciones entre casos de uso</h2><nav><a href="02-casos-de-uso.md#cu-02">Explicación y escenarios</a><a href="png/CU-02.png">PNG</a><a href="svg/CU-02.svg">SVG</a><a href="fuentes/CU-02.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/CU-02.svg" alt="CU-02. Relaciones entre casos de uso" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
     C02([&quot;C02 Elegir o cambiar de local&quot;]) -.-&gt;|&quot;extiende: tiene&lt;br/&gt;más de un local&quot;| C01([&quot;C01 Ingresar&quot;])
     C06([&quot;C06 Exportar a PDF o Excel&quot;]) -.-&gt;|&quot;extiende&quot;| C05([&quot;C05 Ver saldo y reporte&quot;])
-    C09([&quot;C09 Generar venta espejo&quot;]) -.-&gt;|&quot;extiende: gasto que&lt;br/&gt;no es en efectivo&quot;| C07([&quot;C07 Cargar movimiento&quot;])
-    C09 -.-&gt;|&quot;extiende: gasto que&lt;br/&gt;no es en efectivo&quot;| C08([&quot;C08 Corregir o anular&quot;])
-    C07 -.-&gt;|&quot;incluye&quot;| C11([&quot;C11 Registrar en la auditoría&quot;])
-    C08 -.-&gt;|&quot;incluye&quot;| C11
+    C05 -.-&gt;|&quot;incluye&quot;| C09([&quot;C09 Calcular la caja por turno&quot;])
+    C07([&quot;C07 Cargar movimiento&quot;]) -.-&gt;|&quot;incluye&quot;| C11([&quot;C11 Registrar en la auditoría&quot;])
+    C08([&quot;C08 Corregir o anular&quot;]) -.-&gt;|&quot;incluye&quot;| C11
     C10([&quot;C10 Administrar categorías&quot;]) -.-&gt;|&quot;incluye&quot;| C11
-    C12([&quot;C12 Alta de locales y personas&quot;]) -.-&gt;|&quot;incluye&quot;| C11</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+    C12([&quot;C12 Alta de locales y personas&quot;]) -.-&gt;|&quot;incluye&quot;| C11
+    C13([&quot;C13 Cargar el haber inicial&quot;]) -.-&gt;|&quot;incluye&quot;| C11</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
 <section id="CLA-01"><header><p>03-clases.md · diseño objetivo o propuesta, sin implementación comprobada · HU-013, HU-020, HU-022, HU-025</p><h2>CLA-01. Locales, personas y cuadernos</h2><nav><a href="03-clases.md#cla-01">Explicación y escenarios</a><a href="png/CLA-01.png">PNG</a><a href="svg/CLA-01.svg">SVG</a><a href="fuentes/CLA-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/CLA-01.svg" alt="CLA-01. Locales, personas y cuadernos" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>classDiagram
     class Local {
         nombre
@@ -148,7 +150,7 @@
         descripcion
         importe
         medio
-        espejoDe
+        turno
         anulado
         motivoAnulacion
         cargadoPor
@@ -160,6 +162,11 @@
         tipo
         activa
         delSistema
+    }
+    class Caja {
+        haberInicial
+        cierres(desde, hasta)
+        haberAl(fecha, turno)
     }
     class EntradaAuditoria {
         actor
@@ -174,9 +181,10 @@
     Local &quot;1&quot; --&gt; &quot;*&quot; Movimiento
     Local &quot;1&quot; --&gt; &quot;*&quot; Categoria
     Movimiento &quot;*&quot; --&gt; &quot;1&quot; Categoria
-    Movimiento &quot;0..1&quot; --&gt; &quot;1&quot; Movimiento : espejo de
+    Local &quot;1&quot; --&gt; &quot;1&quot; Caja
+    Caja ..&gt; Movimiento : suma lo que es en efectivo
     Movimiento ..&gt; EntradaAuditoria : genera
-    note for Movimiento &quot;Un gasto que no es en efectivo genera su venta espejo. Nada se borra: se anula.&quot;
+    note for Movimiento &quot;Nada se borra: se anula. El medio de pago dice si toca la caja.&quot;
     note for Membresia &quot;El código pregunta puede(permiso), nunca el nombre del rol.&quot;</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
 <section id="DAT-01"><header><p>04-datos.md · diseño objetivo o propuesta, sin implementación comprobada · HU-010, HU-011, HU-013, HU-014, HU-020, HU-025</p><h2>DAT-01. Base de datos</h2><nav><a href="04-datos.md#dat-01">Explicación y escenarios</a><a href="png/DAT-01.png">PNG</a><a href="svg/DAT-01.svg">SVG</a><a href="fuentes/DAT-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/DAT-01.svg" alt="DAT-01. Base de datos" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>erDiagram
     USER ||--o{ MEMBERSHIP : has
@@ -187,7 +195,7 @@
     USER ||--o{ NOTEBOOK_ENTRY : creates
     USER ||--o{ AUDIT_ENTRY : acts
     NOTEBOOK_CATEGORY ||--o{ NOTEBOOK_ENTRY : classifies
-    NOTEBOOK_ENTRY |o--o| NOTEBOOK_ENTRY : mirrors
+    TENANT ||--o| CASH_OPENING : starts
     USER {
         uuid id PK
         string email UK
@@ -209,15 +217,22 @@
         uuid tenant_id FK &quot;obligatorio, con RLS&quot;
         uuid category_id FK
         uuid created_by FK
-        uuid mirror_of FK &quot;solo en la venta espejo&quot;
         uuid idempotency_key UK
         date date
-        string kind &quot;income o expense, haber en P-01&quot;
-        string payment_method
+        string shift &quot;morning o night&quot;
+        string kind &quot;income o expense&quot;
+        string payment_method &quot;cash o no: decide el haber&quot;
         string description
         numeric amount &quot;numeric 14,2&quot;
         bool is_voided
         string void_reason
+    }
+    CASH_OPENING {
+        uuid tenant_id PK &quot;uno por local&quot;
+        date date
+        string shift
+        numeric amount &quot;último haber en papel&quot;
+        uuid updated_by FK
     }
     NOTEBOOK_CATEGORY {
         uuid id PK
@@ -239,25 +254,27 @@
         string reason
         timestamp created_at
     }</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
-<section id="TEC-01"><header><p>05-secuencias-tecnicas.md · diseño objetivo o propuesta, sin implementación comprobada · HU-011, HU-014, HU-021, HU-025</p><h2>TEC-01. Guardar un gasto con venta espejo</h2><nav><a href="05-secuencias-tecnicas.md#tec-01">Explicación y escenarios</a><a href="png/TEC-01.png">PNG</a><a href="svg/TEC-01.svg">SVG</a><a href="fuentes/TEC-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/TEC-01.svg" alt="TEC-01. Guardar un gasto con venta espejo" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>sequenceDiagram
+<section id="TEC-01"><header><p>05-secuencias-tecnicas.md · diseño objetivo o propuesta, sin implementación comprobada · HU-011, HU-014, HU-021, HU-025</p><h2>TEC-01. Guardar un gasto y ver la caja</h2><nav><a href="05-secuencias-tecnicas.md#tec-01">Explicación y escenarios</a><a href="png/TEC-01.png">PNG</a><a href="svg/TEC-01.svg">SVG</a><a href="fuentes/TEC-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/TEC-01.svg" alt="TEC-01. Guardar un gasto y ver la caja" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>sequenceDiagram
     participant P as Persona con rol carga
     participant UI as Portal
     participant V as Vista DRF
     participant S as Servicio de cuadernos
     participant DB as PostgreSQL
-    P-&gt;&gt;UI: guarda un gasto de $ 20.000 por transferencia
+    P-&gt;&gt;UI: guarda un gasto de $ 20.000 por transferencia, turno noche
     UI-&gt;&gt;V: POST de movimiento con clave de idempotencia
     V-&gt;&gt;V: valida datos y permiso de cargar en el local activo
     V-&gt;&gt;S: registrar gasto
     Note over S,DB: una sola transacción
     S-&gt;&gt;DB: BEGIN y SET LOCAL app.tenant_ids
     S-&gt;&gt;DB: INSERT del gasto
-    S-&gt;&gt;DB: INSERT de la venta espejo apuntando al gasto
     S-&gt;&gt;DB: INSERT de la auditoría
     S-&gt;&gt;DB: COMMIT
-    S--&gt;&gt;V: gasto y espejo
     V--&gt;&gt;UI: 201 creado
-    UI--&gt;&gt;P: aparece en su día, en el saldo y en los totales
+    UI-&gt;&gt;V: GET de la caja del período
+    V-&gt;&gt;S: cierres por turno desde el haber inicial
+    S-&gt;&gt;DB: suma por fecha y turno, separando efectivo del resto
+    S--&gt;&gt;UI: haber de cada turno
+    UI--&gt;&gt;P: el gasto aparece en la lista, y la caja no baja porque no salió efectivo
     Note over UI,V: si el mismo POST llega dos veces, la clave de idempotencia devuelve el primero</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
 <section id="TEC-02"><header><p>05-secuencias-tecnicas.md · diseño objetivo o propuesta, sin implementación comprobada · HU-004, HU-005, HU-006</p><h2>TEC-02. CI/CD de punta a punta</h2><nav><a href="05-secuencias-tecnicas.md#tec-02">Explicación y escenarios</a><a href="png/TEC-02.png">PNG</a><a href="svg/TEC-02.svg">SVG</a><a href="fuentes/TEC-02.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/TEC-02.svg" alt="TEC-02. CI/CD de punta a punta" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>sequenceDiagram
     participant Dev as Desarrollador
@@ -295,30 +312,26 @@
 <section id="FUN-02"><header><p>06-flujos-funcionales.md · diseño objetivo o propuesta, sin implementación comprobada · HU-021, HU-024, HU-025</p><h2>FUN-02. Cargar un movimiento</h2><nav><a href="06-flujos-funcionales.md#fun-02">Explicación y escenarios</a><a href="png/FUN-02.png">PNG</a><a href="svg/FUN-02.svg">SVG</a><a href="fuentes/FUN-02.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/FUN-02.svg" alt="FUN-02. Cargar un movimiento" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TD
     A[&quot;Persona dentro de un local&lt;br/&gt;(FUN-01)&quot;] --&gt; B{&quot;¿Rol carga o dueño?&quot;}
     B --&gt;|&quot;no, consulta&quot;| C[&quot;Ve movimientos y reportes&lt;br/&gt;no ve el botón de cargar&lt;br/&gt;la API responde 403&quot;]
-    B --&gt;|&quot;sí&quot;| D[&quot;Fecha, tipo, categoría,&lt;br/&gt;descripción, importe y medio&quot;]
+    B --&gt;|&quot;sí&quot;| D[&quot;Fecha, turno, tipo, categoría,&lt;br/&gt;descripción, importe y medio&quot;]
     D --&gt; E{&quot;¿Datos válidos?&quot;}
     E --&gt;|&quot;no&quot;| F[&quot;Error claro, no se guarda&quot;] --&gt; D
-    E --&gt;|&quot;sí&quot;| G{&quot;¿Es un gasto pagado con débito,&lt;br/&gt;crédito, QR o transferencia?&quot;}
-    G --&gt;|&quot;no&quot;| H[&quot;Movimiento y auditoría&lt;br/&gt;en una transacción&quot;]
-    G --&gt;|&quot;sí&quot;| I[&quot;Gasto, venta espejo del mismo importe&lt;br/&gt;y auditoría en una transacción&quot;]
-    H --&gt; J[&quot;Aparece en su día,&lt;br/&gt;en el saldo y en los totales&quot;]
-    I --&gt; J</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+    E --&gt;|&quot;sí&quot;| H[&quot;Movimiento y auditoría&lt;br/&gt;en una transacción&quot;]
+    H --&gt; J[&quot;Aparece en la lista&lt;br/&gt;y en los totales del período&quot;]
+    H --&gt; G{&quot;¿Es en efectivo?&quot;}
+    G --&gt;|&quot;sí&quot;| K[&quot;Mueve el haber de su turno:&lt;br/&gt;la venta suma, el gasto resta&quot;]
+    G --&gt;|&quot;no: Mercado Pago,&lt;br/&gt;tarjeta o transferencia&quot;| L[&quot;Cuenta como venta o gasto,&lt;br/&gt;pero la caja no se mueve&quot;]</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
 <section id="FUN-03"><header><p>06-flujos-funcionales.md · diseño objetivo o propuesta, sin implementación comprobada · HU-024, HU-025, HU-026, HU-014</p><h2>FUN-03. Corregir o anular un movimiento</h2><nav><a href="06-flujos-funcionales.md#fun-03">Explicación y escenarios</a><a href="png/FUN-03.png">PNG</a><a href="svg/FUN-03.svg">SVG</a><a href="fuentes/FUN-03.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/FUN-03.svg" alt="FUN-03. Corregir o anular un movimiento" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TD
     A[&quot;Movimiento en la lista&quot;] --&gt; B{&quot;¿Rol carga o dueño?&quot;}
     B --&gt;|&quot;no&quot;| C[&quot;Ve el movimiento y su historial&quot;]
-    B --&gt;|&quot;sí&quot;| D{&quot;¿Es una venta espejo?&quot;}
-    D --&gt;|&quot;sí&quot;| E[&quot;No se edita ni se anula sola:&lt;br/&gt;enlace a su gasto&quot;]
+    B --&gt;|&quot;sí&quot;| D{&quot;¿Está anulado?&quot;}
+    D --&gt;|&quot;sí&quot;| E[&quot;No se toca más:&lt;br/&gt;se ve con su motivo&quot;]
     D --&gt;|&quot;no&quot;| F{&quot;¿Qué hace?&quot;}
     F --&gt;|&quot;corregir&quot;| G[&quot;Cambia datos y escribe el motivo&quot;]
     F --&gt;|&quot;anular&quot;| H[&quot;Escribe el motivo&quot;]
-    G --&gt; I{&quot;¿Después del cambio es un gasto&lt;br/&gt;que no es en efectivo?&quot;}
-    I --&gt;|&quot;sí&quot;| J[&quot;Se crea o se actualiza&lt;br/&gt;su venta espejo&quot;]
-    I --&gt;|&quot;no&quot;| K[&quot;Si tenía venta espejo, se anula&quot;]
-    H --&gt; L[&quot;Se anula el movimiento&lt;br/&gt;y su venta espejo si tiene&quot;]
-    J --&gt; M[&quot;Auditoría con antes, después y motivo&lt;br/&gt;en la misma transacción&quot;]
-    K --&gt; M
-    L --&gt; M
-    M --&gt; N[&quot;El cambio aparece en el historial&lt;br/&gt;del movimiento&quot;]</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+    G --&gt; M[&quot;Auditoría con antes, después y motivo&lt;br/&gt;en la misma transacción&quot;]
+    H --&gt; M
+    M --&gt; N[&quot;El cambio aparece en el historial&lt;br/&gt;del movimiento&quot;]
+    M --&gt; O[&quot;La caja se recalcula sola&lt;br/&gt;desde el turno del movimiento&quot;]</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
 <section id="EST-01"><header><p>07-estados.md · diseño objetivo o propuesta, sin implementación comprobada · HU-025, HU-026</p><h2>EST-01. Estados de un movimiento</h2><nav><a href="07-estados.md#est-01">Explicación y escenarios</a><a href="png/EST-01.png">PNG</a><a href="svg/EST-01.svg">SVG</a><a href="fuentes/EST-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/EST-01.svg" alt="EST-01. Estados de un movimiento" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>stateDiagram-v2
     [*] --&gt; Vigente: cargar
     Vigente --&gt; Vigente: corregir con motivo
@@ -326,8 +339,8 @@
     Anulado --&gt; [*]
     note right of Vigente
         Suma en saldo y totales.
-        Una venta espejo cambia de estado
-        solo junto con su gasto.
+        Si es en efectivo, también
+        mueve la caja de su turno.
     end note
     note right of Anulado
         No suma. Sigue visible

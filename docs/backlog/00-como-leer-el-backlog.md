@@ -35,7 +35,7 @@ La fuente de verdad del texto de cada story es `01-epicas-y-stories.md`. Si una 
 1. Entró a `main` por un pull request revisado por la otra persona, con CI en verde.
 2. Cada criterio de aceptación tiene un test automático: unitario para reglas y dinero, de integración para API más base, end to end para los flujos críticos (ingresar, cargar, corregir, exportar).
 3. Los límites de rol y de local tienen test (consulta recibe 403 al cargar; un local no ve datos de otro).
-4. Toda operación de plata corre en `transaction.atomic()` junto con su auditoría y su venta espejo, si corresponde.
+4. Toda operación de plata corre en `transaction.atomic()` junto con su auditoría.
 5. Si tiene pantalla, se probó en un celular de 390 px y en una PC.
 6. Está desplegada en pruebas y pasó el smoke test.
 7. Si cambió una responsabilidad, una regla o un flujo, se actualizó el diagrama o el ADR.
@@ -58,14 +58,14 @@ Es una primera versión para mostrar, no la entrega final. La hace una sola pers
 | Trae | No trae todavía (va en R1) |
 |---|---|
 | Ingreso con usuario y contraseña, elegir local, roles dueño, carga y consulta | Recuperar la contraseña por email: la resetea el equipo (HU-012) |
-| Cargar, corregir y anular con historial; venta espejo | Row Level Security: el aislamiento lo hace la app, con tests de fuga (HU-011) |
+| Cargar, corregir y anular con historial; caja en efectivo por turno | Row Level Security: el aislamiento lo hace la app, con tests de fuga (HU-011) |
 | Filtros, saldo, reporte por mes y por categoría | Entorno de pruebas y promoción con aprobación (HU-005, HU-006) |
 | Exportar a Excel; PDF con la hoja de impresión del navegador | PDF generado en el servidor, si el de impresión no alcanza (HU-027) |
 | Backup nocturno | Restauración mensual automática: la primera se hace a mano (HU-016) |
 | CI con lint, tests y build | SAST, auditoría de dependencias y chequeo de migraciones (HU-004) |
 | | Capacitación y guías (HU-029) |
 
-Se publica en cuentas del equipo hasta que se acuerde a nombre de quién quedan las del cliente (P-04). Si P-01 no está resuelta, sale solo con ingreso y gasto; el haber se agrega al ver los cuadernos.
+Se publica en cuentas del equipo hasta que se acuerde a nombre de quién quedan las del cliente (P-04). El haber quedó definido con el cliente el 02/11/2026 (P-01, ADR-0008).
 
 ## Cómo usamos Jira
 

@@ -23,7 +23,9 @@ def book(norte, centro, categories, make_person):
     sales, suppliers = categories["Local Norte", Kind.INCOME], categories["Local Norte", Kind.EXPENSE]
     rent = Category.objects.create(tenant=norte, kind=Kind.EXPENSE, name="Alquiler")
 
-    def add(day, category, amount, method="cash", description="", voided=False, tenant=norte):
+    def add(
+        day, category, amount, method="cash", description="", voided=False, tenant=norte, shift="morning"
+    ):
         return Entry.objects.create(
             tenant=tenant,
             category=category,
@@ -31,6 +33,7 @@ def book(norte, centro, categories, make_person):
             date=day,
             amount=Decimal(amount),
             payment_method=method,
+            shift=shift,
             description=description,
             is_voided=voided,
             void_reason="error" if voided else "",
@@ -130,6 +133,10 @@ def test_monthly_report_needs_a_valid_year(as_role, book, year):
 # ---------- Excel ----------
 
 
+def col(name: str) -> int:
+    return HEADERS.index(name)
+
+
 def read_excel(response):
     assert response.status_code == 200, response.content
     return load_workbook(BytesIO(response.content))
@@ -148,13 +155,12 @@ def test_excel_has_typed_cells_and_voided_rows_do_not_add_up(as_role, book):
     rows = list(sheet.iter_rows(min_row=2, values_only=True))
     assert len(rows) == 5  # the voided one is listed, Centro's is not
     first = rows[0]
-    assert first[0].date() == date(2026, 10, 1)  # a real date, not text
-    assert first[5] == 100000  # a real number, not text
-    voided = next(r for r in rows if r[6] == "Anulado")
-    assert voided[3] == "Cargado dos veces"
-    assert {r[7] for r in rows} == {None}  # no mirrors yet: the cell stays empty
-    expense = next(r for r in rows if r[3] == "Verdulería")
-    assert expense[5] == pytest.approx(-30000.50)  # expenses go negative
+    assert first[col("Fecha")].date() == date(2026, 10, 1)  # a real date, not text
+    assert first[col("Importe")] == 100000  # a real number, not text
+    voided = next(r for r in rows if r[col("Estado")] == "Anulado")
+    assert voided[col("Descripción")] == "Cargado dos veces"
+    expense = next(r for r in rows if r[col("Descripción")] == "Verdulería")
+    assert expense[col("Importe")] == pytest.approx(-30000.50)  # expenses go negative
 
     totals = {r[0]: r[1] for r in excel["Totales"].iter_rows(values_only=True) if r and r[0]}
     assert totals["Local"] == "Local Norte"
@@ -170,7 +176,7 @@ def test_excel_respects_filters(as_role, book):
     excel = read_excel(api.get("/api/notebooks/export/", RANGE | {"payment_method": "qr"}))
 
     rows = list(excel["Movimientos"].iter_rows(min_row=2, values_only=True))
-    assert [r[3] for r in rows] == ["Jornada sábado"]
+    assert [r[col("Descripción")] for r in rows] == ["Jornada sábado"]
     totals = {r[0]: r[1] for r in excel["Totales"].iter_rows(values_only=True) if r and r[0]}
     assert totals["Filtros"] == "medio QR / Mercado Pago"
 
@@ -182,7 +188,7 @@ def test_excel_leaves_voided_out_unless_asked(as_role, book):
 
     rows = list(excel["Movimientos"].iter_rows(min_row=2, values_only=True))
     assert len(rows) == 4
-    assert all(r[6] == "Vigente" for r in rows)
+    assert all(r[col("Estado")] == "Vigente" for r in rows)
 
 
 def test_export_needs_a_shop_and_a_login(api, book):

@@ -22,6 +22,7 @@ def entry_body(categories, tenant="Local Norte", kind=Kind.EXPENSE, **overrides)
         "description": "Verdura",
         "amount": "45000.50",
         "payment_method": "cash",
+        "shift": "morning",
     }
     return body | overrides
 

@@ -1,11 +1,11 @@
 flowchart TD
     A["Persona dentro de un local<br/>(FUN-01)"] --> B{"¿Rol carga o dueño?"}
     B -->|"no, consulta"| C["Ve movimientos y reportes<br/>no ve el botón de cargar<br/>la API responde 403"]
-    B -->|"sí"| D["Fecha, tipo, categoría,<br/>descripción, importe y medio"]
+    B -->|"sí"| D["Fecha, turno, tipo, categoría,<br/>descripción, importe y medio"]
     D --> E{"¿Datos válidos?"}
     E -->|"no"| F["Error claro, no se guarda"] --> D
-    E -->|"sí"| G{"¿Es un gasto pagado con débito,<br/>crédito, QR o transferencia?"}
-    G -->|"no"| H["Movimiento y auditoría<br/>en una transacción"]
-    G -->|"sí"| I["Gasto, venta espejo del mismo importe<br/>y auditoría en una transacción"]
-    H --> J["Aparece en su día,<br/>en el saldo y en los totales"]
-    I --> J
+    E -->|"sí"| H["Movimiento y auditoría<br/>en una transacción"]
+    H --> J["Aparece en la lista<br/>y en los totales del período"]
+    H --> G{"¿Es en efectivo?"}
+    G -->|"sí"| K["Mueve el haber de su turno:<br/>la venta suma, el gasto resta"]
+    G -->|"no: Mercado Pago,<br/>tarjeta o transferencia"| L["Cuenta como venta o gasto,<br/>pero la caja no se mueve"]
