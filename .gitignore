@@ -71,3 +71,6 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# PDF de las guías: se generan con docs/guias/herramientas y se mandan al cliente, no se versionan
+docs/guias/pdf/

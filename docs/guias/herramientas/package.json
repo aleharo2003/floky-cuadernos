@@ -1,0 +1,14 @@
+{
+  "name": "floky-cuadernos-guias",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Capturas de pantalla y PDF de las guías de uso",
+  "scripts": {
+    "capturas": "node capturas.cjs",
+    "pdf": "node pdf.cjs"
+  },
+  "devDependencies": {
+    "marked": "16.4.1",
+    "playwright": "1.62.1"
+  }
+}
