@@ -9,6 +9,7 @@ Toda la documentación del sistema vive acá, junto al código, y se revisa en l
 3. [Casos de uso](diagramas/02-casos-de-uso.md): qué puede hacer cada rol.
 4. [Decisiones de arquitectura](adr/README.md): por qué el sistema es como es.
 5. [Backlog](backlog/00-como-leer-el-backlog.md): épicas, stories y preguntas abiertas.
+6. [Guías de uso](guias/README.md): para las personas de cada local, una por permiso.
 
 ## Qué hay en cada carpeta
 
@@ -18,6 +19,7 @@ Toda la documentación del sistema vive acá, junto al código, y se revisa en l
 | `adr/` | Decisiones de arquitectura (ADR), numeradas y con estado |
 | `backlog/` | Épicas, stories, preguntas abiertas y el CSV para Jira |
 | `diagramas/` | Diagramas Mermaid con SVG, PNG y [galería](diagramas/galeria.html) |
+| `guias/` | Guías de uso para el cliente (dueño, carga, consulta), con capturas y PDF |
 | `operacion/` | [Puesta en marcha](operacion/puesta-en-marcha.md) (cuentas, publicar, volver atrás) y [backups](operacion/backups.md) |
 
 ## De dónde viene

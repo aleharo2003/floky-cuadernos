@@ -33,8 +33,8 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
   const [editando, setEditando] = useState(false);
 
   const titulo = 'Caja en efectivo (haber) por turno';
-  if (error) return <Card titulo={titulo} className="panel-ancho"><p className="vacio">{error}</p></Card>;
-  if (!caja) return <Card titulo={titulo} className="panel-ancho"><p className="cargando">Cargando…</p></Card>;
+  if (error) return <Card titulo={titulo} className="panel-ancho panel-completo"><p className="vacio">{error}</p></Card>;
+  if (!caja) return <Card titulo={titulo} className="panel-ancho panel-completo"><p className="cargando">Cargando…</p></Card>;
 
   const guardado = () => {
     setEditando(false);
@@ -43,7 +43,7 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
 
   if (!caja.inicial) {
     return (
-      <Card titulo={titulo} className="panel-ancho">
+      <Card titulo={titulo} className="panel-ancho panel-completo">
         {puedeCargarInicial ? (
           <>
             <p className="nota">
@@ -64,7 +64,7 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
     <Card
       titulo={titulo}
       nota={textoInicial(caja.inicial)}
-      className="panel-ancho"
+      className="panel-ancho panel-completo"
       accion={
         puedeCargarInicial && (
           <Button tamano="chico" className="no-imprimir" onClick={() => setEditando(true)}>

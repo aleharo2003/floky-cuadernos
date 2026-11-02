@@ -72,7 +72,7 @@ export default function ResumenAnual({ anio, onAnio, onVerMes, vuelta }: Props) 
             },
             { titulo: 'Ingresos', numerica: true, render: (m) => pesos(m.ingresos) },
             { titulo: 'Gastos', numerica: true, render: (m) => pesos(m.egresos) },
-            { titulo: 'Saldo', numerica: true, render: (m) => <span className={m.saldo < 0 ? 'texto-negativo' : undefined}>{pesos(m.saldo)}</span> },
+            { titulo: 'Resultado', numerica: true, render: (m) => <span className={m.saldo < 0 ? 'texto-negativo' : undefined}>{pesos(m.saldo)}</span> },
             { titulo: 'Gastos sobre ingresos', numerica: true, render: (m) => proporcion(m) },
           ]}
           pie={
@@ -80,7 +80,7 @@ export default function ResumenAnual({ anio, onAnio, onVerMes, vuelta }: Props) 
               <th scope="row">Total {anio}</th>
               <td className="num" data-titulo="Ingresos">{pesos(total.ingresos)}</td>
               <td className="num" data-titulo="Gastos">{pesos(total.egresos)}</td>
-              <td className="num" data-titulo="Saldo">{pesos(total.saldo)}</td>
+              <td className="num" data-titulo="Resultado">{pesos(total.saldo)}</td>
               <td className="num" data-titulo="Gastos sobre ingresos">{proporcion(total)}</td>
             </tr>
           }
