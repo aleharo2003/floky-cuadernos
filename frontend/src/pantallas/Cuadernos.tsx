@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Tecla, useAtajo } from '../atajos/Atajos';
 import Badge from '../componentes/Badge';
 import Button from '../componentes/Button';
@@ -16,6 +16,7 @@ import { rangoDelMes, rangoEsteMes, rangoValido } from '../lib/fechas';
 import { diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros } from '../lib/formato';
 import { useConsulta } from '../lib/useConsulta';
 import { useDemorado } from '../lib/useDemorado';
+import { usePantallaChica } from '../lib/usePantallaChica';
 import { servicios } from '../services';
 import {
   NOMBRE_MEDIO,
@@ -104,6 +105,17 @@ export default function Cuadernos() {
   const [aviso, setAviso] = useState('');
   const [guardando, setGuardando] = useState(false);
   const campoFecha = useRef<HTMLInputElement>(null);
+  // Ref con estado: el formulario aparece recién cuando terminan de llegar los datos.
+  const [tarjetaCarga, setTarjetaCarga] = useState<HTMLDivElement | null>(null);
+  const chica = usePantallaChica();
+  // En el celular, un botón fijo lleva al formulario mientras el formulario no está a la vista.
+  const [cargaVisible, setCargaVisible] = useState(true);
+  useEffect(() => {
+    if (!tarjetaCarga || !chica) return;
+    const obs = new IntersectionObserver(([e]) => setCargaVisible(e.isIntersecting), { threshold: 0.15 });
+    obs.observe(tarjetaCarga);
+    return () => obs.disconnect();
+  }, [chica, tarjetaCarga]);
   // Una clave por intento de carga: si el mismo envío llega dos veces, se guarda uno solo (HU-021).
   const clave = useRef(crypto.randomUUID());
 
@@ -243,7 +255,8 @@ export default function Cuadernos() {
 
         {/* Consulta no carga ni corrige: el formulario no aparece (HU-024). */}
         {(puedeCargar || (puedeCorregir && editando)) && (
-          <Card titulo={editando ? 'Corregir movimiento' : 'Cargar movimiento'} className="no-imprimir">
+          <div ref={setTarjetaCarga} className="ancla-carga no-imprimir">
+          <Card titulo={editando ? 'Corregir movimiento' : 'Cargar movimiento'}>
             <form className="formulario" onSubmit={guardar}>
               <label className="campo">
                 <span>Fecha</span>
@@ -328,6 +341,7 @@ export default function Cuadernos() {
               </div>
             </form>
           </Card>
+          </div>
         )}
 
         <Card titulo={`Movimientos ${periodo}`} className="panel-ancho">
@@ -465,6 +479,16 @@ export default function Cuadernos() {
       )}
 
       {verHistorial && <Historial movimiento={verHistorial} onCerrar={() => setVerHistorial(null)} />}
+
+      {chica && puedeCargar && !editando && !cargaVisible && (
+        <button
+          type="button"
+          className="boton boton-primario boton-flotante no-imprimir"
+          onClick={() => tarjetaCarga?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+        >
+          + Cargar movimiento
+        </button>
+      )}
     </>
   );
 }

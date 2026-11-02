@@ -2752,3 +2752,147 @@ textarea:focus-visible {
     width: 100%;
   }
 }
+
+/* ---------- Celular (retoques) ---------- */
+
+/* El selector de local va sobre la barra oscura: texto claro y borde, no una caja blanca. */
+.barra-local {
+  border: 1px solid var(--sobre-accion);
+  background: transparent;
+  color: var(--sobre-accion);
+  min-height: var(--control-min);
+}
+
+.barra-local option {
+  background: #fff;
+  color: var(--tinta);
+}
+
+.ancla-carga {
+  display: flex;
+  flex-direction: column;
+  scroll-margin-top: var(--esp-4);
+}
+
+.ancla-carga > .tarjeta {
+  flex: 1;
+}
+
+.boton-flotante {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  /* Con letra de menos de 16 px, el iPhone agranda la pantalla al tocar un campo. */
+  input,
+  select,
+  textarea,
+  .campo-texto {
+    font-size: 16px;
+  }
+
+  /* 44 px de alto: lo mínimo cómodo para un dedo. */
+  .boton-chico,
+  .segmentado button,
+  .barra-salir,
+  .barra-local,
+  .filtros-panel > summary {
+    min-height: 44px;
+  }
+
+  .casilla {
+    min-height: 44px;
+  }
+
+  /* Gana a la regla de las tablas apiladas, que los deja en 32 px. */
+  .tabla .boton-chico {
+    min-height: 44px;
+  }
+
+  /* Desde y hasta, uno al lado del otro: la carga queda más arriba. */
+  .filtro-fechas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filtro-fechas .segmentado {
+    grid-column: 1 / -1;
+  }
+
+  .filtro-fechas .campo {
+    width: auto;
+    min-width: 0;
+  }
+
+  .filtro-fechas .campo input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .casilla input {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Los tres totales, en una sola tarjeta compacta: un renglón cada uno. */
+  .indicadores-3 {
+    display: block;
+    border-radius: var(--r);
+    background: var(--superficie);
+    box-shadow: var(--sombra, none);
+    padding: var(--esp-2) var(--esp-4);
+  }
+
+  .indicadores-3 .kpi {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: baseline;
+    gap: 0 var(--esp-3);
+    margin: 0;
+    padding: var(--esp-2) 0 var(--esp-2) var(--esp-3);
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .indicadores-3 .kpi + .kpi {
+    border-top: 1px solid var(--linea);
+  }
+
+  .indicadores-3 .kpi h2 {
+    margin: 0;
+  }
+
+  .indicadores-3 .kpi-valor {
+    margin: 0;
+    font-size: var(--texto-l);
+    font-weight: var(--peso-fuerte);
+  }
+
+  .indicadores-3 .kpi-pie {
+    grid-column: 1 / -1;
+    margin-top: 2px;
+    font-size: var(--texto-xs);
+  }
+
+  /* Botón fijo para ir a cargar, sin tapar el final de la página. */
+  .boton-flotante {
+    display: inline-flex;
+    position: fixed;
+    right: var(--esp-4);
+    bottom: calc(var(--esp-4) + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
+    min-height: 48px;
+    padding: 0 var(--esp-5);
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgb(0 0 0 / 0.25);
+  }
+
+  main {
+    padding-bottom: 88px;
+  }
+
+  .resumen-anual-mas {
+    margin-top: var(--esp-2);
+  }
+}
