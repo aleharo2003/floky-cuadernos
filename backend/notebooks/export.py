@@ -102,7 +102,7 @@ def build_workbook(
     totals.append([])
     totals.append(["Ingresos", income])
     totals.append(["Gastos", expense])
-    totals.append(["Saldo", income - expense])
+    totals.append(["Resultado", income - expense])
     for row in range(totals.max_row - 2, totals.max_row + 1):
         totals.cell(row, 1).font = BOLD
         totals.cell(row, 2).number_format = MONEY

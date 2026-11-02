@@ -167,7 +167,7 @@ def test_excel_has_typed_cells_and_voided_rows_do_not_add_up(as_role, book):
     assert totals["Período"] == "01/10/2026 al 31/10/2026"
     assert totals["Ingresos"] == 150000
     assert totals["Gastos"] == pytest.approx(70000.50)
-    assert totals["Saldo"] == pytest.approx(79999.50)
+    assert totals["Resultado"] == pytest.approx(79999.50)
 
 
 def test_excel_respects_filters(as_role, book):
