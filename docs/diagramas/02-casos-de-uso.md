@@ -6,7 +6,7 @@
 
 ## CU-01. Casos de uso de los cuadernos
 
-**Propósito:** ver de un vistazo qué puede hacer cada rol. **Stories:** HU-010, HU-012, HU-013, HU-021, HU-022, HU-023, HU-024, HU-026, HU-028, HU-029. **Viene de floky:** nueva.
+**Propósito:** ver de un vistazo qué puede hacer cada rol. **Stories:** HU-010, HU-012, HU-013, HU-021, HU-022, HU-023, HU-024, HU-025, HU-026, HU-028, HU-029. **Viene de floky:** nueva.
 
 <!-- diagram: CU-01 -->
 ```mermaid
@@ -23,10 +23,11 @@ flowchart LR
         C01(["C01 Ingresar"])
         C03(["C03 Buscar y filtrar movimientos"])
         C04(["C04 Ver historial de un movimiento"])
-        C05(["C05 Ver saldo y reporte del período"])
+        C05(["C05 Ver saldo, caja y reporte del período"])
         C07(["C07 Cargar movimiento"])
         C08(["C08 Corregir o anular movimiento"])
         C10(["C10 Administrar categorías"])
+        C13(["C13 Cargar el haber inicial"])
         C12(["C12 Dar de alta locales,<br/>personas y membresías"])
     end
     Consulta --> C01
@@ -36,6 +37,7 @@ flowchart LR
     Carga --> C07
     Carga --> C08
     Dueno --> C10
+    Dueno --> C13
     Equipo --> C12
 ```
 
@@ -54,22 +56,22 @@ flowchart LR
 flowchart LR
     C02(["C02 Elegir o cambiar de local"]) -.->|"extiende: tiene<br/>más de un local"| C01(["C01 Ingresar"])
     C06(["C06 Exportar a PDF o Excel"]) -.->|"extiende"| C05(["C05 Ver saldo y reporte"])
-    C09(["C09 Generar venta espejo"]) -.->|"extiende: gasto que<br/>no es en efectivo"| C07(["C07 Cargar movimiento"])
-    C09 -.->|"extiende: gasto que<br/>no es en efectivo"| C08(["C08 Corregir o anular"])
-    C07 -.->|"incluye"| C11(["C11 Registrar en la auditoría"])
-    C08 -.->|"incluye"| C11
+    C05 -.->|"incluye"| C09(["C09 Calcular la caja por turno"])
+    C07(["C07 Cargar movimiento"]) -.->|"incluye"| C11(["C11 Registrar en la auditoría"])
+    C08(["C08 Corregir o anular"]) -.->|"incluye"| C11
     C10(["C10 Administrar categorías"]) -.->|"incluye"| C11
     C12(["C12 Alta de locales y personas"]) -.->|"incluye"| C11
+    C13(["C13 Cargar el haber inicial"]) -.->|"incluye"| C11
 ```
 
 **Archivos CU-02:** [SVG](svg/CU-02.svg) · [PNG](png/CU-02.png) · [Mermaid](fuentes/CU-02.mmd).
 
-**Lectura:** C09 y C11 no los dispara una persona sino el sistema, como parte de otro caso.
+**Lectura:** C09 y C11 no los dispara una persona sino el sistema, como parte de otro caso. La caja no se guarda: se calcula cada vez que alguien mira el saldo (ADR-0008).
 
 **Cómo leer las flechas punteadas:**
 
 - **Incluye:** el caso que sale siempre ejecuta el caso al que llega. Cargar, corregir y administrar categorías siempre dejan auditoría.
-- **Extiende:** el caso que sale agrega algo al caso al que llega solo cuando se cumple una condición. Elegir local pasa solo si la persona tiene más de uno; la venta espejo, solo si el gasto no es en efectivo.
+- **Extiende:** el caso que sale agrega algo al caso al que llega solo cuando se cumple una condición. Elegir local pasa solo si la persona tiene más de uno.
 
 > Tip: si un "incluye" tiene condición, en realidad es un "extiende". Es el error más común en estos diagramas, y obliga a preguntar "¿esto pasa siempre?", que es justo la pregunta que destapa reglas de negocio.
 
@@ -81,11 +83,12 @@ flowchart LR
 | C02 Elegir o cambiar de local | Todos con más de un local | Trabajar en el local que corresponde | Con un solo local no aparece. Pedir un local ajeno responde 404 | HU-012, HU-013, HU-011 |
 | C03 Buscar y filtrar | Consulta | Encontrar movimientos | Por fechas, categoría, tipo, medio y texto. Los anulados se ven marcados | HU-028 |
 | C04 Ver historial | Consulta | Saber quién cambió qué y por qué | Muestra antes, después, motivo, persona y hora | HU-026 |
-| C05 Ver saldo y reporte | Consulta | Totales por mes y por categoría, ingresos contra gastos | Los espejos suman, los anulados no | HU-023 |
+| C05 Ver saldo, caja y reporte | Consulta | Totales por mes y por categoría, ingresos contra gastos, y el efectivo de cada turno | Los anulados no suman. La caja no sigue los filtros | HU-023, HU-025 |
 | C06 Exportar | Consulta | Llevarse el reporte en PDF o Excel | Respeta el período y los filtros en pantalla | HU-027 |
-| C07 Cargar movimiento | Carga | Anotar un ingreso, gasto o haber | Datos inválidos: no se guarda nada. Un doble toque guarda uno solo | HU-021 |
-| C08 Corregir o anular | Carga | Arreglar un error sin esconderlo | Siempre con motivo. Nada se borra. La venta espejo no se toca sola | HU-026 |
-| C09 Generar venta espejo | Sistema | Que el saldo no baje por un gasto que no salió del cajón | Solo gastos con débito, crédito, QR o transferencia. Mismo importe y fecha | HU-025 |
+| C07 Cargar movimiento | Carga | Anotar un ingreso o un gasto, con su turno | Datos inválidos: no se guarda nada. Un doble toque guarda uno solo | HU-021 |
+| C08 Corregir o anular | Carga | Arreglar un error sin esconderlo | Siempre con motivo. Nada se borra. La caja se recalcula sola | HU-026 |
+| C09 Calcular la caja por turno | Sistema | Saber cuánto efectivo hay al cerrar cada turno | Haber anterior más ventas en efectivo, menos gastos en efectivo. Mercado Pago, tarjetas y transferencias no la mueven. Si da negativa, avisa | HU-025 |
 | C10 Administrar categorías | Dueño | Ordenar los movimientos como piensa el negocio | Una categoría con movimientos se desactiva, no se borra | HU-022 |
+| C13 Cargar el haber inicial | Dueño | Que la caja arranque del último haber anotado en papel | Fecha, turno e importe. Cambiarlo pide motivo, porque mueve todos los haberes siguientes | HU-025, HU-029 |
 | C11 Registrar en la auditoría | Sistema | Que todo cambio quede registrado | En la misma transacción que el cambio | HU-014, HU-024 |
 | C12 Alta de locales y personas | Equipo | Dejar listo el acceso de cada persona | Una membresía por persona y local, con su rol | HU-010, HU-013, HU-029 |

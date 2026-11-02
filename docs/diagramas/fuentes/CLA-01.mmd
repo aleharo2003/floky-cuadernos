@@ -19,7 +19,7 @@ classDiagram
         descripcion
         importe
         medio
-        espejoDe
+        turno
         anulado
         motivoAnulacion
         cargadoPor
@@ -31,6 +31,11 @@ classDiagram
         tipo
         activa
         delSistema
+    }
+    class Caja {
+        haberInicial
+        cierres(desde, hasta)
+        haberAl(fecha, turno)
     }
     class EntradaAuditoria {
         actor
@@ -45,7 +50,8 @@ classDiagram
     Local "1" --> "*" Movimiento
     Local "1" --> "*" Categoria
     Movimiento "*" --> "1" Categoria
-    Movimiento "0..1" --> "1" Movimiento : espejo de
+    Local "1" --> "1" Caja
+    Caja ..> Movimiento : suma lo que es en efectivo
     Movimiento ..> EntradaAuditoria : genera
-    note for Movimiento "Un gasto que no es en efectivo genera su venta espejo. Nada se borra: se anula."
+    note for Movimiento "Nada se borra: se anula. El medio de pago dice si toca la caja."
     note for Membresia "El código pregunta puede(permiso), nunca el nombre del rol."

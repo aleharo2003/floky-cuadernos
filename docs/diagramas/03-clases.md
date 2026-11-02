@@ -31,7 +31,7 @@ classDiagram
         descripcion
         importe
         medio
-        espejoDe
+        turno
         anulado
         motivoAnulacion
         cargadoPor
@@ -43,6 +43,11 @@ classDiagram
         tipo
         activa
         delSistema
+    }
+    class Caja {
+        haberInicial
+        cierres(desde, hasta)
+        haberAl(fecha, turno)
     }
     class EntradaAuditoria {
         actor
@@ -57,12 +62,13 @@ classDiagram
     Local "1" --> "*" Movimiento
     Local "1" --> "*" Categoria
     Movimiento "*" --> "1" Categoria
-    Movimiento "0..1" --> "1" Movimiento : espejo de
+    Local "1" --> "1" Caja
+    Caja ..> Movimiento : suma lo que es en efectivo
     Movimiento ..> EntradaAuditoria : genera
-    note for Movimiento "Un gasto que no es en efectivo genera su venta espejo. Nada se borra: se anula."
+    note for Movimiento "Nada se borra: se anula. El medio de pago dice si toca la caja."
     note for Membresia "El código pregunta puede(permiso), nunca el nombre del rol."
 ```
 
 **Archivos CLA-01:** [SVG](svg/CLA-01.svg) · [PNG](png/CLA-01.png) · [Mermaid](fuentes/CLA-01.mmd).
 
-**Lectura:** el movimiento sabe corregirse y anularse, y al hacerlo arrastra a su venta espejo (`espejoDe`). La membresía es la única puerta: responde si una persona puede algo en un local. La auditoría es de solo agregar.
+**Lectura:** el movimiento sabe corregirse y anularse. La caja no guarda nada propio salvo el haber inicial: calcula el haber de cada turno con los movimientos en efectivo, así que corregir o anular un movimiento la corrige sola (ADR-0008). La membresía es la única puerta: responde si una persona puede algo en un local. La auditoría es de solo agregar.

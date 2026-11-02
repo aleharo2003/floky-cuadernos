@@ -7,15 +7,19 @@ Si una palabra significa una cosa en una reunión y otra en el código, tarde o 
 | Término | Significado | En el código |
 |---|---|---|
 | Local | Un comercio que usa el sistema. Tiene sus cuadernos, sus categorías y su gente | `Tenant` |
-| Cuaderno | Lo que el local anotaba en papel: sus movimientos. Si un local lleva uno o varios cuadernos se define al verlos (P-01) | app `notebooks` |
-| Movimiento | Cada anotación: fecha, tipo, categoría, descripción, importe y medio de pago | `Entry` |
+| Cuaderno | Lo que el local anotaba en papel. Comedor TJ lleva dos: "Costos" (cada gasto) y el anual (ventas y haber por turno) | app `notebooks` |
+| Movimiento | Cada anotación: fecha, turno, tipo, categoría, descripción, importe y medio de pago | `Entry` |
+| Turno | Mañana o noche. La caja se cierra al final de cada uno. El turno noche que termina después de medianoche conserva la fecha en que empezó | `shift` |
 | Ingreso | Movimiento que suma. Incluye las ventas que se anotan a mano | `kind = income` |
 | Gasto | Movimiento que resta | `kind = expense` |
-| Haber | Tipo de anotación de los cuadernos. Qué significa y cómo afecta el saldo se define al verlos (P-01) | |
+| Haber | El efectivo que hay en la caja al cerrar un turno: haber anterior más ventas en efectivo, menos gastos en efectivo. No se guarda: se calcula (ADR-0008) | `notebooks.cash` |
+| Haber inicial | El último haber anotado en papel, con su fecha y turno. La caja del sistema arranca de ahí. Lo carga el dueño | `CashOpening` |
+| Cobrado sin efectivo | Ventas cobradas con Mercado Pago, tarjeta o transferencia. Son venta, pero esa plata no está en la caja. En papel se restaba como costo ("MP") | `sales_not_cash` |
+| D (debe) | Marca al final de algunos montos del cuaderno de Costos. Es un gasto común que resta | |
 | Categoría | Agrupa movimientos del mismo tipo para los reportes. Cada local tiene las suyas | `Category` |
 | Medio de pago | Efectivo, débito, crédito, QR o transferencia | `payment_method` |
-| Venta espejo | Ingreso que el sistema crea solo por cada gasto pagado con débito, crédito, QR o transferencia, del mismo importe, para que el saldo no baje por plata que no salió del cajón. Sigue siempre a su gasto | `Entry.mirror_of` |
-| Saldo | Ingresos menos gastos del período, sin contar los anulados | |
+| Venta espejo | Idea descartada (ADR-0008): crear una fila extra para compensar lo que no es efectivo. Hoy el medio de pago dice si un movimiento toca la caja | |
+| Resultado | Ingresos menos gastos del período, con cualquier medio de pago, sin contar los anulados. No es lo mismo que el haber | |
 | Corregir | Cambiar datos de un movimiento, con motivo. Queda en el historial | |
 | Anular | Dejar un movimiento sin efecto, con motivo. Sigue visible y no suma | `is_voided` |
 | Historial | Lista de cambios de un movimiento: quién, cuándo, motivo, antes y después. Se arma con la auditoría | |

@@ -4,9 +4,9 @@
 
 <a id="tec-01"></a>
 
-## TEC-01. Guardar un gasto con venta espejo
+## TEC-01. Guardar un gasto y ver la caja
 
-**Propósito:** mostrar que el gasto, su espejo y la auditoría se guardan juntos o no se guarda nada. **Stories:** HU-011, HU-014, HU-021, HU-025. **Viene de floky:** Nueva, con la idea de TEC-01.
+**Propósito:** mostrar que el movimiento y su auditoría se guardan juntos o no se guarda nada, y que el haber se calcula al leerlo, sin filas extra. **Stories:** HU-011, HU-014, HU-021, HU-025. **Viene de floky:** Nueva, con la idea de TEC-01.
 
 <!-- diagram: TEC-01 -->
 ```mermaid
@@ -16,25 +16,27 @@ sequenceDiagram
     participant V as Vista DRF
     participant S as Servicio de cuadernos
     participant DB as PostgreSQL
-    P->>UI: guarda un gasto de $ 20.000 por transferencia
+    P->>UI: guarda un gasto de $ 20.000 por transferencia, turno noche
     UI->>V: POST de movimiento con clave de idempotencia
     V->>V: valida datos y permiso de cargar en el local activo
     V->>S: registrar gasto
     Note over S,DB: una sola transacción
     S->>DB: BEGIN y SET LOCAL app.tenant_ids
     S->>DB: INSERT del gasto
-    S->>DB: INSERT de la venta espejo apuntando al gasto
     S->>DB: INSERT de la auditoría
     S->>DB: COMMIT
-    S-->>V: gasto y espejo
     V-->>UI: 201 creado
-    UI-->>P: aparece en su día, en el saldo y en los totales
+    UI->>V: GET de la caja del período
+    V->>S: cierres por turno desde el haber inicial
+    S->>DB: suma por fecha y turno, separando efectivo del resto
+    S-->>UI: haber de cada turno
+    UI-->>P: el gasto aparece en la lista, y la caja no baja porque no salió efectivo
     Note over UI,V: si el mismo POST llega dos veces, la clave de idempotencia devuelve el primero
 ```
 
 **Archivos TEC-01:** [SVG](svg/TEC-01.svg) · [PNG](png/TEC-01.png) · [Mermaid](fuentes/TEC-01.mmd).
 
-**Lectura:** la persona ve "guardado" recién después del COMMIT. Si algo falla en el medio, no queda un gasto sin espejo ni un espejo suelto. El `SET LOCAL` hace que la base solo deje tocar filas del local activo, aunque el código se equivoque.
+**Lectura:** la persona ve "guardado" recién después del COMMIT. El haber no se guarda en ninguna tabla: se calcula cada vez desde el haber inicial y los movimientos en efectivo (ADR-0008). Así no hay filas que mantener sincronizadas, y corregir o anular un movimiento corrige la caja sola. El `SET LOCAL` hace que la base solo deje tocar filas del local activo, aunque el código se equivoque.
 
 <a id="tec-02"></a>
 

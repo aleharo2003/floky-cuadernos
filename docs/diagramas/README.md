@@ -8,8 +8,8 @@ Abrir [la galería](galeria.html) para recorrerlos. La [guía didáctica](guia-p
 
 1. [CU-01: qué puede hacer cada rol](02-casos-de-uso.md#cu-01).
 2. [ARQ-04: quién ve qué cuando hay varios locales](01-arquitectura.md#arq-04).
-3. [FUN-02: cargar un movimiento](06-flujos-funcionales.md#fun-02), con la regla de la venta espejo.
-4. [TEC-01: guardar un gasto con su espejo](05-secuencias-tecnicas.md#tec-01). Dónde empieza y dónde termina la transacción.
+3. [FUN-02: cargar un movimiento](06-flujos-funcionales.md#fun-02), con su turno y qué mueve la caja.
+4. [TEC-01: guardar un gasto y ver la caja](05-secuencias-tecnicas.md#tec-01). Dónde empieza y dónde termina la transacción, y por qué el haber se calcula.
 
 ## Qué explica cada documento
 
@@ -70,7 +70,7 @@ Una asociación no significa que la story esté diseñada por completo: algunas 
 | TEC-01 | Nueva, con la idea de TEC-01 |
 | TEC-02 | TEC-05, sin instalador |
 | FUN-01 | Nueva, a partir del ingreso de FUN-07 |
-| FUN-02 | FUN-06, sin segunda clave y con venta espejo |
+| FUN-02 | FUN-06, sin segunda clave y con turno |
 | FUN-03 | Nueva |
 | EST-01 | Nueva |
 | OPS-01 | OPS-02, sin la parte del local |

@@ -19,7 +19,7 @@ erDiagram
     USER ||--o{ NOTEBOOK_ENTRY : creates
     USER ||--o{ AUDIT_ENTRY : acts
     NOTEBOOK_CATEGORY ||--o{ NOTEBOOK_ENTRY : classifies
-    NOTEBOOK_ENTRY |o--o| NOTEBOOK_ENTRY : mirrors
+    TENANT ||--o| CASH_OPENING : starts
     USER {
         uuid id PK
         string email UK
@@ -41,15 +41,22 @@ erDiagram
         uuid tenant_id FK "obligatorio, con RLS"
         uuid category_id FK
         uuid created_by FK
-        uuid mirror_of FK "solo en la venta espejo"
         uuid idempotency_key UK
         date date
-        string kind "income o expense, haber en P-01"
-        string payment_method
+        string shift "morning o night"
+        string kind "income o expense"
+        string payment_method "cash o no: decide el haber"
         string description
         numeric amount "numeric 14,2"
         bool is_voided
         string void_reason
+    }
+    CASH_OPENING {
+        uuid tenant_id PK "uno por local"
+        date date
+        string shift
+        numeric amount "último haber en papel"
+        uuid updated_by FK
     }
     NOTEBOOK_CATEGORY {
         uuid id PK
@@ -75,4 +82,4 @@ erDiagram
 
 **Archivos DAT-01:** [SVG](svg/DAT-01.svg) · [PNG](png/DAT-01.png) · [Mermaid](fuentes/DAT-01.mmd).
 
-**Lectura:** `MEMBERSHIP` es la única puerta a un local. Todas las tablas de negocio tienen `tenant_id` y Row Level Security (ADR-0003). `mirror_of` une la venta espejo con su gasto para corregirlas y anularlas juntas; `is_system` marca la categoría de los espejos, que nadie edita. `AUDIT_ENTRY` es de solo agregar: la app no tiene permiso para modificarla ni borrarla, y de ahí sale el historial que ve la persona. `idempotency_key` evita que un doble toque cree dos movimientos.
+**Lectura:** `MEMBERSHIP` es la única puerta a un local. Todas las tablas de negocio tienen `tenant_id` y Row Level Security (ADR-0003). El haber (efectivo en la caja) no se guarda: se calcula desde `CASH_OPENING`, el último haber anotado en papel, sumando las ventas en efectivo y restando los gastos en efectivo, turno por turno (ADR-0008). Por eso no hay filas espejo. `AUDIT_ENTRY` es de solo agregar: la app no tiene permiso para modificarla ni borrarla, y de ahí sale el historial que ve la persona. `idempotency_key` evita que un doble toque cree dos movimientos.
