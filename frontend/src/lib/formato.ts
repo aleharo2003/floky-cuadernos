@@ -56,14 +56,29 @@ export function hora(iso: string | Date): string {
 
 export const fechaHora = (iso: string | Date): string => `${fecha(iso)} ${hora(iso)}`;
 
-/** Acepta "12.345,67", "12345,67" o "12345.67" tal como lo tipea la gente. */
+/**
+ * Lee un importe como lo tipea la gente en Argentina: "12.345,67", "12345,67", "45.000", "1.300.000"
+ * o "12345.67". Sin coma, los puntos en grupos de tres son miles ("45.000" son cuarenta y cinco mil).
+ * Si no se entiende devuelve NaN, nunca un 0 inventado: quien llama decide qué decirle a la persona.
+ */
 export function leerMonto(texto: string): number {
   const limpio = texto.trim().replace(/\s|\$/g, '');
-  if (!limpio) return 0;
-  const normal = limpio.includes(',') ? limpio.replace(/\./g, '').replace(',', '.') : limpio;
-  const n = Number(normal);
-  return Number.isFinite(n) ? redondear(n) : 0;
+  if (!limpio) return NaN;
+  let normal: string;
+  if (limpio.includes(',')) {
+    if ((limpio.match(/,/g) ?? []).length > 1) return NaN;
+    normal = limpio.replace(/\./g, '').replace(',', '.');
+  } else if (/^\d{1,3}(\.\d{3})+$/.test(limpio)) {
+    normal = limpio.replace(/\./g, '');
+  } else {
+    normal = limpio;
+  }
+  if (!/^\d+(\.\d+)?$/.test(normal)) return NaN;
+  return redondear(Number(normal));
 }
+
+/** El mensaje para un importe que no se pudo leer. */
+export const MONTO_ILEGIBLE = 'Escribí el monto con números, por ejemplo 45.000 o 45.000,50.';
 
 /** 0003-00001234 */
 export function numeroComprobante(puntoVenta: number, numero: number): string {

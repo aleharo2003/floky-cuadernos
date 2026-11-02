@@ -28,6 +28,7 @@ class EntryData:
     description: str
     amount: Decimal
     payment_method: str
+    shift: str
 
 
 def _category_for(membership: Membership, data: EntryData) -> Category:
@@ -65,6 +66,7 @@ def create_entry(membership: Membership, data: EntryData, idempotency_key: uuid.
                 description=data.description.strip(),
                 amount=data.amount,
                 payment_method=data.payment_method,
+                shift=data.shift,
                 idempotency_key=idempotency_key,
                 created_by=membership.user,
             )
@@ -95,8 +97,6 @@ def _locked(membership: Membership, entry_id) -> Entry:
         raise Entry.DoesNotExist
     if entry.is_voided:
         raise RuleError("El movimiento está anulado: no se puede cambiar.")
-    if entry.mirror_of_id:
-        raise RuleError("Este movimiento lo creó el sistema y sigue a su gasto: corregí el gasto.")
     return entry
 
 
@@ -112,6 +112,7 @@ def correct_entry(membership: Membership, entry_id, data: EntryData, reason: str
         entry.description = data.description.strip()
         entry.amount = data.amount
         entry.payment_method = data.payment_method
+        entry.shift = data.shift
         if entry.snapshot() == before:
             raise RuleError("No cambiaste nada.")
         entry.save()

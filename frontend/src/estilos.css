@@ -2834,8 +2834,8 @@ textarea:focus-visible {
     height: 22px;
   }
 
-  /* Los tres totales, en una sola tarjeta compacta: un renglón cada uno. */
-  .indicadores-3 {
+  /* Los totales, en una sola tarjeta compacta: un renglón cada uno. */
+  .indicadores-compactos {
     display: block;
     border-radius: var(--r);
     background: var(--superficie);
@@ -2843,7 +2843,7 @@ textarea:focus-visible {
     padding: var(--esp-2) var(--esp-4);
   }
 
-  .indicadores-3 .kpi {
+  .indicadores-compactos .kpi {
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: baseline;
@@ -2855,21 +2855,21 @@ textarea:focus-visible {
     box-shadow: none;
   }
 
-  .indicadores-3 .kpi + .kpi {
+  .indicadores-compactos .kpi + .kpi {
     border-top: 1px solid var(--linea);
   }
 
-  .indicadores-3 .kpi h2 {
+  .indicadores-compactos .kpi h2 {
     margin: 0;
   }
 
-  .indicadores-3 .kpi-valor {
+  .indicadores-compactos .kpi-valor {
     margin: 0;
     font-size: var(--texto-l);
     font-weight: var(--peso-fuerte);
   }
 
-  .indicadores-3 .kpi-pie {
+  .indicadores-compactos .kpi-pie {
     grid-column: 1 / -1;
     margin-top: 2px;
     font-size: var(--texto-xs);
@@ -2895,4 +2895,23 @@ textarea:focus-visible {
   .resumen-anual-mas {
     margin-top: var(--esp-2);
   }
+}
+
+/* ---------- Caja por turno ---------- */
+
+.aviso-caja {
+  margin: 0 0 var(--esp-3);
+  padding: var(--esp-3) var(--esp-4);
+  border: 1px solid var(--negativo-texto);
+  border-radius: var(--r);
+  background: var(--negativo-suave);
+  color: var(--negativo-texto);
+}
+
+.nota-caja {
+  margin-top: var(--esp-3);
+}
+
+.formulario-inicial {
+  max-width: 520px;
 }

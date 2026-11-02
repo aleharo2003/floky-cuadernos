@@ -8,21 +8,31 @@ from openpyxl import Workbook
 from openpyxl.styles import Font
 from openpyxl.utils import get_column_letter
 
-from notebooks.models import Entry, Kind, PaymentMethod
+from notebooks.cash import Close
+from notebooks.models import Entry, Kind, PaymentMethod, Shift
 
 MONEY = "#,##0.00;-#,##0.00"
 DATE = "DD/MM/YYYY"
 BOLD = Font(bold=True)
 HEADERS = [
     "Fecha",
+    "Turno",
     "Tipo",
     "Categoría",
     "Descripción",
     "Medio de pago",
     "Importe",
     "Estado",
-    "Espejo",
     "Cargado por",
+]
+CASH_HEADERS = [
+    "Fecha",
+    "Turno",
+    "Haber anterior",
+    "Ventas",
+    "Cobrado sin efectivo",
+    "Gastos en efectivo",
+    "Haber",
 ]
 
 
@@ -33,7 +43,13 @@ def _autosize(sheet) -> None:
 
 
 def build_workbook(
-    *, shop: str, filters: dict, entries: QuerySet[Entry], issued_at: datetime, category: str = ""
+    *,
+    shop: str,
+    filters: dict,
+    entries: QuerySet[Entry],
+    issued_at: datetime,
+    category: str = "",
+    closes: list[Close] | None = None,
 ) -> bytes:
     book = Workbook()
 
@@ -49,19 +65,19 @@ def build_workbook(
         detail.append(
             [
                 e.date,
+                Shift(e.shift).label,
                 Kind(e.kind).label,
                 e.category.name,
                 e.description,
                 PaymentMethod(e.payment_method).label,
                 signed,
                 "Anulado" if e.is_voided else "Vigente",
-                "Sí" if e.mirror_of_id else "",  # mirrors add up like any other entry (HU-025)
                 e.created_by.get_full_name() or e.created_by.get_username(),
             ]
         )
         row = detail.max_row
         detail.cell(row, 1).number_format = DATE
-        detail.cell(row, 6).number_format = MONEY
+        detail.cell(row, 7).number_format = MONEY
         if e.is_voided:
             continue  # voided entries are listed, but they never add up (HU-027)
         if e.kind == Kind.INCOME:
@@ -99,6 +115,9 @@ def build_workbook(
         totals.cell(totals.max_row, 4).number_format = MONEY
     _autosize(totals)
 
+    if closes is not None:
+        _cash_sheet(book.create_sheet("Caja"), closes)
+
     buffer = BytesIO()
     book.save(buffer)
     return buffer.getvalue()
@@ -117,3 +136,22 @@ def describe_filters(filters: dict, category: str = "") -> str:
     if filters.get("voided"):
         parts.append("con anulados (no suman)")
     return ", ".join(parts)
+
+
+def _cash_sheet(sheet, closes: list[Close]) -> None:
+    """The haber shift by shift, like the paper notebook. It ignores the list filters: it is the whole box."""
+    sheet.append(CASH_HEADERS)
+    for cell in sheet[1]:
+        cell.font = BOLD
+    for c in closes:
+        sheet.append(
+            [c.date, Shift(c.shift).label, c.before, c.sales, c.sales_not_cash, c.expenses_cash, c.after]
+        )
+        row = sheet.max_row
+        sheet.cell(row, 1).number_format = DATE
+        for col in range(3, 8):
+            sheet.cell(row, col).number_format = MONEY
+    if not closes:
+        sheet.append(["Sin cierres en este período."])
+    sheet.freeze_panes = "A2"
+    _autosize(sheet)

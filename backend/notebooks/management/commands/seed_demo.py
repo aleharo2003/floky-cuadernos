@@ -9,7 +9,8 @@ from django.db import transaction
 
 from accounts.models import Membership, Role
 from core.models import Tenant
-from notebooks.models import Category, Kind
+from notebooks.cash import set_opening
+from notebooks.models import Category, Kind, Shift
 from notebooks.services import EntryData, create_entry
 
 PASSWORD = "clave-de-prueba-123"  # noqa: S105 - demo data, documented in the README
@@ -50,22 +51,37 @@ class Command(BaseCommand):
         lucia_norte = Membership.objects.get(user__username="lucia", tenant=norte)
         today = date.today()
         samples = [
-            (0, Kind.INCOME, "Ventas", "Ventas de la noche", "320000", "cash"),
-            (0, Kind.EXPENSE, "Proveedores", "Verdura", "45000", "cash"),
-            (1, Kind.INCOME, "Ventas", "Ventas de la noche", "280000", "cash"),
-            (1, Kind.EXPENSE, "Servicios", "Luz", "95000", "debit"),
-            (2, Kind.EXPENSE, "Sueldos y adelantos", "Adelanto", "60000", "cash"),
+            (0, Shift.NIGHT, Kind.INCOME, "Ventas", "Ventas de la noche", "320000", "cash"),
+            (0, Shift.MORNING, Kind.EXPENSE, "Proveedores", "Verdura", "45000", "cash"),
+            (1, Shift.NIGHT, Kind.INCOME, "Ventas", "Ventas de la noche", "280000", "cash"),
+            (1, Shift.MORNING, Kind.EXPENSE, "Servicios", "Luz", "95000", "debit"),
+            (2, Shift.MORNING, Kind.EXPENSE, "Sueldos y adelantos", "Adelanto", "60000", "cash"),
         ]
-        for days_ago, kind, category, description, amount, method in samples:
+        # Every sample stays inside the current month, so "Este mes" shows them all on any date.
+        first_of_month = today.replace(day=1)
+
+        def day_for(days_ago: int) -> date:
+            return max(today - timedelta(days=days_ago), first_of_month)
+
+        # The last haber written on paper, the night before the first sample (P-01).
+        set_opening(
+            lucia_norte,
+            day=day_for(2) - timedelta(days=1),
+            shift=Shift.NIGHT,
+            amount=Decimal("500000"),
+            reason="",
+        )
+        for days_ago, shift, kind, category, description, amount, method in samples:
             create_entry(
                 lucia_norte,
                 EntryData(
-                    date=today - timedelta(days=days_ago),
+                    date=day_for(days_ago),
                     kind=kind,
                     category_id=Category.objects.get(tenant=norte, kind=kind, name=category).id,
                     description=description,
                     amount=Decimal(amount),
                     payment_method=method,
+                    shift=shift,
                 ),
             )
         self.stdout.write(

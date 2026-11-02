@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from notebooks.models import Category, Entry, Kind, PaymentMethod
+from notebooks.models import CashOpening, Category, Entry, Kind, PaymentMethod, Shift
 from notebooks.services import EntryData
 
 MAX_RANGE = timedelta(days=366)
@@ -31,9 +31,9 @@ class EntrySerializer(serializers.ModelSerializer):
             "description",
             "amount",
             "payment_method",
+            "shift",
             "is_voided",
             "void_reason",
-            "mirror_of",
             "created_by",
             "created_at",
         ]
@@ -49,6 +49,7 @@ class EntryInputSerializer(serializers.Serializer):
     description = serializers.CharField(max_length=120, allow_blank=True, default="")
     amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=Decimal("0.01"))
     payment_method = serializers.ChoiceField(choices=PaymentMethod.choices)
+    shift = serializers.ChoiceField(choices=Shift.choices)
 
     def to_data(self) -> EntryData:
         return EntryData(**self.validated_data)
@@ -60,6 +61,19 @@ class CorrectionSerializer(EntryInputSerializer):
     def to_data_without_reason(self) -> EntryData:
         fields = {k: v for k, v in self.validated_data.items() if k != "reason"}
         return EntryData(**fields)
+
+
+class CashOpeningSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CashOpening
+        fields = ["date", "shift", "amount"]
+
+
+class CashOpeningInputSerializer(serializers.Serializer):
+    date = serializers.DateField()
+    shift = serializers.ChoiceField(choices=Shift.choices)
+    amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=Decimal("0"))
+    reason = serializers.CharField(max_length=200, required=False, allow_blank=True, default="")
 
 
 class VoidSerializer(serializers.Serializer):

@@ -1,6 +1,8 @@
 from django.urls import path
 
 from notebooks.views import (
+    CashOpeningView,
+    CashView,
     CategoryListView,
     EntryDetailView,
     EntryHistoryView,
@@ -22,4 +24,6 @@ urlpatterns = [
     path("summary/", SummaryView.as_view()),
     path("monthly/", MonthlyView.as_view()),
     path("export/", ExportView.as_view()),
+    path("cash/", CashView.as_view()),
+    path("cash/opening/", CashOpeningView.as_view()),
 ]

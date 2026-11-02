@@ -10,16 +10,18 @@ import FiltrosMovimientos, { describirFiltros } from '../componentes/FiltrosMovi
 import KpiCard from '../componentes/KpiCard';
 import Modal from '../componentes/Modal';
 import ResumenAnual from '../componentes/ResumenAnual';
+import TarjetaCaja from '../componentes/TarjetaCaja';
 import SegmentedControl from '../componentes/SegmentedControl';
 import { useSesion } from '../estado/Sesion';
 import { rangoDelMes, rangoEsteMes, rangoValido } from '../lib/fechas';
-import { diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros } from '../lib/formato';
+import { MONTO_ILEGIBLE, diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros } from '../lib/formato';
 import { useConsulta } from '../lib/useConsulta';
 import { useDemorado } from '../lib/useDemorado';
 import { usePantallaChica } from '../lib/usePantallaChica';
 import { servicios } from '../services';
 import {
   NOMBRE_MEDIO,
+  NOMBRE_TURNO,
   SIN_FILTROS,
   type Cambio,
   type FiltrosMovimientos as Filtros,
@@ -28,6 +30,7 @@ import {
   type RangoFechas,
   type ResumenCuadernos,
   type TipoMovimiento,
+  type Turno,
 } from '../types';
 
 const MEDIOS = Object.keys(NOMBRE_MEDIO) as MedioPago[];
@@ -35,6 +38,30 @@ const TIPOS: { valor: TipoMovimiento; etiqueta: string }[] = [
   { valor: 'egreso', etiqueta: 'Gasto' },
   { valor: 'ingreso', etiqueta: 'Ingreso' },
 ];
+const TURNOS: { valor: Turno; etiqueta: string }[] = [
+  { valor: 'morning', etiqueta: 'Mañana' },
+  { valor: 'night', etiqueta: 'Noche' },
+];
+
+/** Se propone el último turno usado en este navegador; si no hay, la hora decide. */
+const CLAVE_TURNO = 'cuadernos.ultimoTurno';
+function turnoSugerido(): Turno {
+  try {
+    const guardado = localStorage.getItem(CLAVE_TURNO);
+    if (guardado === 'morning' || guardado === 'night') return guardado;
+  } catch {
+    // Sin almacenamiento (modo privado, por ejemplo): se decide por la hora.
+  }
+  return new Date().getHours() < 16 ? 'morning' : 'night';
+}
+function recordarTurno(t: Turno) {
+  try {
+    localStorage.setItem(CLAVE_TURNO, t);
+  } catch {
+    // No pasa nada: la próxima vez se propone por la hora.
+  }
+}
+
 const nombreTipo = (t: TipoMovimiento) => (t === 'ingreso' ? 'Ingreso' : 'Gasto');
 const RESUMEN_VACIO: ResumenCuadernos = { ingresos: 0, egresos: 0, saldo: 0, porCategoria: [] };
 
@@ -45,6 +72,7 @@ interface Borrador {
   descripcion: string;
   monto: string;
   medioPago: MedioPago;
+  turno: Turno;
   motivo: string;
 }
 const enBlanco = (): Borrador => ({
@@ -54,6 +82,7 @@ const enBlanco = (): Borrador => ({
   descripcion: '',
   monto: '',
   medioPago: 'cash',
+  turno: turnoSugerido(),
   motivo: '',
 });
 
@@ -61,8 +90,10 @@ const enBlanco = (): Borrador => ({
 function detalle(c: Cambio): string {
   const d = (c.despues ?? {}) as Record<string, string>;
   const a = (c.antes ?? {}) as Record<string, string>;
+  // Los cambios anteriores al turno no lo tienen guardado.
+  const turno = (x: Record<string, string>) => (x.shift ? ` (${NOMBRE_TURNO[x.shift as Turno].toLowerCase()})` : '');
   const fila = (x: Record<string, string>) =>
-    `${x.kind === 'income' ? 'Ingreso' : 'Gasto'} del ${diaLegible(x.date)}, ${x.category}${x.description ? ` (${x.description})` : ''}, ${pesos(
+    `${x.kind === 'income' ? 'Ingreso' : 'Gasto'} del ${diaLegible(x.date)}${turno(x)}, ${x.category}${x.description ? ` (${x.description})` : ''}, ${pesos(
       Number(x.amount),
     )}, ${NOMBRE_MEDIO[x.payment_method as MedioPago] ?? x.payment_method}`;
   if (c.accion === 'Alta') return fila(d);
@@ -73,6 +104,7 @@ function detalle(c: Cambio): string {
 /** Los cuadernos del local: cargar, corregir, anular y mirar los movimientos del período. */
 export default function Cuadernos() {
   const { puede, sesion } = useSesion();
+  const puedeCargarInicial = puede('notebooks.set_cash_opening');
   const puedeExportar = puede('notebooks.export');
   const puedeCargar = puede('notebooks.add_entry');
   const puedeCorregir = puede('notebooks.change_entry');
@@ -96,6 +128,11 @@ export default function Cuadernos() {
     pedido,
   );
   const { datos: cambios } = useConsulta(() => servicios.cuadernos.cambiosRecientes(), [vuelta]);
+  // La caja no sigue los filtros: es la caja entera del período.
+  const { datos: caja, error: errorCaja } = useConsulta(
+    () => (rangoValido(rango) ? servicios.cuadernos.caja(rango) : Promise.resolve(null)),
+    [rango.desde, rango.hasta, vuelta],
+  );
 
   const [borrador, setBorrador] = useState<Borrador>(enBlanco);
   const [editando, setEditando] = useState<Movimiento | null>(null);
@@ -108,11 +145,11 @@ export default function Cuadernos() {
   // Ref con estado: el formulario aparece recién cuando terminan de llegar los datos.
   const [tarjetaCarga, setTarjetaCarga] = useState<HTMLDivElement | null>(null);
   const chica = usePantallaChica();
-  // En el celular, un botón fijo lleva al formulario mientras el formulario no está a la vista.
+  // En el celular, un botón fijo lleva al formulario cuando el formulario no se ve para nada.
   const [cargaVisible, setCargaVisible] = useState(true);
   useEffect(() => {
     if (!tarjetaCarga || !chica) return;
-    const obs = new IntersectionObserver(([e]) => setCargaVisible(e.isIntersecting), { threshold: 0.15 });
+    const obs = new IntersectionObserver(([e]) => setCargaVisible(e.isIntersecting), { threshold: 0 });
     obs.observe(tarjetaCarga);
     return () => obs.disconnect();
   }, [chica, tarjetaCarga]);
@@ -159,7 +196,12 @@ export default function Cuadernos() {
       descripcion: borrador.descripcion,
       monto: leerMonto(borrador.monto),
       medioPago: borrador.medioPago,
+      turno: borrador.turno,
     };
+    if (!Number.isFinite(datos.monto) || datos.monto <= 0) {
+      setAviso(MONTO_ILEGIBLE);
+      return;
+    }
     setGuardando(true);
     try {
       if (editando) await servicios.cuadernos.corregir(editando.id, datos, borrador.motivo);
@@ -171,6 +213,7 @@ export default function Cuadernos() {
       setGuardando(false);
     }
     clave.current = crypto.randomUUID();
+    recordarTurno(datos.turno);
     // Si el movimiento guardado cae fuera del período, se lo estira para que no "desaparezca".
     if (datos.fecha < rango.desde) setRango({ ...rango, desde: datos.fecha });
     else if (datos.fecha > rango.hasta) setRango({ ...rango, hasta: datos.fecha });
@@ -188,6 +231,7 @@ export default function Cuadernos() {
       descripcion: m.descripcion,
       monto: m.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }),
       medioPago: m.medioPago,
+      turno: m.turno,
       motivo: '',
     });
     setAviso('');
@@ -242,14 +286,21 @@ export default function Cuadernos() {
 
       <div className="panel">
         {/* Los tres indicadores van en su propia fila, a todo el ancho, en cualquier pantalla. */}
-        <div className="panel-completo indicadores-3">
+        {/* "Resultado" es lo que ganó o perdió el local; "Caja" es el efectivo que quedó (el haber). No son lo mismo. */}
+        <div className="panel-completo indicadores-4 indicadores-compactos">
           <KpiCard titulo="Ingresos del período" valor={pesosEnteros(resumen.ingresos)} variante="positiva" />
           <KpiCard titulo="Gastos del período" valor={pesosEnteros(resumen.egresos)} variante="negativa" />
           <KpiCard
-            titulo="Saldo del período"
+            titulo="Resultado del período"
             valor={pesosEnteros(resumen.saldo)}
             variante={resumen.saldo >= 0 ? 'positiva' : 'negativa'}
             pie={proporcion === null ? 'Ingresos menos gastos' : `Los gastos son el ${proporcion} % de los ingresos`}
+          />
+          <KpiCard
+            titulo="Caja al cierre"
+            valor={caja?.haberAlFinal == null ? 'Sin dato' : pesosEnteros(caja.haberAlFinal)}
+            variante={caja?.haberAlFinal == null ? 'neutra' : caja.haberAlFinal < 0 ? 'negativa' : 'positiva'}
+            pie={!caja ? '' : !caja.inicial ? 'Falta el haber inicial' : 'Efectivo en la caja (haber)'}
           />
         </div>
 
@@ -269,6 +320,10 @@ export default function Cuadernos() {
                   onChange={(e) => cambiar({ fecha: e.target.value })}
                 />
               </label>
+              <div className="campo">
+                <span>Turno</span>
+                <SegmentedControl etiqueta="Turno" opciones={TURNOS} valor={borrador.turno} onChange={(turno) => cambiar({ turno })} bloque />
+              </div>
               <div className="campo">
                 <span>Tipo</span>
                 <SegmentedControl
@@ -352,6 +407,7 @@ export default function Cuadernos() {
             vacio={textoFiltros === 'Ninguno' ? 'No hay movimientos cargados en este período.' : 'Ningún movimiento coincide con los filtros.'}
             columnas={[
               { titulo: 'Fecha', render: (m) => diaLegible(m.fecha) },
+              { titulo: 'Turno', render: (m) => NOMBRE_TURNO[m.turno] },
               {
                 titulo: 'Tipo',
                 render: (m) =>
@@ -419,6 +475,8 @@ export default function Cuadernos() {
             ]}
           />
         </Card>
+
+        <TarjetaCaja caja={caja} error={errorCaja} puedeCargarInicial={puedeCargarInicial} onCambio={() => setVuelta((v) => v + 1)} />
 
         <ResumenAnual anio={anio} onAnio={setAnio} onVerMes={verMes} vuelta={vuelta} />
 

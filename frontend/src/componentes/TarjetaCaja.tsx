@@ -1,0 +1,224 @@
+import { useState } from 'react';
+import { Tecla } from '../atajos/Atajos';
+import { MONTO_ILEGIBLE, diaLegible, fechaHora, leerMonto, pesos } from '../lib/formato';
+import { servicios } from '../services';
+import { NOMBRE_TURNO, type Caja, type CierreCaja, type HaberInicial, type Turno } from '../types';
+import Badge from './Badge';
+import Button from './Button';
+import { CampoMonto } from './Campos';
+import Card from './Card';
+import DataTable from './DataTable';
+import Modal from './Modal';
+import SegmentedControl from './SegmentedControl';
+
+const TURNOS: { valor: Turno; etiqueta: string }[] = [
+  { valor: 'morning', etiqueta: 'Mañana' },
+  { valor: 'night', etiqueta: 'Noche' },
+];
+
+interface Props {
+  /** La pide la pantalla, porque también la usa el indicador de caja. */
+  caja: Caja | null;
+  error: string | null;
+  puedeCargarInicial: boolean;
+  /** Avisa que el haber inicial cambió, para que la pantalla actualice lo demás. */
+  onCambio(): void;
+}
+
+/**
+ * La caja en efectivo, turno por turno, como el cuaderno "Comedor TJ" (P-01, ADR-0008).
+ * Haber = haber anterior + ventas en efectivo, menos gastos en efectivo. No sigue los filtros de la lista.
+ */
+export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio }: Props) {
+  const [editando, setEditando] = useState(false);
+
+  const titulo = 'Caja en efectivo (haber) por turno';
+  if (error) return <Card titulo={titulo} className="panel-ancho"><p className="vacio">{error}</p></Card>;
+  if (!caja) return <Card titulo={titulo} className="panel-ancho"><p className="cargando">Cargando…</p></Card>;
+
+  const guardado = () => {
+    setEditando(false);
+    onCambio();
+  };
+
+  if (!caja.inicial) {
+    return (
+      <Card titulo={titulo} className="panel-ancho">
+        {puedeCargarInicial ? (
+          <>
+            <p className="nota">
+              Para calcular la caja hace falta el punto de partida: el último haber anotado en el cuaderno, con su fecha y su turno.
+            </p>
+            <FormularioInicial onGuardado={guardado} />
+          </>
+        ) : (
+          <p className="vacio">Falta el haber inicial de la caja. Lo carga el dueño del local.</p>
+        )}
+      </Card>
+    );
+  }
+
+  const negativos = caja.cierres.filter((c) => c.negativo);
+
+  return (
+    <Card
+      titulo={titulo}
+      nota={textoInicial(caja.inicial)}
+      className="panel-ancho"
+      accion={
+        puedeCargarInicial && (
+          <Button tamano="chico" className="no-imprimir" onClick={() => setEditando(true)}>
+            Cambiar haber inicial
+          </Button>
+        )
+      }
+    >
+      {negativos.length > 0 && (
+        <p className="aviso-caja" role="alert">
+          La caja no puede quedar negativa: revisá si falta cargar una venta o sobra un gasto en{' '}
+          {negativos.map((c) => `${diaLegible(c.fecha)} (${NOMBRE_TURNO[c.turno].toLowerCase()})`).join(', ')}.
+        </p>
+      )}
+      <DataTable<CierreCaja>
+        filas={[...caja.cierres].reverse()}
+        clave={(c) => `${c.fecha}-${c.turno}`}
+        vacio="Sin cierres en este período."
+        columnas={[
+          { titulo: 'Fecha', render: (c) => diaLegible(c.fecha) },
+          { titulo: 'Turno', render: (c) => NOMBRE_TURNO[c.turno] },
+          { titulo: 'Haber anterior', numerica: true, render: (c) => pesos(c.antes) },
+          { titulo: 'Ventas', numerica: true, render: (c) => pesos(c.ventas) },
+          { titulo: 'Cobrado sin efectivo', numerica: true, render: (c) => pesos(-c.sinEfectivo) },
+          { titulo: 'Gastos en efectivo', numerica: true, render: (c) => pesos(-c.gastosEfectivo) },
+          {
+            titulo: 'Haber',
+            numerica: true,
+            render: (c) =>
+              c.negativo ? (
+                <span className="texto-negativo">
+                  {pesos(c.despues)} <Badge tono="negativo">Revisar</Badge>
+                </span>
+              ) : (
+                <strong>{pesos(c.despues)}</strong>
+              ),
+          },
+        ]}
+      />
+      <p className="nota nota-caja">
+        Lo cobrado con Mercado Pago, tarjeta o transferencia es venta, pero no entra a la caja. Los gastos pagados por transferencia o
+        tarjeta tampoco salen de la caja.
+      </p>
+      {editando && <ModalInicial inicial={caja.inicial} onCerrar={() => setEditando(false)} onGuardado={guardado} />}
+    </Card>
+  );
+}
+
+const textoInicial = (i: HaberInicial) =>
+  `Arranca con ${pesos(i.monto)} al cierre del turno ${NOMBRE_TURNO[i.turno].toLowerCase()} del ${diaLegible(i.fecha)}. Lo cargó ${
+    i.cargadoPor
+  } el ${fechaHora(i.cargadoEl)}.`;
+
+/** Fecha, turno y monto del haber inicial. El motivo se pide solo al cambiarlo. */
+function useFormularioInicial(inicial?: HaberInicial) {
+  const [fecha, setFecha] = useState(inicial?.fecha ?? '');
+  const [turno, setTurno] = useState<Turno>(inicial?.turno ?? 'night');
+  const [monto, setMonto] = useState(inicial ? inicial.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }) : '');
+  const [motivo, setMotivo] = useState('');
+  const [aviso, setAviso] = useState('');
+  const [guardando, setGuardando] = useState(false);
+
+  const guardar = async (onGuardado: () => void) => {
+    if (guardando) return;
+    if (!fecha) return setAviso('Elegí la fecha del último haber anotado.');
+    const importe = leerMonto(monto);
+    if (!Number.isFinite(importe)) return setAviso(MONTO_ILEGIBLE);
+    setGuardando(true);
+    try {
+      await servicios.cuadernos.cargarHaberInicial(fecha, turno, importe, motivo);
+    } catch (err) {
+      setAviso((err as Error).message);
+      return;
+    } finally {
+      setGuardando(false);
+    }
+    onGuardado();
+  };
+
+  const campos = (
+    <>
+      <label className="campo">
+        <span>Fecha del último haber anotado</span>
+        <input className="campo-texto" type="date" required value={fecha} onChange={(e) => setFecha(e.target.value)} />
+      </label>
+      <div className="campo">
+        <span>Turno</span>
+        <SegmentedControl etiqueta="Turno" opciones={TURNOS} valor={turno} onChange={setTurno} bloque />
+      </div>
+      <CampoMonto rotulo="Haber (efectivo en la caja)" valor={monto} onChange={setMonto} />
+    </>
+  );
+
+  return { campos, motivo, setMotivo, aviso, guardando, guardar };
+}
+
+function FormularioInicial({ onGuardado }: { onGuardado(): void }) {
+  const f = useFormularioInicial();
+  return (
+    <form
+      className="formulario formulario-inicial"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void f.guardar(onGuardado);
+      }}
+    >
+      {f.campos}
+      <p className="login-error" role="alert">
+        {f.aviso}
+      </p>
+      <div className="acciones">
+        <Button type="submit" variante="primario" disabled={f.guardando}>
+          Guardar haber inicial
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function ModalInicial({ inicial, onCerrar, onGuardado }: { inicial: HaberInicial; onCerrar(): void; onGuardado(): void }) {
+  const f = useFormularioInicial(inicial);
+  return (
+    <Modal
+      titulo="Cambiar el haber inicial"
+      onCerrar={onCerrar}
+      onConfirmar={() => void f.guardar(onGuardado)}
+      acciones={
+        <>
+          <Button onClick={onCerrar}>
+            Cancelar <Tecla id="volver" />
+          </Button>
+          <Button variante="primario" disabled={f.guardando || !f.motivo.trim()} onClick={() => void f.guardar(onGuardado)}>
+            Guardar cambio <Tecla id="confirmar" />
+          </Button>
+        </>
+      }
+    >
+      <p>Cambia el haber de todos los turnos que siguen. Queda anotado quién lo cambió y por qué.</p>
+      <div className="formulario">
+        {f.campos}
+        <label className="campo">
+          <span>Motivo del cambio</span>
+          <input
+            className="campo-texto"
+            maxLength={200}
+            value={f.motivo}
+            placeholder="Por ejemplo: lo había copiado mal"
+            onChange={(e) => f.setMotivo(e.target.value)}
+          />
+        </label>
+      </div>
+      <p className="login-error" role="alert">
+        {f.aviso}
+      </p>
+    </Modal>
+  );
+}

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from notebooks.models import Category, Entry
+from notebooks.models import CashOpening, Category, Entry
 
 
 @admin.register(Category)
@@ -16,9 +16,25 @@ class CategoryAdmin(admin.ModelAdmin):
 class EntryAdmin(admin.ModelAdmin):
     """Read only: entries change through the portal, so every change is audited."""
 
-    list_display = ["date", "tenant", "kind", "category", "amount", "payment_method", "is_voided"]
-    list_filter = ["tenant", "kind", "payment_method", "is_voided"]
+    list_display = ["date", "shift", "tenant", "kind", "category", "amount", "payment_method", "is_voided"]
+    list_filter = ["tenant", "kind", "shift", "payment_method", "is_voided"]
     date_hierarchy = "date"
+
+    def has_add_permission(self, request) -> bool:
+        return False
+
+    def has_change_permission(self, request, obj=None) -> bool:
+        return False
+
+    def has_delete_permission(self, request, obj=None) -> bool:
+        return False
+
+
+@admin.register(CashOpening)
+class CashOpeningAdmin(admin.ModelAdmin):
+    """Read only: the owner loads it from the portal, with a reason when it changes (audited)."""
+
+    list_display = ["tenant", "date", "shift", "amount", "updated_by", "updated_at"]
 
     def has_add_permission(self, request) -> bool:
         return False

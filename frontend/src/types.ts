@@ -19,6 +19,12 @@ export const NOMBRE_MEDIO: Record<MedioPago, string> = {
   transfer: 'Transferencia',
 };
 
+/** La caja se cierra dos veces por día (P-01). El turno noche que termina después de medianoche
+ * conserva la fecha en que empezó. */
+export type Turno = 'morning' | 'night';
+
+export const NOMBRE_TURNO: Record<Turno, string> = { morning: 'Mañana', night: 'Noche' };
+
 export interface Categoria {
   id: string;
   nombre: string;
@@ -35,6 +41,7 @@ export interface Movimiento {
   descripcion: string;
   monto: number;
   medioPago: MedioPago;
+  turno: Turno;
   anulado: boolean;
   motivoAnulacion: string;
   cargadoPor: string;
@@ -47,6 +54,7 @@ export interface MovimientoNuevo {
   descripcion: string;
   monto: number;
   medioPago: MedioPago;
+  turno: Turno;
 }
 
 export interface ResumenCuadernos {
@@ -76,6 +84,38 @@ export interface MesDelAnio {
   saldo: number;
 }
 
+/** El último haber anotado en papel: la caja arranca de ahí (P-01). */
+export interface HaberInicial {
+  fecha: string;
+  turno: Turno;
+  monto: number;
+  cargadoPor: string;
+  cargadoEl: string;
+}
+
+/** Un cierre de caja, como en el cuaderno (ADR-0008). */
+export interface CierreCaja {
+  fecha: string;
+  turno: Turno;
+  /** Todo lo vendido, con cualquier medio de pago. */
+  ventas: number;
+  /** Mercado Pago, tarjetas y transferencias: se vendió, pero no está en la caja. */
+  sinEfectivo: number;
+  gastosEfectivo: number;
+  /** Pagados por transferencia o tarjeta: son gasto, pero la caja no se movió. */
+  gastosSinEfectivo: number;
+  antes: number;
+  despues: number;
+  negativo: boolean;
+}
+
+export interface Caja {
+  inicial: HaberInicial | null;
+  cierres: CierreCaja[];
+  /** El haber al terminar el período en pantalla. null si el período es anterior al haber inicial. */
+  haberAlFinal: number | null;
+}
+
 /** Un cambio de un movimiento, tal como lo guarda la auditoría. */
 export interface Cambio {
   id: string;
@@ -95,7 +135,8 @@ export type Permiso =
   | 'notebooks.add_entry'
   | 'notebooks.change_entry'
   | 'notebooks.void_entry'
-  | 'notebooks.manage_categories';
+  | 'notebooks.manage_categories'
+  | 'notebooks.set_cash_opening';
 
 export interface LocalDisponible {
   id: string;
