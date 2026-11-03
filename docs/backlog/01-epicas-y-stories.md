@@ -270,9 +270,10 @@ Como dueño, quiero ver cuánto efectivo hay en la caja al cerrar cada turno, co
 - Dado el haber inicial, cuando lo carga el dueño, entonces queda con fecha, turno, importe y quién lo cargó. Cambiarlo pide motivo y queda en la auditoría. Carga y consulta no pueden.
 - Dado los filtros de la lista, cuando filtro, entonces la caja no cambia: es la caja entera del local.
 - Dado el Excel, cuando exporto con haber inicial, entonces hay una hoja "Caja" con los cierres del período.
-- Dado el cálculo, cuando corren los tests, entonces hay un caso que reproduce la cuenta del cuaderno en papel (venta del turno con los D sumados, menos los costos con los D incluidos) y da lo mismo.
+- Dado un gasto con débito, cuando lo cargo con el tilde "Sumarlo también a la venta", entonces se crea una venta con débito por el mismo monto, en la misma operación. Corregir el gasto la actualiza, anularlo la anula, y la venta no se puede corregir ni anular sola (ADR-0010).
+- Dado el cálculo, cuando corren los tests, entonces hay un caso que reproduce la cuenta del cuaderno en papel (venta del turno, más la venta de los D, menos los costos con los D incluidos) y da lo mismo.
 
-> Reemplaza a la venta espejo (ADR-0008). En Comedor TJ los gastos con D (pagados con débito) se cargan como están en el papel, con Efectivo, porque el dueño ya los sumó a la venta del turno (ADR-0009).
+> Reemplaza a la venta espejo (ADR-0008). La venta de un gasto con débito no es un truco para la caja: es el renglón que el dueño escribe en su cuaderno (ADR-0010).
 
 ### HU-026. Corregir y anular con historial
 **Prioridad:** Must · **Etiquetas:** `backend`, `frontend`, `cuadernos`, `auditoria` · **Diagramas:** FUN-03, EST-01, CU-01

@@ -22,8 +22,8 @@ from notebooks.serializers import (
     CategoryInputSerializer,
     CategorySerializer,
     CorrectionSerializer,
-    EntryInputSerializer,
     EntrySerializer,
+    NewEntrySerializer,
     RangeSerializer,
     VoidSerializer,
 )
@@ -36,7 +36,7 @@ class TenantView(APIView):
 
     def entries(self):
         return Entry.objects.filter(tenant=self.request.membership.tenant).select_related(
-            "category", "created_by"
+            "category", "created_by", "debit_sale"
         )
 
 
@@ -77,11 +77,16 @@ class EntryListView(TenantView):
         return Response(EntrySerializer(entries, many=True).data)
 
     def post(self, request: Request) -> Response:
-        data = EntryInputSerializer(data=request.data)
+        data = NewEntrySerializer(data=request.data)
         data.is_valid(raise_exception=True)
         key = request.headers.get("Idempotency-Key")
         try:
-            entry = services.create_entry(request.membership, data.to_data(), idempotency_key=key or None)
+            entry = services.create_entry(
+                request.membership,
+                data.to_data(),
+                idempotency_key=key or None,
+                add_sale=data.validated_data["add_sale"],
+            )
         except services.RuleError as exc:
             raise rule_error(exc) from exc
         except ValueError as exc:  # a malformed idempotency key

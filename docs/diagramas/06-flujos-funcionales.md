@@ -52,7 +52,7 @@ flowchart TD
 
 **Archivos FUN-02:** [SVG](svg/FUN-02.svg) · [PNG](png/FUN-02.png) · [Mermaid](fuentes/FUN-02.mmd).
 
-**Lectura:** la persona carga cada movimiento una sola vez, con su medio de pago, y el sistema decide si toca la caja (ADR-0008, HU-025). En Comedor TJ todo se carga como está en el cuaderno: los gastos con D (pagados con débito) van con Efectivo, porque el dueño ya los sumó a la venta del turno (ADR-0009).
+**Lectura:** la persona carga cada movimiento una sola vez, con su medio de pago, y el sistema decide si toca la caja (ADR-0008, HU-025). En Comedor TJ, un gasto con D (pagado con débito) se carga con Débito y el sistema suma su venta con débito por el mismo monto, como el renglón aparte que el dueño escribe en el cuaderno (ADR-0010).
 
 <a id="fun-03"></a>
 

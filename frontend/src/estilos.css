@@ -3126,3 +3126,39 @@ textarea:focus-visible {
     min-height: 44px;
   }
 }
+
+/* ---------- gasto con débito: sumarlo también a la venta (ADR-0010) ---------- */
+
+.campo-tilde {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--esp-3);
+  padding: var(--esp-3);
+  border-radius: var(--r);
+  background: var(--accion-suave);
+  cursor: pointer;
+}
+
+.campo-tilde input {
+  width: 20px;
+  height: 20px;
+  margin: 2px 0 0;
+  accent-color: var(--accion);
+  flex: none;
+}
+
+.campo-tilde span {
+  display: grid;
+  gap: 2px;
+  font-weight: var(--peso-medio);
+}
+
+.campo-tilde small {
+  color: var(--tinta-2);
+  font-size: var(--texto-s);
+  font-weight: var(--peso);
+}
+
+.modal-nota {
+  margin-bottom: var(--esp-3);
+}

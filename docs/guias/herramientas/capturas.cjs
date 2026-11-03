@@ -93,6 +93,15 @@ const tarjeta = (p, titulo) => p.locator(`.tarjeta:has(h2:text-is("${titulo}"))`
   await form.locator('button:has-text("Guardar movimiento")').click();
   await form.locator('.aviso-ok').waitFor();
 
+  // Un renglón con D: gasto con débito y el tilde para sumar su venta (sin guardarlo)
+  await form.locator('.segmentado button:text-is("Gasto")').click();
+  await form.locator('select').first().selectOption({ label: 'Proveedores' });
+  await form.locator('input[placeholder="Por ejemplo: verdura"]').fill('Verdu');
+  await form.locator('input[inputmode=decimal]').fill('89.000');
+  await form.locator('select').nth(1).selectOption({ label: 'Débito' });
+  await p.waitForTimeout(200);
+  await foto(p.locator('.carga-form'), 'gasto-debito');
+
   // Menú de la cuenta, abierto
   await p.click('.barra-usuario-boton');
   const menu = await p.locator('[role=menu]').boundingBox();

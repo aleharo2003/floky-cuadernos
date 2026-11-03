@@ -75,6 +75,17 @@ class Entry(models.Model):
     is_voided = models.BooleanField("anulado", default=False)
     void_reason = models.CharField("motivo de anulación", max_length=200, blank=True)
 
+    # The sale that a cost paid with debit adds to the shift, as the owner does on paper (ADR-0010).
+    # It lives on the sale and points to its cost. It is changed and voided only through the cost.
+    from_debit_expense = models.OneToOneField(
+        "self",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="debit_sale",
+        verbose_name="venta del gasto con débito",
+    )
+
     idempotency_key = models.UUIDField(null=True, blank=True, editable=False)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", verbose_name="cargado por"

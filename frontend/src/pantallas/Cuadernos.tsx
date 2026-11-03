@@ -48,6 +48,7 @@ const enBlanco = (): Borrador => ({
   medioPago: 'cash',
   turno: turnoSugerido(),
   motivo: '',
+  sumarAVenta: true,
 });
 
 const deMovimiento = (m: Movimiento): Borrador => ({
@@ -59,7 +60,10 @@ const deMovimiento = (m: Movimiento): Borrador => ({
   medioPago: m.medioPago,
   turno: m.turno,
   motivo: '',
+  sumarAVenta: false,
 });
+
+const sumaVenta = (b: Borrador) => b.sumarAVenta && b.tipo === 'egreso' && b.medioPago === 'debit';
 
 /** Lo que se le manda al servicio. Devuelve null si el monto no se entiende. */
 function datosDe(b: Borrador) {
@@ -119,9 +123,12 @@ function columnasMovimiento(conFecha: boolean, a: AccionesFila): Columna<Movimie
       render: (m) => {
         // Las tres acciones en un solo botón: la fila respira y "Anular" no queda a un clic distraído.
         const items: ItemMenu[] = [];
-        if (a.puedeCorregir && !m.anulado) items.push({ etiqueta: 'Corregir', onElegir: () => a.onCorregir(m) });
+        // La venta de un gasto con débito se corrige y se anula desde su gasto (ADR-0010).
+        const libre = !m.anulado && !m.gastoConDebitoId;
+        if (m.gastoConDebitoId && !m.anulado) items.push({ tipo: 'titulo', etiqueta: 'Sale de un gasto con débito' });
+        if (a.puedeCorregir && libre) items.push({ etiqueta: 'Corregir', onElegir: () => a.onCorregir(m) });
         items.push({ etiqueta: 'Historial', onElegir: () => a.onHistorial(m) });
-        if (a.puedeAnular && !m.anulado) items.push({ tipo: 'separador' }, { etiqueta: 'Anular', peligro: true, onElegir: () => a.onAnular(m) });
+        if (a.puedeAnular && libre) items.push({ tipo: 'separador' }, { etiqueta: 'Anular', peligro: true, onElegir: () => a.onAnular(m) });
         return (
           <span className="acciones-fila no-imprimir">
             <Menu contenido="⋯" etiqueta={`Acciones de ${m.categoria} del ${diaLegible(m.fecha)}`} items={items} claseBoton="boton boton-secundario boton-chico boton-mas" />
@@ -298,7 +305,7 @@ function SolapaCargar({ categorias, puedeCrearCategorias, recargarCategorias, vu
     setGuardando(true);
     let nuevo: Movimiento;
     try {
-      nuevo = await servicios.cuadernos.crear(datos, clave.current);
+      nuevo = await servicios.cuadernos.crear({ ...datos, sumarAVenta: sumaVenta(borrador) }, clave.current);
     } catch (err) {
       setAviso((err as Error).message);
       return;
@@ -308,7 +315,8 @@ function SolapaCargar({ categorias, puedeCrearCategorias, recargarCategorias, vu
     clave.current = crypto.randomUUID();
     recordarTurno(datos.turno);
     const categoria = categorias[datos.tipo].find((c) => c.id === datos.categoriaId)?.nombre ?? '';
-    setAvisoOk(`Guardado: ${nombreTipo(datos.tipo).toLowerCase()} de ${categoria}, ${pesos(datos.monto)}.`);
+    const yVenta = nuevo.ventaDelDebitoId ? ', y su venta con débito' : '';
+    setAvisoOk(`Guardado: ${nombreTipo(datos.tipo).toLowerCase()} de ${categoria}, ${pesos(datos.monto)}${yVenta}.`);
     setUltimo(nuevo.id);
     // Carga en serie: fecha, turno, tipo y medio de pago quedan para el próximo renglón.
     setBorrador((b) => ({ ...b, categoriaId: '', descripcion: '', monto: '', motivo: '' }));
@@ -550,6 +558,9 @@ function Correccion({
 
   return (
     <Modal titulo="Corregir movimiento" onCerrar={onCerrar}>
+      {movimiento.ventaDelDebitoId && (
+        <p className="nota modal-nota">Tiene su venta con débito: se corrige sola. Si deja de ser con débito, la venta se anula.</p>
+      )}
       <FormMovimiento
         borrador={borrador}
         onCambio={(parte) => {
@@ -606,6 +617,7 @@ function Anulacion({ movimiento, onCerrar, onAnulado }: { movimiento: Movimiento
       <p>
         {nombreTipo(movimiento.tipo)} del {diaLegible(movimiento.fecha)}, {movimiento.categoria}, por <strong>{pesos(movimiento.monto)}</strong>. Deja de
         sumar en los saldos, pero sigue visible en el historial.
+        {movimiento.ventaDelDebitoId && ' También se anula su venta con débito.'}
       </p>
       <label className="campo">
         <span>Motivo</span>

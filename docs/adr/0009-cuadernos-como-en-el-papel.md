@@ -1,6 +1,7 @@
 # ADR-0009. Los cuadernos son las cuentas personales del dueño y se cargan como están en el papel
 
-- **Estado:** aceptada, 03/11/2026. Corrige una premisa del contexto de [ADR-0008](0008-haber-calculado-sin-espejo.md) (la resta de Mercado Pago). La decisión de ADR-0008, calcular el haber desde el medio de pago, sigue vigente.
+- **Estado:** reemplazada por [ADR-0010](0010-gasto-con-debito-suma-su-venta.md) en cómo se cargan los renglones con D (03/11/2026). Sigue vigente que los cuadernos son las cuentas personales del dueño y que el sistema refleja su método.
+- **Antes:** aceptada, 03/11/2026. Corrige una premisa del contexto de [ADR-0008](0008-haber-calculado-sin-espejo.md) (la resta de Mercado Pago). La decisión de ADR-0008, calcular el haber desde el medio de pago, sigue vigente.
 
 ## Contexto
 
