@@ -31,12 +31,11 @@ Es la misma cuenta que hacés en el cuaderno, turno por turno:
 | En el cuaderno | En el sistema |
 |---|---|
 | Haber anterior | Haber anterior |
-| Venta del turno (todo junto) | Ventas |
-| Lo que restabas como "MP" | Cobrado sin efectivo (Mercado Pago, tarjeta, transferencia) |
-| Costos | Gastos en efectivo |
+| Venta del turno (con los D ya sumados) | Ventas |
+| Costos (también los que tienen D) | Gastos en efectivo |
 | Haber nuevo | Haber |
 
-La diferencia es que acá no hace falta restar a mano lo de Mercado Pago: alcanza con cargar cada venta con su medio de pago. Los gastos pagados por transferencia o tarjeta tampoco bajan la caja.
+Todo se carga como está en el cuaderno, con Efectivo, incluidos los gastos con D. Así el haber da lo mismo que en el papel. La columna **Cobrado sin efectivo** queda en cero: las ventas con tarjeta las llevás en tus cuentas y no pasan por acá.
 
 Si un turno sale en rojo con **Revisar**, la caja dio negativa: falta una venta o sobra un gasto.
 

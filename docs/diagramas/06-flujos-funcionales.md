@@ -52,7 +52,7 @@ flowchart TD
 
 **Archivos FUN-02:** [SVG](svg/FUN-02.svg) · [PNG](png/FUN-02.png) · [Mermaid](fuentes/FUN-02.mmd).
 
-**Lectura:** la persona carga cada movimiento una sola vez, con su medio de pago, y el sistema decide si toca la caja. En papel, el local suma todas las ventas y después resta como "costo" lo cobrado por Mercado Pago, para que el haber dé el efectivo. Acá no se escribe esa resta: se calcula (ADR-0008, HU-025).
+**Lectura:** la persona carga cada movimiento una sola vez, con su medio de pago, y el sistema decide si toca la caja (ADR-0008, HU-025). En Comedor TJ todo se carga como está en el cuaderno: los gastos con D (pagados con débito) van con Efectivo, porque el dueño ya los sumó a la venta del turno (ADR-0009).
 
 <a id="fun-03"></a>
 
