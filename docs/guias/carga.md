@@ -22,7 +22,7 @@ Al entrar estás en la solapa **Cargar**: el formulario arriba y, al lado (o aba
 2. **Tipo:** gasto o ingreso (las ventas son ingresos).
 3. **Categoría** y, si querés, una **descripción** ("verdura", "ventas del turno").
 4. **Monto.** Escribilo como siempre: `45.000` o `45.000,50`.
-5. **Medio de pago.** Decide si la plata entra o sale de la caja: Efectivo la mueve; Mercado Pago, tarjeta o transferencia no. Para pasar el cuaderno, usá **Efectivo**, también en los renglones con D (mirá abajo).
+5. **Medio de pago.** Decide si la plata entra o sale de la caja: Efectivo la mueve; débito, tarjeta, Mercado Pago o transferencia no. Los renglones con D van con **Débito** (mirá abajo).
 6. **Guardar movimiento.** En la compu también se guarda con Enter.
 
 Después de guardar, la fecha, el turno, el tipo y el medio de pago quedan como estaban, así pasás el cuaderno renglón por renglón sin volver a elegirlos. El movimiento nuevo aparece marcado en la lista del día, con el total de ingresos y gastos de ese día para comparar con el papel.
@@ -31,7 +31,21 @@ Después de guardar, la fecha, el turno, el tipo y el medio de pago quedan como 
 
 ## Los renglones con D
 
-En el cuaderno de Costos, la D al final de un gasto quiere decir que se pagó con débito. Cargalos **igual que los demás, con Efectivo**, y la venta del turno con el **total que figura en el cuaderno**, que ya los incluye. No hay que restar nada. Así el haber da lo mismo que en el papel.
+<img src="img/gasto-debito.png" width="230" alt="Gasto con débito con el tilde para sumarlo a la venta" align="right">
+
+En el cuaderno de Costos, la D al final de un gasto quiere decir que se pagó con débito. El dueño lo anota dos veces: el gasto y, en el cuaderno de ventas, una venta por el mismo monto.
+
+En el sistema se carga **una sola vez**:
+
+1. Tipo **Gasto**, la categoría, el monto y medio de pago **Débito**.
+2. Dejá marcado **Sumarlo también a la venta, con débito**. El sistema carga la venta solo.
+3. Al pasar el cuaderno de ventas, **saltá el renglón de esa venta**: ya está cargado.
+
+Por ejemplo, "Verdu 89.000 D" queda como un gasto de Proveedores por $ 89.000 con Débito, y una venta de $ 89.000 con Débito que dice "Gasto con débito: Proveedores". Ninguno de los dos mueve la caja, igual que en el papel.
+
+Si después corregís o anulás el gasto, su venta se corrige o se anula con él. La venta sola no se puede tocar.
+
+<br clear="right">
 
 ## Si te equivocaste
 

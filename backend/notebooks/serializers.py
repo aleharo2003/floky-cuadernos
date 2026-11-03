@@ -24,6 +24,8 @@ class EntrySerializer(serializers.ModelSerializer):
     category_id = serializers.UUIDField(source="category.id")
     category_name = serializers.CharField(source="category.name")
     created_by = serializers.SerializerMethodField()
+    debit_sale_id = serializers.SerializerMethodField()
+    from_debit_expense_id = serializers.UUIDField(read_only=True, allow_null=True)
 
     class Meta:
         model = Entry
@@ -41,10 +43,16 @@ class EntrySerializer(serializers.ModelSerializer):
             "void_reason",
             "created_by",
             "created_at",
+            "debit_sale_id",
+            "from_debit_expense_id",
         ]
 
     def get_created_by(self, entry: Entry) -> str:
         return entry.created_by.get_full_name() or entry.created_by.get_username()
+
+    def get_debit_sale_id(self, entry: Entry) -> str | None:
+        sale = getattr(entry, "debit_sale", None)
+        return str(sale.id) if sale else None
 
 
 class EntryInputSerializer(serializers.Serializer):
@@ -57,7 +65,13 @@ class EntryInputSerializer(serializers.Serializer):
     shift = serializers.ChoiceField(choices=Shift.choices)
 
     def to_data(self) -> EntryData:
-        return EntryData(**self.validated_data)
+        fields = {k: v for k, v in self.validated_data.items() if k != "add_sale"}
+        return EntryData(**fields)
+
+
+class NewEntrySerializer(EntryInputSerializer):
+    # A cost paid with debit also adds the sale, as on paper (ADR-0010).
+    add_sale = serializers.BooleanField(default=False)
 
 
 class CorrectionSerializer(EntryInputSerializer):

@@ -21,6 +21,8 @@ interface EntryApi {
   is_voided: boolean;
   void_reason: string;
   created_by: string;
+  debit_sale_id: string | null;
+  from_debit_expense_id: string | null;
 }
 
 interface ChangeApi {
@@ -53,6 +55,8 @@ const aMovimiento = (e: EntryApi): Movimiento => ({
   anulado: e.is_voided,
   motivoAnulacion: e.void_reason,
   cargadoPor: e.created_by,
+  ventaDelDebitoId: e.debit_sale_id ?? null,
+  gastoConDebitoId: e.from_debit_expense_id ?? null,
 });
 
 const aCambio = (c: ChangeApi): Cambio => ({
@@ -179,7 +183,8 @@ export const cuadernosApi: CuadernosService = {
   },
 
   async crear(movimiento, clave) {
-    return aMovimiento(await pedir<EntryApi>('POST', '/notebooks/entries/', cuerpo(movimiento), { 'Idempotency-Key': clave }));
+    const datos = { ...cuerpo(movimiento), add_sale: !!movimiento.sumarAVenta };
+    return aMovimiento(await pedir<EntryApi>('POST', '/notebooks/entries/', datos, { 'Idempotency-Key': clave }));
   },
 
   async corregir(id, movimiento, motivo) {

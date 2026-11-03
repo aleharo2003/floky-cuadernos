@@ -16,6 +16,8 @@ export interface Borrador {
   medioPago: MedioPago;
   turno: Turno;
   motivo: string;
+  /** Gasto con débito: sumar también la venta con débito, como en el cuaderno (ADR-0010). */
+  sumarAVenta: boolean;
 }
 
 const MEDIOS = Object.keys(NOMBRE_MEDIO) as MedioPago[];
@@ -156,6 +158,15 @@ export default function FormMovimiento({
           ))}
         </select>
       </label>
+      {!correccion && borrador.tipo === 'egreso' && borrador.medioPago === 'debit' && (
+        <label className="campo-tilde">
+          <input type="checkbox" checked={borrador.sumarAVenta} onChange={(e) => onCambio({ sumarAVenta: e.target.checked })} />
+          <span>
+            Sumarlo también a la venta, con débito
+            <small>Como en el cuaderno: se carga una venta por el mismo monto.</small>
+          </span>
+        </label>
+      )}
       {correccion && (
         <label className="campo">
           <span>Motivo de la corrección</span>

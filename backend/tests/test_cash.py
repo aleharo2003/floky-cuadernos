@@ -1,4 +1,4 @@
-"""The cash box by shift (P-01, P-02, ADR-0008, ADR-0009).
+"""The cash box by shift (P-01, P-02, ADR-0008). The paper method with debit costs: test_debit_sale.py.
 
 The haber is cash on hand, and money is never a float.
 """
@@ -72,23 +72,6 @@ def test_haber_counts_only_cash(owner, add):
     assert close.expenses_cash == D("300000.00")
     assert close.expenses_not_cash == D("50000.00")
     assert close.after == D("1200000.00")
-
-
-def test_matches_the_paper_notebook_with_debit_costs_loaded_as_cash(owner, add):
-    """Comedor TJ (ADR-0009): a cost paid with debit is marked "D" on paper. The owner adds it to the
-    shift sale and subtracts it with the costs, so it does not move the haber. Loaded as on paper,
-    with cash, the system gives the same number."""
-    start = opening(owner)
-    add(2, "morning", Kind.INCOME, "720600.00")  # the shift sale, with the 89.000 of the D already added
-    add(2, "morning", Kind.EXPENSE, "45000.00")  # a common cost
-    add(2, "morning", Kind.EXPENSE, "89000.00")  # "Verdu 89.000 D", paid with debit, loaded as on paper
-
-    [close] = cash.closes(owner.tenant, start, until=date(2026, 1, 31))
-
-    # On paper: previous haber + shift sale - costs (the D included).
-    paper = D("1000000.00") + D("720600.00") - (D("45000.00") + D("89000.00"))
-    assert close.after == paper
-    assert close.sales_not_cash == D("0.00")
 
 
 def test_shifts_carry_forward_in_order(owner, add):

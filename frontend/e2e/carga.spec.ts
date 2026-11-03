@@ -1,7 +1,7 @@
 import { accion, cargarMovimiento, CELULAR, expect, formulario, ingresar, irAReportes, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
 
 // La solapa Cargar: lo de todos los días. Hoy es el miércoles 11/3 (ver ayuda.ts).
-test.beforeAll(reiniciarDatos);
+test.beforeEach(reiniciarDatos);
 
 test('se entra en Cargar, con lo cargado hoy al lado', async ({ page }) => {
   await ingresar(page, 'tomas');
@@ -126,4 +126,60 @@ test('quien solo consulta no ve solapas ni formulario, y el ⋯ solo ofrece Hist
   await ana.keyboard.press('Escape');
   await expect(ana.locator('body')).not.toContainText('Verdura');
   expect(await sinDesborde(ana)).toBeLessThanOrEqual(0);
+});
+
+test('un gasto con débito suma también su venta; se corrige y se anula junto con el gasto', async ({ page }) => {
+  await ingresar(page, 'lucia', { local: 'Local Norte' });
+  const f = formulario(page);
+  await f.getByRole('group', { name: 'Tipo' }).getByRole('button', { name: 'Gasto' }).click();
+  const tilde = f.getByRole('checkbox', { name: /Sumarlo también a la venta/ });
+  await expect(tilde, 'con efectivo no aparece').toHaveCount(0);
+  await f.locator('select').nth(1).selectOption({ label: 'Débito' });
+  await expect(tilde).toBeChecked();
+
+  await f.locator('select').first().selectOption({ label: 'Proveedores' });
+  await f.getByPlaceholder('Por ejemplo: verdura').fill('don José');
+  await f.locator('input[inputmode=decimal]').fill('100.000');
+  await f.getByRole('button', { name: /Guardar movimiento/ }).click();
+  await expect(f.locator('.aviso-ok')).toHaveText('Guardado: gasto de Proveedores, $ 100.000,00, y su venta con débito.');
+  await expect(tilde, 'para el próximo renglón sigue marcado').toBeChecked();
+
+  const venta = primeraTabla(page).locator('tr', { hasText: 'Gasto con débito: Proveedores (don José)' });
+  await expect(venta).toContainText('Ingreso');
+  await expect(venta).toContainText('Débito');
+  await expect(venta).toContainText('$ 100.000,00');
+  await expect(page.locator('.carga-dia .nota')).toContainText('Ingresos $ 420.000,00, gastos $ 145.000,00');
+
+  // La venta no se toca sola: solo Historial.
+  await venta.locator('.boton-mas').click();
+  await expect(page.getByRole('menu')).toContainText('Sale de un gasto con débito');
+  await expect(page.getByRole('menuitem')).toHaveText(['Historial']);
+  await page.keyboard.press('Escape');
+
+  // Corregir el gasto arrastra la venta.
+  const gasto = primeraTabla(page).locator('tr', { hasText: 'don José' }).filter({ hasNotText: 'Gasto con débito' });
+  await gasto.locator('.boton-mas').click();
+  await page.getByRole('menuitem', { name: 'Corregir' }).click();
+  const ventana = page.getByRole('dialog');
+  await expect(ventana).toContainText('se corrige sola');
+  await ventana.locator('input[inputmode=decimal]').fill('120.000');
+  await ventana.getByPlaceholder('Por ejemplo: el monto era otro').fill('el ticket decía 120.000');
+  await ventana.getByRole('button', { name: /Guardar corrección/ }).click();
+  await expect(ventana).toBeHidden();
+  await expect(venta).toContainText('$ 120.000,00');
+
+  // Anular el gasto se lleva la venta.
+  await gasto.locator('.boton-mas').click();
+  await page.getByRole('menuitem', { name: 'Anular' }).click();
+  await expect(ventana).toContainText('También se anula su venta con débito');
+  await ventana.getByPlaceholder('Por ejemplo: cargado dos veces').fill('era otro local');
+  await ventana.getByRole('button', { name: /Sí, anular/ }).click();
+  await expect(primeraTabla(page).locator('tr', { hasText: 'don José' })).toHaveCount(0);
+
+  // Destildado, es solo el gasto.
+  await f.locator('select').first().selectOption({ label: 'Proveedores' });
+  await f.locator('input[inputmode=decimal]').fill('5.000');
+  await tilde.uncheck();
+  await f.getByRole('button', { name: /Guardar movimiento/ }).click();
+  await expect(f.locator('.aviso-ok')).toHaveText('Guardado: gasto de Proveedores, $ 5.000,00.');
 });

@@ -45,6 +45,10 @@ export interface Movimiento {
   anulado: boolean;
   motivoAnulacion: string;
   cargadoPor: string;
+  /** Gasto con débito: la venta que se sumó con él (ADR-0010). */
+  ventaDelDebitoId: string | null;
+  /** Venta que sale de un gasto con débito: solo se corrige o anula desde ese gasto. */
+  gastoConDebitoId: string | null;
 }
 
 export interface MovimientoNuevo {
@@ -55,6 +59,8 @@ export interface MovimientoNuevo {
   monto: number;
   medioPago: MedioPago;
   turno: Turno;
+  /** Solo en un gasto con débito nuevo: sumar también la venta con débito, como en el cuaderno. */
+  sumarAVenta?: boolean;
 }
 
 export interface ResumenCuadernos {
