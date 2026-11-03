@@ -6,6 +6,8 @@ Un sistema para reemplazar los cuadernos de papel donde un comercio anota ingres
 
 No está conectado con el sistema de caja del local. Cada movimiento se carga a mano.
 
+En Comedor TJ, los cuadernos son las cuentas personales del dueño, no la contabilidad del local: las ventas del local están en iCOM. Por eso el sistema refleja la forma en que él lleva sus cuentas, sin corregirla (ADR-0009).
+
 ## Para quién
 
 | Persona | Qué necesita |

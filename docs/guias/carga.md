@@ -22,12 +22,16 @@ Al entrar estás en la solapa **Cargar**: el formulario arriba y, al lado (o aba
 2. **Tipo:** gasto o ingreso (las ventas son ingresos).
 3. **Categoría** y, si querés, una **descripción** ("verdura", "ventas del turno").
 4. **Monto.** Escribilo como siempre: `45.000` o `45.000,50`.
-5. **Medio de pago.** Fijate bien en este: decide si la plata entra o sale de la caja. Efectivo mueve la caja; Mercado Pago, tarjeta o transferencia no.
+5. **Medio de pago.** Decide si la plata entra o sale de la caja: Efectivo la mueve; Mercado Pago, tarjeta o transferencia no. Para pasar el cuaderno, usá **Efectivo**, también en los renglones con D (mirá abajo).
 6. **Guardar movimiento.** En la compu también se guarda con Enter.
 
 Después de guardar, la fecha, el turno, el tipo y el medio de pago quedan como estaban, así pasás el cuaderno renglón por renglón sin volver a elegirlos. El movimiento nuevo aparece marcado en la lista del día, con el total de ingresos y gastos de ese día para comparar con el papel.
 
 <br clear="right">
+
+## Los renglones con D
+
+En el cuaderno de Costos, la D al final de un gasto quiere decir que se pagó con débito. Cargalos **igual que los demás, con Efectivo**, y la venta del turno con el **total que figura en el cuaderno**, que ya los incluye. No hay que restar nada. Así el haber da lo mismo que en el papel.
 
 ## Si te equivocaste
 

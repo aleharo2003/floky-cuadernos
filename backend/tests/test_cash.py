@@ -1,4 +1,7 @@
-"""The cash box by shift (P-01, P-02, ADR-0008). The haber is cash on hand, and money is never a float."""
+"""The cash box by shift (P-01, P-02, ADR-0008, ADR-0009).
+
+The haber is cash on hand, and money is never a float.
+"""
 
 from datetime import date
 from decimal import Decimal
@@ -55,7 +58,7 @@ def opening(owner, day=1, shift="night", amount="1000000.00"):
 # ---------- the rule ----------
 
 
-def test_haber_is_cash_and_matches_the_paper_notebook(owner, add):
+def test_haber_counts_only_cash(owner, add):
     start = opening(owner)
     add(2, "morning", Kind.INCOME, "500000.00", "cash")
     add(2, "morning", Kind.INCOME, "200000.00", "qr")  # Mercado Pago: sold, not in the box
@@ -69,9 +72,23 @@ def test_haber_is_cash_and_matches_the_paper_notebook(owner, add):
     assert close.expenses_cash == D("300000.00")
     assert close.expenses_not_cash == D("50000.00")
     assert close.after == D("1200000.00")
-    # On paper: previous haber + every sale - (cash costs + the "MP" written as a cost).
-    paper = D("1000000.00") + D("700000.00") - (D("300000.00") + D("200000.00"))
+
+
+def test_matches_the_paper_notebook_with_debit_costs_loaded_as_cash(owner, add):
+    """Comedor TJ (ADR-0009): a cost paid with debit is marked "D" on paper. The owner adds it to the
+    shift sale and subtracts it with the costs, so it does not move the haber. Loaded as on paper,
+    with cash, the system gives the same number."""
+    start = opening(owner)
+    add(2, "morning", Kind.INCOME, "720600.00")  # the shift sale, with the 89.000 of the D already added
+    add(2, "morning", Kind.EXPENSE, "45000.00")  # a common cost
+    add(2, "morning", Kind.EXPENSE, "89000.00")  # "Verdu 89.000 D", paid with debit, loaded as on paper
+
+    [close] = cash.closes(owner.tenant, start, until=date(2026, 1, 31))
+
+    # On paper: previous haber + shift sale - costs (the D included).
+    paper = D("1000000.00") + D("720600.00") - (D("45000.00") + D("89000.00"))
     assert close.after == paper
+    assert close.sales_not_cash == D("0.00")
 
 
 def test_shifts_carry_forward_in_order(owner, add):
