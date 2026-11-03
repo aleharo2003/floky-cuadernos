@@ -18,8 +18,9 @@ export default function Ingreso() {
     setEnviando(true);
     setError('');
     try {
-      const sesion = await ingresar(usuario.trim(), clave);
-      navegar(sesion.active_tenant ? '/cuadernos' : '/elegir-local', { replace: true });
+      await ingresar(usuario.trim(), clave);
+      // /cuadernos decide: elegir local, el aviso de sin acceso, o los cuadernos.
+      navegar('/cuadernos', { replace: true });
     } catch (err) {
       setError((err as Error).message);
       setClave('');

@@ -1,4 +1,7 @@
-import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import BotonSalir from './componentes/BotonSalir';
+import CambiarClave from './componentes/CambiarClave';
 import { useSesion } from './estado/Sesion';
 import Cuadernos from './pantallas/Cuadernos';
 import ElegirLocal from './pantallas/ElegirLocal';
@@ -9,8 +12,8 @@ function Cargando() {
 }
 
 function Barra() {
-  const { sesion, salir, elegirLocal } = useSesion();
-  const navegar = useNavigate();
+  const { sesion, elegirLocal } = useSesion();
+  const [cambiandoClave, setCambiandoClave] = useState(false);
   if (!sesion?.user || !sesion.active_tenant) return null;
   const activo = sesion.active_tenant;
 
@@ -31,19 +34,20 @@ function Barra() {
           ) : (
             <span className="barra-local-nombre">{activo.name}</span>
           )}
-          <span className="barra-usuario">{sesion.user.name}</span>
+          {/* Tocar el nombre abre "Cambiar tu contraseña". */}
           <button
             type="button"
-            className="barra-salir"
-            onClick={async () => {
-              await salir();
-              navegar('/ingresar', { replace: true });
-            }}
+            className="barra-usuario barra-usuario-boton"
+            title="Cambiar tu contraseña"
+            aria-label={`${sesion.user.name}: cambiar tu contraseña`}
+            onClick={() => setCambiandoClave(true)}
           >
-            Salir
+            {sesion.user.name} <span aria-hidden="true">▾</span>
           </button>
+          <BotonSalir />
         </div>
       </div>
+      {cambiandoClave && <CambiarClave onCerrar={() => setCambiandoClave(false)} />}
     </header>
   );
 }
@@ -60,6 +64,7 @@ function ConLocal() {
       <div className="aviso-pantalla">
         <h1>Tu usuario no tiene acceso a ningún local</h1>
         <p>Pedile al administrador que te dé acceso.</p>
+        <BotonSalir className="boton boton-secundario" />
       </div>
     );
   }

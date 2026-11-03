@@ -15,6 +15,11 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name", "kind"]
 
 
+class CategoryInputSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=120)
+    kind = serializers.ChoiceField(choices=Kind.choices)
+
+
 class EntrySerializer(serializers.ModelSerializer):
     category_id = serializers.UUIDField(source="category.id")
     category_name = serializers.CharField(source="category.name")

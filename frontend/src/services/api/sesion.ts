@@ -7,4 +7,7 @@ export const sesionApi: SesionService = {
   ingresar: (usuario, clave) => pedir<Sesion>('POST', '/auth/login/', { username: usuario, password: clave }),
   salir: () => pedir<Sesion>('POST', '/auth/logout/'),
   elegirLocal: (id) => pedir<Sesion>('POST', '/auth/tenant/', { tenant_id: id }),
+  cambiarClave: async (actual, nueva) => {
+    await pedir<null>('POST', '/auth/password/', { current: actual, new: nueva });
+  },
 };

@@ -9,6 +9,7 @@ import FiltroFechas from '../componentes/FiltroFechas';
 import FiltrosMovimientos, { describirFiltros } from '../componentes/FiltrosMovimientos';
 import KpiCard from '../componentes/KpiCard';
 import Modal from '../componentes/Modal';
+import NuevaCategoria from '../componentes/NuevaCategoria';
 import ResumenAnual from '../componentes/ResumenAnual';
 import TarjetaCaja from '../componentes/TarjetaCaja';
 import SegmentedControl from '../componentes/SegmentedControl';
@@ -62,6 +63,9 @@ function recordarTurno(t: Turno) {
   }
 }
 
+/** Valor de la opción "+ Nueva categoría…" del desplegable: nunca es el id de una categoría. */
+const NUEVA = '__nueva__';
+
 const nombreTipo = (t: TipoMovimiento) => (t === 'ingreso' ? 'Ingreso' : 'Gasto');
 const RESUMEN_VACIO: ResumenCuadernos = { ingresos: 0, egresos: 0, saldo: 0, porCategoria: [] };
 
@@ -105,6 +109,8 @@ function detalle(c: Cambio): string {
 export default function Cuadernos() {
   const { puede, sesion } = useSesion();
   const puedeCargarInicial = puede('notebooks.set_cash_opening');
+  const puedeCrearCategorias = puede('notebooks.manage_categories');
+  const [creandoCategoria, setCreandoCategoria] = useState(false);
   const puedeExportar = puede('notebooks.export');
   const puedeCargar = puede('notebooks.add_entry');
   const puedeCorregir = puede('notebooks.change_entry');
@@ -118,7 +124,7 @@ export default function Cuadernos() {
   const [vuelta, setVuelta] = useState(0);
   // Con una fecha a medio escribir se sigue mostrando lo último que se pidió.
   const pedido = [rango.desde, rango.hasta, aplicados.tipo, aplicados.categoriaId, aplicados.medioPago, texto, aplicados.verAnulados, vuelta];
-  const { datos: categorias } = useConsulta(() => servicios.cuadernos.categorias(), []);
+  const { datos: categorias, recargar: recargarCategorias } = useConsulta(() => servicios.cuadernos.categorias(), []);
   const { datos: movimientos, error } = useConsulta(
     () => (rangoValido(rango) ? servicios.cuadernos.movimientos(rango, aplicados) : Promise.resolve([])),
     pedido,
@@ -336,13 +342,22 @@ export default function Cuadernos() {
               </div>
               <label className="campo">
                 <span>Categoría</span>
-                <select required value={borrador.categoriaId} onChange={(e) => cambiar({ categoriaId: e.target.value })}>
+                <select
+                  required
+                  value={borrador.categoriaId}
+                  onChange={(e) => {
+                    // La última opción no es una categoría: abre la ventana para crear una nueva.
+                    if (e.target.value === NUEVA) setCreandoCategoria(true);
+                    else cambiar({ categoriaId: e.target.value });
+                  }}
+                >
                   <option value="">Elegí una categoría</option>
                   {categorias[borrador.tipo].map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.nombre}
                     </option>
                   ))}
+                  {puedeCrearCategorias && <option value={NUEVA}>+ Nueva categoría…</option>}
                 </select>
               </label>
               <label className="campo">
@@ -534,6 +549,18 @@ export default function Cuadernos() {
             {aviso}
           </p>
         </Modal>
+      )}
+
+      {creandoCategoria && (
+        <NuevaCategoria
+          tipo={borrador.tipo}
+          onCerrar={() => setCreandoCategoria(false)}
+          onCreada={(c) => {
+            setCreandoCategoria(false);
+            recargarCategorias();
+            cambiar({ categoriaId: c.id });
+          }}
+        />
       )}
 
       {verHistorial && <Historial movimiento={verHistorial} onCerrar={() => setVerHistorial(null)} />}
