@@ -48,6 +48,15 @@ export function diaLegible(dia: string): string {
   return `${d}/${m}/${a}`;
 }
 
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+
+/** De aaaa-mm-dd a "martes 3/11". Se arma la fecha a mediodía para que la zona horaria no la corra de día. */
+export function diaConNombre(dia: string): string {
+  const [a, m, d] = dia.split('-').map(Number);
+  const f = new Date(a, m - 1, d, 12);
+  return `${DIAS[f.getDay()]} ${d}/${m}`;
+}
+
 /** hh:mm */
 export function hora(iso: string | Date): string {
   const d = new Date(iso);

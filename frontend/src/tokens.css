@@ -10,6 +10,8 @@
   --petroleo-oscuro: #0e3b4b; /* pestaña bajo el mouse, texto de la pestaña activa */
   --accion: #1a7392; /* botones, enlaces, segmento activo */
   --accion-fuerte: #135a73;
+  --accion-fondo: #1a7392; /* fondo de botón con texto blanco; en claro es igual a --accion */
+  --accion-fondo-fuerte: #135a73;
   --accion-suave: #e1eff4;
   --sobre-accion: #ffffff;
   --sobre-barra-ok: #9be08a; /* punto de caja abierta, sobre la barra */
@@ -93,4 +95,46 @@
   --alto-grafico: clamp(200px, 30vh, 340px);
   --alto-barra: 56px;
   --ancho-pedido: 420px; /* columna fija del pedido en la comanda */
+}
+
+/* ---------- tema oscuro ----------
+   Lo prende src/lib/tema.ts con data-tema="oscuro" en <html> (elegido en el menú del usuario o
+   según el dispositivo). Solo en pantalla: en papel o PDF siempre sale claro.
+   Contrastes revisados: texto chico 4,5:1 o más sobre --superficie, bordes de campo 3:1. */
+@media screen {
+  :root[data-tema='oscuro'] {
+    color-scheme: dark;
+
+    --petroleo: #0d2a35;
+    --petroleo-oscuro: #08202a;
+    --accion: #5bb4d6; /* sobre fondo oscuro: texto, bordes, contornos */
+    --accion-fuerte: #82c8e3;
+    --accion-suave: #16333f;
+    --accion-fondo: #1c7393; /* con texto blanco encima */
+    --accion-fondo-fuerte: #155d78;
+
+    --plano: #0f1a1f;
+    --superficie: #17242a;
+    --superficie-2: #1e2e35;
+    --papel: #1d2a2f;
+    --tinta: #e4ecee;
+    --tinta-2: #9fb2b9;
+    --linea: #2c3e45;
+    --borde-campo: #5f747c;
+    --velo: rgba(0, 0, 0, 0.6);
+
+    --positivo: #4cb46c;
+    --positivo-texto: #6fd08c;
+    --positivo-suave: #183526;
+    --negativo: #e5604f;
+    --negativo-texto: #ff8a7a;
+    --negativo-suave: #3d1e1a;
+    --aviso: #e0a33a;
+    --aviso-texto: #f0bb5e;
+    --aviso-suave: #3a2c12;
+
+    --sombra: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --sombra-media: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --sombra-alta: 0 12px 40px rgba(0, 0, 0, 0.6);
+  }
 }

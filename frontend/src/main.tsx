@@ -5,8 +5,11 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { ProveedorAtajos } from './atajos/Atajos';
 import { ProveedorSesion } from './estado/Sesion';
+import { aplicarTemaGuardado } from './lib/tema';
 import './tokens.css';
 import './estilos.css';
+
+aplicarTemaGuardado();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

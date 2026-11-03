@@ -6,6 +6,8 @@ Para quien mira los números del local sin cargar nada (por ejemplo, el contador
 
 Abrí la dirección que te pasamos y escribí tu usuario y tu contraseña. Si tenés acceso a más de un local, elegís cuál ver; después lo cambiás desde la barra de arriba.
 
+Tocando tu nombre, arriba a la derecha, podés cambiar tu contraseña, elegir el tema (claro u oscuro) y salir.
+
 ## Elegir el período y filtrar
 
 <img src="img/filtros-y-exportar.png" alt="Período, filtros y botones para exportar">
@@ -31,7 +33,7 @@ Cada renglón es un cierre de caja: haber anterior, más ventas, menos lo cobrad
 
 <img src="img/historial.png" width="230" alt="Historial de un movimiento" align="right">
 
-- **Historial**, al lado de cada movimiento: quién lo cargó, quién lo cambió, cuándo y por qué.
+- **Historial**, en el botón **⋯** de cada movimiento: quién lo cargó, quién lo cambió, cuándo y por qué.
 - **Bajar Excel:** un archivo con los movimientos del período (fechas e importes listos para sumar), una hoja de totales y una hoja con la caja por turno.
 - **PDF / Imprimir:** abre la impresión del navegador. Para tener el PDF, elegí "Guardar como PDF".
 

@@ -1,14 +1,56 @@
 import { useState } from 'react';
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import BotonSalir from './componentes/BotonSalir';
+import Menu, { type ItemMenu } from './componentes/Menu';
 import CambiarClave from './componentes/CambiarClave';
 import { useSesion } from './estado/Sesion';
+import { type PreferenciaTema, useTema } from './lib/tema';
 import Cuadernos from './pantallas/Cuadernos';
 import ElegirLocal from './pantallas/ElegirLocal';
 import Ingreso from './pantallas/Ingreso';
 
 function Cargando() {
   return <p className="cargando">Cargando…</p>;
+}
+
+/** Lo que la persona hace con su propia cuenta. Pensado para sumar opciones más adelante. */
+function MenuUsuario({ nombre, onCambiarClave }: { nombre: string; onCambiarClave(): void }) {
+  const { salir } = useSesion();
+  const navegar = useNavigate();
+  const [tema, elegirTema] = useTema();
+  const opcionTema = (valor: PreferenciaTema, etiqueta: string): ItemMenu => ({
+    tipo: 'opcion',
+    etiqueta,
+    marcada: tema === valor,
+    onElegir: () => elegirTema(valor),
+  });
+  return (
+    <Menu
+      claseBoton="barra-usuario barra-usuario-boton"
+      contenido={
+        <>
+          {nombre} <span aria-hidden="true">▾</span>
+        </>
+      }
+      etiqueta={`${nombre}: opciones de tu cuenta`}
+      items={[
+        { etiqueta: 'Cambiar contraseña', onElegir: onCambiarClave },
+        { tipo: 'separador' },
+        { tipo: 'titulo', etiqueta: 'Tema' },
+        opcionTema('claro', 'Claro'),
+        opcionTema('oscuro', 'Oscuro'),
+        opcionTema('auto', 'Como el dispositivo'),
+        { tipo: 'separador' },
+        {
+          etiqueta: 'Salir',
+          onElegir: async () => {
+            await salir();
+            navegar('/ingresar', { replace: true });
+          },
+        },
+      ]}
+    />
+  );
 }
 
 function Barra() {
@@ -34,17 +76,7 @@ function Barra() {
           ) : (
             <span className="barra-local-nombre">{activo.name}</span>
           )}
-          {/* Tocar el nombre abre "Cambiar tu contraseña". */}
-          <button
-            type="button"
-            className="barra-usuario barra-usuario-boton"
-            title="Cambiar tu contraseña"
-            aria-label={`${sesion.user.name}: cambiar tu contraseña`}
-            onClick={() => setCambiandoClave(true)}
-          >
-            {sesion.user.name} <span aria-hidden="true">▾</span>
-          </button>
-          <BotonSalir />
+          <MenuUsuario nombre={sesion.user.name} onCambiarClave={() => setCambiandoClave(true)} />
         </div>
       </div>
       {cambiandoClave && <CambiarClave onCerrar={() => setCambiandoClave(false)} />}

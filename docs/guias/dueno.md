@@ -16,7 +16,7 @@ Cada local tiene sus movimientos, sus categorías y su caja. Lo de un local nunc
 
 ## Antes de empezar: el haber inicial
 
-La caja del sistema arranca del **último haber que anotaste en el cuaderno**. Se carga una sola vez por local: la fecha, el turno (mañana o noche) y el monto.
+La caja del sistema arranca del **último haber que anotaste en el cuaderno**. Se carga una sola vez por local, en la solapa **Reportes**: la fecha, el turno (mañana o noche) y el monto.
 
 <img src="img/haber-inicial.png" width="460" alt="Cargar el haber inicial">
 
@@ -49,14 +49,18 @@ Si un turno sale en rojo con **Revisar**, la caja dio negativa: falta una venta 
 
 ## El año completo
 
-<img src="img/resumen-anual.png" width="230" alt="Resumen del año en el celular" align="right">
+<img src="img/resumen-anual.png" width="230" alt="Resumen del año" align="right">
 
 En **Resumen del año** ves cada mes con sus ingresos, gastos y resultado, y qué parte de lo que entró se fue en gastos. Tocá un mes para verlo en detalle. Con las flechas pasás al año anterior.
 
-En el celular aparecen solo los meses con movimientos; **Ver los 12 meses** los muestra todos.
+Aparecen solo los meses con movimientos; **Ver los 12 meses** los muestra todos.
 
 <br clear="right">
 
-## Personas y categorías
+## Categorías nuevas
 
-Por ahora, para dar de alta a alguien, cambiarle el permiso o agregar una categoría, avisanos y lo hacemos nosotros. Hay tres permisos: **dueño** (todo, incluido el haber inicial), **carga** (carga, corrige y anula movimientos) y **consulta** (mira y exporta, pero no cambia nada).
+Si al cargar falta una categoría, elegí **+ Nueva categoría…** al final de la lista. Queda solo en este local y ya la pueden usar todos los que cargan. Si escribís una que ya existe (aunque sea con otras mayúsculas), te avisa.
+
+## Personas
+
+Por ahora, para dar de alta a alguien o cambiarle el permiso, avisanos y lo hacemos nosotros. Hay tres permisos: **dueño** (todo, incluido el haber inicial y las categorías nuevas), **carga** (carga, corrige y anula movimientos) y **consulta** (mira y exporta, pero no cambia nada).
