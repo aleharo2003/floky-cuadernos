@@ -52,8 +52,10 @@ npm run dev
 
 ```text
 cd backend && ruff check . && ruff format --check . && pytest
-cd frontend && npm run lint && npm run build
+cd frontend && npm run lint && npm test && npm run build
 ```
+
+Y las pruebas en navegador, que recorren la app entera como lo haría una persona: [frontend/e2e/README.md](frontend/e2e/README.md).
 
 Es lo mismo que corre el CI.
 
