@@ -24,6 +24,10 @@ CATEGORIES = {
 class Command(BaseCommand):
     help = "Two made up shops, people with each role and some entries. Refuses to run if shops exist."
 
+    def add_arguments(self, parser):
+        # The browser tests pin "today" so their numbers do not depend on the day of the month.
+        parser.add_argument("--today", type=date.fromisoformat, help="Use this date as today (YYYY-MM-DD).")
+
     @transaction.atomic
     def handle(self, *args, **options):
         if Tenant.objects.exists():
@@ -49,7 +53,7 @@ class Command(BaseCommand):
         user_model.objects.create_superuser(username="admin", password=PASSWORD)
 
         lucia_norte = Membership.objects.get(user__username="lucia", tenant=norte)
-        today = date.today()
+        today = options.get("today") or date.today()
         samples = [
             (0, Shift.NIGHT, Kind.INCOME, "Ventas", "Ventas de la noche", "320000", "cash"),
             (0, Shift.MORNING, Kind.EXPENSE, "Proveedores", "Verdura", "45000", "cash"),
