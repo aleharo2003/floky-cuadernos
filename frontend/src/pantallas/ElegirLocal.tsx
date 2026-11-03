@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
+import BotonSalir from '../componentes/BotonSalir';
 import { useSesion } from '../estado/Sesion';
 
 const NOMBRE_ROL = { owner: 'Dueño', editor: 'Carga', viewer: 'Consulta' } as const;
@@ -18,6 +19,9 @@ export default function ElegirLocal() {
       setError((err as Error).message);
     }
   };
+
+  // Sin locales para elegir, el aviso de "sin acceso" vive en /cuadernos.
+  if (sesion && sesion.tenants.length === 0) return <Navigate to="/cuadernos" replace />;
 
   return (
     <div className="login">
@@ -43,6 +47,7 @@ export default function ElegirLocal() {
           <p className="login-error" role="alert">
             {error}
           </p>
+          <BotonSalir className="boton-texto" />
         </section>
       </div>
     </div>

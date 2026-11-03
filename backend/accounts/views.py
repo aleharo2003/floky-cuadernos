@@ -1,6 +1,8 @@
 import logging
 
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from rest_framework import serializers, status
@@ -20,6 +22,11 @@ WRONG_CREDENTIALS = "Usuario o contraseña incorrectos."
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=150, trim_whitespace=True)
     password = serializers.CharField(max_length=128, trim_whitespace=False)
+
+
+class ChangePasswordSerializer(serializers.Serializer):
+    current = serializers.CharField(max_length=128, trim_whitespace=False)
+    new = serializers.CharField(max_length=128, trim_whitespace=False)
 
 
 class ChooseTenantSerializer(serializers.Serializer):
@@ -78,3 +85,31 @@ class ChooseTenantView(APIView):
             return Response({"detail": "No encontramos ese local."}, status=status.HTTP_404_NOT_FOUND)
         set_active_tenant(request, membership)
         return Response(session_payload(request))
+
+
+@method_decorator(csrf_protect, name="post")
+class ChangePasswordView(APIView):
+    """A person changes their own password. This device stays signed in; every other session ends."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "login"  # same limit as login: guessing the current password is just as bad
+
+    def post(self, request: Request) -> Response:
+        data = ChangePasswordSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        user = request.user
+        if not user.check_password(data.validated_data["current"]):
+            return Response(
+                {"current": ["La contraseña actual no es correcta."]}, status=status.HTTP_400_BAD_REQUEST
+            )
+        try:
+            validate_password(data.validated_data["new"], user)
+        except DjangoValidationError as exc:
+            return Response({"new": list(exc.messages)}, status=status.HTTP_400_BAD_REQUEST)
+        user.set_password(data.validated_data["new"])
+        user.save(update_fields=["password"])
+        # The session hash changes with the password: other devices are signed out on their next request.
+        update_session_auth_hash(request, user)
+        log.info("password changed", extra={"user_id": user.pk})
+        return Response(status=status.HTTP_204_NO_CONTENT)

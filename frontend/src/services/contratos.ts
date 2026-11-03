@@ -19,11 +19,15 @@ export interface SesionService {
   ingresar(usuario: string, clave: string): Promise<Sesion>;
   salir(): Promise<Sesion>;
   elegirLocal(id: string): Promise<Sesion>;
+  /** Cambia la contraseña propia. Este dispositivo sigue adentro; los demás se cierran. */
+  cambiarClave(actual: string, nueva: string): Promise<void>;
 }
 
 /** Lo que las pantallas le piden a los cuadernos del local activo. */
 export interface CuadernosService {
   categorias(): Promise<Record<TipoMovimiento, Categoria[]>>;
+  /** Solo el dueño. Si existía desactivada con el mismo nombre, vuelve en lugar de duplicarse. */
+  crearCategoria(nombre: string, tipo: TipoMovimiento): Promise<Categoria>;
   /** La lista, el resumen y el Excel usan los mismos filtros: nunca muestran cosas distintas. */
   movimientos(rango: RangoFechas, filtros: FiltrosMovimientos): Promise<Movimiento[]>;
   /** Los anulados nunca suman, aunque se pida verlos en la lista. */

@@ -13,7 +13,7 @@ from django.db import IntegrityError, transaction
 
 from accounts.models import Membership
 from core.models import record
-from notebooks.models import Category, Entry
+from notebooks.models import Category, Entry, Kind
 
 
 class RuleError(ValueError):
@@ -148,3 +148,42 @@ def void_entry(membership: Membership, entry_id, reason: str) -> Entry:
             reason=reason,
         )
     return entry
+
+
+def create_category(membership: Membership, name: str, kind: str) -> tuple[Category, bool]:
+    """Owner adds a category from the form (HU-022). Returns (category, created).
+
+    Names are compared without caring about upper or lower case, so "ventas" and "Ventas" are the same.
+    A deactivated one with the same name comes back instead of creating a twin.
+    """
+    if kind not in Kind.values:
+        raise RuleError("Elegí si es de ingreso o de gasto.")
+    name = " ".join((name or "").split())
+    if not name:
+        raise RuleError("Escribí el nombre de la categoría.")
+    if len(name) > 60:
+        raise RuleError("El nombre puede tener hasta 60 letras.")
+    with transaction.atomic():
+        existing = (
+            Category.objects.select_for_update()
+            .filter(tenant=membership.tenant, kind=kind, name__iexact=name)
+            .first()
+        )
+        if existing and existing.is_active:
+            raise RuleError(f"Ya existe la categoría {existing.name}.")
+        if existing:
+            existing.is_active = True
+            existing.save(update_fields=["is_active"])
+            category, created, action = existing, False, "category.reactivate"
+        else:
+            category = Category.objects.create(tenant=membership.tenant, kind=kind, name=name)
+            created, action = True, "category.create"
+        record(
+            tenant=membership.tenant,
+            actor=membership.user,
+            action=action,
+            entity="category",
+            entity_id=category.id,
+            after={"name": category.name, "kind": category.kind, "is_active": True},
+        )
+    return category, created

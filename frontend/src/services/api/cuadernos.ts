@@ -134,6 +134,11 @@ export const cuadernosApi: CuadernosService = {
     return porTipo;
   },
 
+  async crearCategoria(nombre, tipo) {
+    const c = await pedir<{ id: string; name: string; kind: Kind }>('POST', '/notebooks/categories/', { name: nombre, kind: aKind(tipo) });
+    return { id: c.id, nombre: c.name, tipo: aTipo(c.kind) };
+  },
+
   async movimientos(rango, filtros) {
     return (await pedir<EntryApi[]>('GET', `/notebooks/entries/?${consulta(rango, filtros)}`)).map(aMovimiento);
   },

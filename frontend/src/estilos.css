@@ -2915,3 +2915,32 @@ textarea:focus-visible {
 .formulario-inicial {
   max-width: 520px;
 }
+
+/* ---------- Cuenta: el nombre en la barra abre "Cambiar tu contraseña" ---------- */
+
+.barra-usuario-boton {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--esp-1);
+  min-height: var(--control-min);
+  padding: 0 var(--esp-2);
+  border: 1px solid transparent;
+  border-radius: var(--r);
+  background: transparent;
+  color: var(--sobre-accion);
+  font: inherit;
+  font-weight: var(--peso-medio);
+  cursor: pointer;
+}
+
+.barra-usuario-boton:hover,
+.barra-usuario-boton:focus-visible {
+  border-color: var(--sobre-accion);
+}
+
+@media (max-width: 700px) {
+  .barra-usuario-boton {
+    min-height: 44px;
+  }
+}

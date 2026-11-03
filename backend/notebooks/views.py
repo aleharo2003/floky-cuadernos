@@ -19,6 +19,7 @@ from notebooks.filters import apply_filters
 from notebooks.models import CashOpening, Category, Entry, Kind
 from notebooks.serializers import (
     CashOpeningInputSerializer,
+    CategoryInputSerializer,
     CategorySerializer,
     CorrectionSerializer,
     EntryInputSerializer,
@@ -44,13 +45,28 @@ def rule_error(exc: services.RuleError) -> ValidationError:
 
 
 class CategoryListView(TenantView):
-    required_permissions = {"GET": Perm.VIEW}
+    required_permissions = {"GET": Perm.VIEW, "POST": Perm.MANAGE_CATEGORIES}
 
     def get(self, request: Request) -> Response:
         categories = Category.objects.filter(
             tenant=request.membership.tenant, is_active=True, is_system=False
         )
         return Response(CategorySerializer(categories, many=True).data)
+
+    def post(self, request: Request) -> Response:
+        """The owner adds a category from the load form, without going to the admin (HU-022)."""
+        data = CategoryInputSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        try:
+            category, created = services.create_category(
+                request.membership, data.validated_data["name"], data.validated_data["kind"]
+            )
+        except services.RuleError as exc:
+            raise rule_error(exc) from exc
+        return Response(
+            CategorySerializer(category).data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK,
+        )
 
 
 class EntryListView(TenantView):
