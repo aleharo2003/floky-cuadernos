@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { leerMonto, pesos } from './formato';
+import { diaConNombre, leerMonto, pesos } from './formato';
 
 describe('leerMonto', () => {
   it.each([
@@ -28,5 +28,13 @@ describe('pesos', () => {
   it('formatea en pesos argentinos, con el signo adelante', () => {
     expect(pesos(1234567.8)).toBe('$ 1.234.567,80');
     expect(pesos(-200000)).toBe('-$ 200.000,00');
+  });
+});
+
+describe('diaConNombre', () => {
+  it('nombra el día sin correrlo por la zona horaria', () => {
+    expect(diaConNombre('2026-11-03')).toBe('martes 3/11');
+    expect(diaConNombre('2026-11-01')).toBe('domingo 1/11');
+    expect(diaConNombre('2026-12-31')).toBe('jueves 31/12');
   });
 });
