@@ -187,10 +187,18 @@ def _void(membership: Membership, entry: Entry, reason: str) -> None:
     )
 
 
-def correct_entry(membership: Membership, entry_id, data: EntryData, reason: str) -> Entry:
-    """Correct an entry. If it is a debit cost with its sale, the sale follows in the same transaction."""
+def correct_entry(
+    membership: Membership, entry_id, data: EntryData, reason: str, add_sale: bool = False
+) -> Entry:
+    """Correct an entry. If it is a debit cost with its sale, the sale follows in the same transaction.
+
+    add_sale: a debit cost that has no standing sale gets one, as when it is loaded (ADR-0012).
+    It covers the round trip: debit to cash voids the sale, and back to debit brings a new one.
+    """
     reason = _reason(reason)
     category = _category_for(membership, data)
+    if add_sale and not (data.kind == Kind.EXPENSE and data.payment_method == PaymentMethod.DEBIT):
+        raise RuleError("Solo un gasto con débito se puede sumar a la venta.")
     with transaction.atomic():
         entry = _locked(membership, entry_id)
         _not_a_debit_sale(entry)
@@ -202,20 +210,21 @@ def correct_entry(membership: Membership, entry_id, data: EntryData, reason: str
         entry.amount = data.amount
         entry.payment_method = data.payment_method
         entry.shift = data.shift
-        if entry.snapshot() == before:
-            raise RuleError("No cambiaste nada.")
-        entry.save()
-        record(
-            tenant=membership.tenant,
-            actor=membership.user,
-            action="entry.correct",
-            entity="entry",
-            entity_id=entry.id,
-            before=before,
-            after=entry.snapshot(),
-            reason=reason,
-        )
         sale = _linked_sale(entry)
+        if entry.snapshot() == before and not (add_sale and sale is None):
+            raise RuleError("No cambiaste nada.")
+        if entry.snapshot() != before:
+            entry.save()
+            record(
+                tenant=membership.tenant,
+                actor=membership.user,
+                action="entry.correct",
+                entity="entry",
+                entity_id=entry.id,
+                before=before,
+                after=entry.snapshot(),
+                reason=reason,
+            )
         if sale and not _is_debit_expense(entry):
             # It is no longer a cost paid with debit, so the sale has no reason to be there.
             _void(membership, sale, f"El gasto ya no es con débito. {reason}")
@@ -235,6 +244,8 @@ def correct_entry(membership: Membership, entry_id, data: EntryData, reason: str
                     after=sale.snapshot(),
                     reason=f"Acompaña la corrección del gasto con débito. {reason}"[:200],
                 )
+        elif add_sale:
+            _create_debit_sale(membership, entry)
     return entry
 
 

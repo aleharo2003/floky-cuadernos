@@ -43,7 +43,7 @@ En el sistema se carga **una sola vez**:
 
 Por ejemplo, "Verdu 89.000 D" queda como un gasto de Proveedores por $ 89.000 con Débito, y una venta de $ 89.000 con Débito que dice "Gasto con débito: Proveedores". Ninguno de los dos mueve la caja, igual que en el papel.
 
-Si después corregís o anulás el gasto, su venta se corrige o se anula con él. La venta sola no se puede tocar.
+Si después corregís o anulás el gasto, su venta se corrige o se anula con él. La venta sola no se puede tocar. Si corregís un gasto y lo pasás a Débito, la ventana te ofrece el mismo tilde para sumar su venta.
 
 <br clear="right">
 

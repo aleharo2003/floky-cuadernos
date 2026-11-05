@@ -60,7 +60,9 @@ const deMovimiento = (m: Movimiento): Borrador => ({
   medioPago: m.medioPago,
   turno: m.turno,
   motivo: '',
-  sumarAVenta: false,
+  // Si pasa a ser con débito al corregirlo, se propone sumar la venta (la ida y vuelta, ADR-0012).
+  // Si ya era con débito y se cargó sin venta, no se propone de entrada.
+  sumarAVenta: m.medioPago !== 'debit',
 });
 
 const sumaVenta = (b: Borrador) => b.sumarAVenta && b.tipo === 'egreso' && b.medioPago === 'debit';
@@ -571,7 +573,8 @@ function Correccion({
     }
     setGuardando(true);
     try {
-      await servicios.cuadernos.corregir(movimiento.id, datos, borrador.motivo);
+      const sumarAVenta = !movimiento.ventaDelDebitoId && sumaVenta(borrador);
+      await servicios.cuadernos.corregir(movimiento.id, { ...datos, sumarAVenta }, borrador.motivo);
     } catch (err) {
       setAviso((err as Error).message);
       return;
@@ -595,6 +598,7 @@ function Correccion({
         categorias={categorias}
         fechaYTurno="campos"
         correccion
+        ofrecerVenta={!movimiento.ventaDelDebitoId}
         aviso={aviso}
         guardando={guardando}
         textoGuardar="Guardar corrección"

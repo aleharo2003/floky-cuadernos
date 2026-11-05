@@ -48,6 +48,11 @@ interface Props {
   fechaYTurno: 'resumen' | 'campos';
   /** Corrección: pide el motivo. */
   correccion?: boolean;
+  /**
+   * Mostrar el tilde "Sumarlo también a la venta" en un gasto con débito. Al cargar, siempre; al
+   * corregir, solo si el gasto no tiene ya su venta (ADR-0012).
+   */
+  ofrecerVenta?: boolean;
   campoCategoria?: Ref<HTMLSelectElement>;
   aviso: string;
   /** Confirmación de lo último que se guardó. */
@@ -67,6 +72,7 @@ export default function FormMovimiento({
   onNuevaCategoria,
   fechaYTurno,
   correccion = false,
+  ofrecerVenta = !correccion,
   campoCategoria,
   aviso,
   avisoOk,
@@ -158,7 +164,7 @@ export default function FormMovimiento({
           ))}
         </select>
       </label>
-      {!correccion && borrador.tipo === 'egreso' && borrador.medioPago === 'debit' && (
+      {ofrecerVenta && borrador.tipo === 'egreso' && borrador.medioPago === 'debit' && (
         <label className="campo-tilde">
           <input type="checkbox" checked={borrador.sumarAVenta} onChange={(e) => onCambio({ sumarAVenta: e.target.checked })} />
           <span>

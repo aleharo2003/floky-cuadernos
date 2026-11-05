@@ -184,3 +184,84 @@ def test_the_sale_cannot_be_changed_or_voided_on_its_own(as_role, categories):
     assert "corregí o anulá el gasto" in str(fix.data)
     sale.refresh_from_db()
     assert sale.amount == Decimal("100000.00") and not sale.is_voided
+
+
+# ---------- round trip (review of 05/11/2026, ADR-0012) ----------
+
+
+def test_back_to_debit_with_add_sale_brings_a_new_sale(as_role, categories):
+    api = as_role(Role.EDITOR)
+    api.post(URL, body(categories), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+    api.put(f"{URL}{cost.id}/", correction(cost, payment_method="cash"), format="json")
+    cost.refresh_from_db()
+    assert api.get(URL, {"from": "2026-10-01", "to": "2026-10-31"}).json()[0]["debit_sale_id"] is None
+
+    response = api.put(
+        f"{URL}{cost.id}/", correction(cost, payment_method="debit", add_sale=True), format="json"
+    )
+
+    assert response.status_code == 200
+    old, new = Entry.objects.filter(kind=Kind.INCOME).order_by("created_at")
+    assert old.is_voided and not new.is_voided
+    assert new.from_debit_expense == cost and new.amount == cost.amount
+    assert response.data["debit_sale_id"] == str(new.id)
+
+
+def test_without_add_sale_back_to_debit_stays_without_sale(as_role, categories):
+    api = as_role(Role.EDITOR)
+    api.post(URL, body(categories), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+    api.put(f"{URL}{cost.id}/", correction(cost, payment_method="cash"), format="json")
+    cost.refresh_from_db()
+
+    api.put(f"{URL}{cost.id}/", correction(cost, payment_method="debit"), format="json")
+
+    assert not Entry.objects.filter(kind=Kind.INCOME, is_voided=False).exists()
+
+
+def test_add_sale_never_makes_a_second_standing_sale(as_role, categories):
+    api = as_role(Role.EDITOR)
+    api.post(URL, body(categories), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+
+    api.put(f"{URL}{cost.id}/", correction(cost, amount="150000.00", add_sale=True), format="json")
+
+    assert Entry.objects.filter(kind=Kind.INCOME, is_voided=False).count() == 1
+    assert Entry.objects.get(kind=Kind.INCOME).amount == Decimal("150000.00")
+
+
+def test_a_debit_cost_loaded_without_sale_can_get_it_later(as_role, categories):
+    """Only the sale is added: nothing else changes, and that is not "No cambiaste nada"."""
+    api = as_role(Role.EDITOR)
+    api.post(URL, body(categories, add_sale=False), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+
+    response = api.put(f"{URL}{cost.id}/", correction(cost, add_sale=True), format="json")
+
+    assert response.status_code == 200
+    assert Entry.objects.filter(kind=Kind.INCOME, is_voided=False).count() == 1
+
+
+def test_add_sale_on_a_cash_correction_is_refused(as_role, categories):
+    api = as_role(Role.EDITOR)
+    api.post(URL, body(categories), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+
+    response = api.put(
+        f"{URL}{cost.id}/", correction(cost, payment_method="cash", add_sale=True), format="json"
+    )
+
+    assert response.status_code == 400
+    assert not Entry.objects.get(kind=Kind.INCOME).is_voided, "nothing changed"
+
+
+def test_a_voided_sale_does_not_count_as_the_standing_one(as_role, categories):
+    api = as_role(Role.OWNER)
+    api.post(URL, body(categories), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+    api.post(f"{URL}{cost.id}/void/", {"reason": "error"}, format="json")
+
+    listed = api.get(URL, {"from": "2026-10-01", "to": "2026-10-31", "voided": "1"}).json()
+
+    assert [e["debit_sale_id"] for e in listed if e["kind"] == Kind.EXPENSE] == [None]

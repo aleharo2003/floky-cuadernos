@@ -77,12 +77,14 @@ class Entry(models.Model):
 
     # The sale that a cost paid with debit adds to the shift, as the owner does on paper (ADR-0010).
     # It lives on the sale and points to its cost. It is changed and voided only through the cost.
-    from_debit_expense = models.OneToOneField(
+    # A cost can have more than one over time (a voided one and a new one, ADR-0012), never two
+    # standing at once: the services make sure of it.
+    from_debit_expense = models.ForeignKey(
         "self",
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        related_name="debit_sale",
+        related_name="debit_sales",
         verbose_name="venta del gasto con débito",
     )
 

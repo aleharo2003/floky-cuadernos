@@ -188,7 +188,8 @@ export const cuadernosApi: CuadernosService = {
   },
 
   async corregir(id, movimiento, motivo) {
-    return aMovimiento(await pedir<EntryApi>('PUT', `/notebooks/entries/${id}/`, { ...cuerpo(movimiento), reason: motivo }));
+    const datos = { ...cuerpo(movimiento), reason: motivo, add_sale: !!movimiento.sumarAVenta };
+    return aMovimiento(await pedir<EntryApi>('PUT', `/notebooks/entries/${id}/`, datos));
   },
 
   async anular(id, motivo) {
