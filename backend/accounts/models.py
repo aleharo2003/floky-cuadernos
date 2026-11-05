@@ -66,3 +66,19 @@ class Membership(models.Model):
 
     def can(self, perm: str) -> bool:
         return perm in self.permissions
+
+
+class FailedLogin(models.Model):
+    """A failed sign in. Counted in the database so every server copy sees the same number (ADR-0011)."""
+
+    username = models.CharField("usuario", max_length=150)
+    ip = models.GenericIPAddressField("IP", null=True, blank=True)
+    at = models.DateTimeField("cuándo", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "ingreso fallido"
+        verbose_name_plural = "ingresos fallidos"
+        indexes = [models.Index(fields=["username", "at"]), models.Index(fields=["ip", "at"])]
+
+    def __str__(self) -> str:
+        return f"{self.username} {self.at:%d/%m/%Y %H:%M}"

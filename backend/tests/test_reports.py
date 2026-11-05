@@ -203,3 +203,30 @@ def test_excel_names_every_filter_in_words(as_role, book):
 
     totals = {r[0]: r[1] for r in excel["Totales"].iter_rows(values_only=True) if r and r[0]}
     assert totals["Filtros"] == 'tipo gasto, categoría Alquiler, texto "oct", con anulados (no suman)'
+
+
+def test_excel_never_carries_formulas_from_what_people_typed(as_role, book, norte, categories):
+    """A description or category that starts with "=" stays as text: it must not run when the file
+    is opened (security review, 05/11/2026)."""
+    author = Entry.objects.first().created_by
+    evil = Category.objects.create(tenant=norte, kind=Kind.EXPENSE, name="=1+1")
+    Entry.objects.create(
+        tenant=norte,
+        category=evil,
+        kind=Kind.EXPENSE,
+        date=date(2026, 10, 5),
+        amount=Decimal("1.00"),
+        payment_method="cash",
+        shift="morning",
+        description='=HYPERLINK("http://example.com","clic")',
+        created_by=author,
+    )
+    api = as_role(Role.VIEWER)
+
+    excel = read_excel(api.get("/api/notebooks/export/", RANGE))
+
+    cells = [c for sheet in excel.worksheets for row in sheet.iter_rows() for c in row]
+    assert not [c.coordinate for c in cells if c.data_type == "f"]
+    texts = [c.value for c in cells if isinstance(c.value, str)]
+    assert '=HYPERLINK("http://example.com","clic")' in texts
+    assert "=1+1" in texts

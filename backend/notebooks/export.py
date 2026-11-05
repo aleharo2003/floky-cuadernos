@@ -118,9 +118,21 @@ def build_workbook(
     if closes is not None:
         _cash_sheet(book.create_sheet("Caja"), closes)
 
+    _only_text(book)
     buffer = BytesIO()
     book.save(buffer)
     return buffer.getvalue()
+
+
+def _only_text(book: Workbook) -> None:
+    """No cell is ever a formula. openpyxl turns any text that starts with "=" into one, so a
+    description like '=HYPERLINK(...)' would run when the accountant opens the file. Every number
+    is computed here in Python, so nothing legitimate is lost."""
+    for sheet in book.worksheets:
+        for row in sheet.iter_rows():
+            for cell in row:
+                if cell.data_type == "f":
+                    cell.data_type = "s"
 
 
 def describe_filters(filters: dict, category: str = "") -> str:

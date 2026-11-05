@@ -9,9 +9,9 @@ from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
+from accounts import lockout
 from accounts.session import active_memberships, choose_tenant_after_login, session_payload, set_active_tenant
 
 log = logging.getLogger("accounts")
@@ -46,16 +46,20 @@ class SessionView(APIView):
 @method_decorator(csrf_protect, name="post")
 class LoginView(APIView):
     permission_classes = [AllowAny]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "login"
 
     def post(self, request: Request) -> Response:
         data = LoginSerializer(data=request.data)
         data.is_valid(raise_exception=True)
+        username = data.validated_data["username"]
+        ip = lockout.client_ip(request)
+        if lockout.is_locked(username, ip):
+            log.info("login locked", extra={"username": username, "ip": ip})
+            return Response({"detail": lockout.TOO_MANY}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+        # A failure is counted by the user_login_failed signal (accounts.signals).
         user = authenticate(request, **data.validated_data)
         if user is None:
             # Same message whether the user or the password was wrong (HU-012).
-            log.info("login failed", extra={"username": data.validated_data["username"]})
+            log.info("login failed", extra={"username": username, "ip": ip})
             return Response({"detail": WRONG_CREDENTIALS}, status=status.HTTP_400_BAD_REQUEST)
         login(request, user)
         choose_tenant_after_login(request)
@@ -92,14 +96,17 @@ class ChangePasswordView(APIView):
     """A person changes their own password. This device stays signed in; every other session ends."""
 
     permission_classes = [IsAuthenticated]
-    throttle_classes = [ScopedRateThrottle]
-    throttle_scope = "login"  # same limit as login: guessing the current password is just as bad
 
     def post(self, request: Request) -> Response:
         data = ChangePasswordSerializer(data=request.data)
         data.is_valid(raise_exception=True)
         user = request.user
+        # Same limit as the login: guessing the current password is just as bad (ADR-0011).
+        ip = lockout.client_ip(request)
+        if lockout.is_locked(user.get_username(), ip):
+            return Response({"detail": lockout.TOO_MANY}, status=status.HTTP_429_TOO_MANY_REQUESTS)
         if not user.check_password(data.validated_data["current"]):
+            lockout.record_failure(user.get_username(), ip)
             return Response(
                 {"current": ["La contraseña actual no es correcta."]}, status=status.HTTP_400_BAD_REQUEST
             )

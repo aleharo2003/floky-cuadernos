@@ -1,6 +1,5 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from accounts.models import Membership, Role
@@ -14,13 +13,6 @@ PASSWORD = "una-clave-de-prueba-larga"  # noqa: S105 - test data, not a secret
 def fast_password_hasher(settings):
     """Production hashes are slow on purpose. Tests do not need that."""
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
-
-
-@pytest.fixture(autouse=True)
-def clean_throttle_cache():
-    cache.clear()
-    yield
-    cache.clear()
 
 
 @pytest.fixture

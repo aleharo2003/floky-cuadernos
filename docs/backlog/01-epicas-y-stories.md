@@ -141,7 +141,7 @@ Como persona con acceso al portal, quiero entrar con mi usuario y contraseña y 
 - Dado que estoy dentro de un local y tengo más de uno, cuando uso el selector de la barra, entonces cambio de local sin volver a ingresar. Si tengo uno solo, el selector no aparece.
 - Dado credenciales válidas sin membresías activas, cuando ingreso, entonces veo que no tengo acceso a ningún local y queda auditado.
 - Dado credenciales inválidas, cuando ingreso, entonces el mensaje no dice si falló el usuario o la contraseña, y queda auditado.
-- Dado varios intentos fallidos, cuando paso el umbral, entonces se aplica una espera creciente.
+- Dado 10 intentos fallidos con el mismo usuario, cuando pruebo otra vez, entonces queda bloqueado 15 minutos, aunque cambie de IP o el pedido llegue a otra copia del servidor. El admin de Django tiene el mismo límite (ADR-0011).
 - Dado que olvidé la contraseña, cuando pido recuperarla, entonces recibo un enlace de un solo uso que vence, y al usarlo se cierran las otras sesiones.
 - Dado un celular, cuando ingreso, entonces la pantalla de ingreso y la de elegir local se usan sin desplazarse hacia el costado.
 
@@ -296,6 +296,7 @@ Como persona con acceso a un local, quiero exportar el reporte del período, par
 - Dado lo mismo, cuando exporto a Excel, entonces cada movimiento es una fila, las fechas son fechas y los importes son números (no texto), y hay una hoja aparte con los totales.
 - Dado movimientos anulados, cuando exporto, entonces no suman en los totales y aparecen marcados como anulados.
 - Dado un haber inicial cargado, cuando exporto a Excel, entonces hay una hoja "Caja" con el haber de cada turno (HU-025).
+- Dado un texto que empieza con "=" (descripción o categoría), cuando exporto a Excel, entonces queda como texto y no como fórmula, para que nada se ejecute al abrir el archivo.
 - Dado cualquier rol, cuando exporta, entonces puede, y solo del local activo.
 - Dado un año de movimientos, cuando exporto, entonces el archivo sale en menos de 10 segundos.
 

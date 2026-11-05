@@ -58,7 +58,7 @@ export async function pedir<T>(
   const datos = respuesta.status === 204 ? null : await respuesta.json().catch(() => null);
   if (!respuesta.ok) {
     const { mensaje, codigo } = mensajeDe(datos);
-    throw new ErrorDeApi(respuesta.status === 429 ? 'Demasiados intentos. Esperá un minuto y probá de nuevo.' : mensaje, respuesta.status, codigo);
+    throw new ErrorDeApi(respuesta.status === 429 ? 'Demasiados intentos. Esperá unos minutos y probá de nuevo.' : mensaje, respuesta.status, codigo);
   }
   return datos as T;
 }
