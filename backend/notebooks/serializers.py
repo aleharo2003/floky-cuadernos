@@ -62,8 +62,11 @@ class EntrySerializer(serializers.ModelSerializer):
         return entry.created_by.get_full_name() or entry.created_by.get_username()
 
     def get_debit_sale_id(self, entry: Entry) -> str | None:
-        sale = getattr(entry, "debit_sale", None)
-        return str(sale.id) if sale else None
+        """The standing sale of a debit cost. A voided one does not count (ADR-0012)."""
+        sales = getattr(entry, "standing_debit_sales", None)
+        if sales is None:  # not prefetched: a single entry, after saving it
+            sales = list(entry.debit_sales.filter(is_voided=False)[:1])
+        return str(sales[0].id) if sales else None
 
 
 class EntryInputSerializer(serializers.Serializer):
@@ -89,9 +92,11 @@ class NewEntrySerializer(EntryInputSerializer):
 
 class CorrectionSerializer(EntryInputSerializer):
     reason = serializers.CharField(max_length=200)
+    # A debit cost without a standing sale can get one when corrected (ADR-0012).
+    add_sale = serializers.BooleanField(default=False)
 
     def to_data_without_reason(self) -> EntryData:
-        fields = {k: v for k, v in self.validated_data.items() if k != "reason"}
+        fields = {k: v for k, v in self.validated_data.items() if k not in ("reason", "add_sale")}
         return EntryData(**fields)
 
 

@@ -1,6 +1,6 @@
 # ADR-0010. Un gasto con débito suma también su venta con débito, y el sistema la crea
 
-- **Estado:** aceptada, 03/11/2026. Reemplaza a [ADR-0009](0009-cuadernos-como-en-el-papel.md) en cómo se cargan los renglones con D. Sigue valiendo de ADR-0009 que los cuadernos son las cuentas personales del dueño y que el sistema refleja su método.
+- **Estado:** aceptada, 03/11/2026. El punto "el tilde aparece solo al cargar" lo cambió [ADR-0012](0012-venta-del-debito-al-corregir.md) el 05/11/2026. Reemplaza a [ADR-0009](0009-cuadernos-como-en-el-papel.md) en cómo se cargan los renglones con D. Sigue valiendo de ADR-0009 que los cuadernos son las cuentas personales del dueño y que el sistema refleja su método.
 
 ## Contexto
 

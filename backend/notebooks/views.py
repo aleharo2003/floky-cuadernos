@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Prefetch, Q, Sum
 from django.db.models.functions import ExtractMonth
 from django.http import HttpResponse
 from django.utils import timezone
@@ -35,8 +35,13 @@ class TenantView(APIView):
     permission_classes = [HasTenantPermission]
 
     def entries(self):
-        return Entry.objects.filter(tenant=self.request.membership.tenant).select_related(
-            "category", "created_by", "debit_sale"
+        standing_sales = Prefetch(
+            "debit_sales", queryset=Entry.objects.filter(is_voided=False), to_attr="standing_debit_sales"
+        )
+        return (
+            Entry.objects.filter(tenant=self.request.membership.tenant)
+            .select_related("category", "created_by")
+            .prefetch_related(standing_sales)
         )
 
 
@@ -102,7 +107,11 @@ class EntryDetailView(TenantView):
         data.is_valid(raise_exception=True)
         try:
             entry = services.correct_entry(
-                request.membership, entry_id, data.to_data_without_reason(), data.validated_data["reason"]
+                request.membership,
+                entry_id,
+                data.to_data_without_reason(),
+                data.validated_data["reason"],
+                add_sale=data.validated_data["add_sale"],
             )
         except Entry.DoesNotExist as exc:
             raise NotFound("No encontramos ese movimiento.") from exc

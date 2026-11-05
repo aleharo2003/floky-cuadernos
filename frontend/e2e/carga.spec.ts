@@ -193,3 +193,35 @@ test('un monto con más de 2 decimales avisa en lugar de redondear', async ({ pa
   await expect(f.getByRole('alert')).toHaveText('El monto puede tener hasta 2 decimales.');
   await expect(primeraTabla(page).locator('tbody tr')).toHaveCount(2);
 });
+
+test('ida y vuelta: débito, efectivo y otra vez débito recupera la venta', async ({ page }) => {
+  await ingresar(page, 'tomas');
+  await cargarMovimiento(page, { tipo: 'Gasto', categoria: 'Proveedores', descripcion: 'Hielo ida y vuelta', monto: '7.000', medio: 'Débito' });
+  const venta = primeraTabla(page).locator('tr', { hasText: 'Gasto con débito: Proveedores (Hielo ida y vuelta)' });
+  await expect(venta).toHaveCount(1);
+  const gasto = primeraTabla(page).locator('tr', { hasText: 'Hielo ida y vuelta' }).filter({ hasNotText: 'Gasto con débito' });
+  const ventana = page.getByRole('dialog');
+
+  async function corregirMedio(medio: string) {
+    await gasto.locator('.boton-mas').click();
+    await page.getByRole('menuitem', { name: 'Corregir' }).click();
+    await ventana.locator('select').nth(1).selectOption({ label: medio });
+  }
+
+  // A efectivo: la venta se anula y no se ofrece el tilde.
+  await corregirMedio('Efectivo');
+  await expect(ventana.getByRole('checkbox', { name: /Sumarlo también a la venta/ })).toHaveCount(0);
+  await ventana.getByPlaceholder('Por ejemplo: el monto era otro').fill('era en efectivo');
+  await ventana.getByRole('button', { name: /Guardar corrección/ }).click();
+  await expect(ventana).toBeHidden();
+  await expect(venta).toHaveCount(0);
+
+  // Otra vez a débito: aparece el tilde marcado y la venta vuelve.
+  await corregirMedio('Débito');
+  await expect(ventana.getByRole('checkbox', { name: /Sumarlo también a la venta/ })).toBeChecked();
+  await ventana.getByPlaceholder('Por ejemplo: el monto era otro').fill('al final fue con débito');
+  await ventana.getByRole('button', { name: /Guardar corrección/ }).click();
+  await expect(ventana).toBeHidden();
+  await expect(venta).toHaveCount(1);
+  await expect(venta).toContainText('$ 7.000,00');
+});

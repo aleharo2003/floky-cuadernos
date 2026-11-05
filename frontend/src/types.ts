@@ -59,7 +59,7 @@ export interface MovimientoNuevo {
   monto: number;
   medioPago: MedioPago;
   turno: Turno;
-  /** Solo en un gasto con débito nuevo: sumar también la venta con débito, como en el cuaderno. */
+  /** Solo en un gasto con débito sin venta: sumar también la venta con débito, como en el cuaderno. */
   sumarAVenta?: boolean;
 }
 
