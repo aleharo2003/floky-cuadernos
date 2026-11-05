@@ -30,7 +30,6 @@ export default defineConfig({
     url: `http://127.0.0.1:${PUERTO}/api/auth/session/`,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
-    // LOGIN_RATE: las pruebas entran decenas de veces por minuto; el límite real lo prueba pytest.
-    env: { ...(process.env as Record<string, string>), DJANGO_DEBUG: '1', DJANGO_SECURE_SSL_REDIRECT: '0', LOGIN_RATE: '1000/min' },
+    env: { ...(process.env as Record<string, string>), DJANGO_DEBUG: '1', DJANGO_SECURE_SSL_REDIRECT: '0' },
   },
 });

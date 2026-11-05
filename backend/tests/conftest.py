@@ -1,6 +1,5 @@
 import pytest
 from django.contrib.auth import get_user_model
-from django.core.cache import cache
 from rest_framework.test import APIClient
 
 from accounts.models import Membership, Role
@@ -17,10 +16,13 @@ def fast_password_hasher(settings):
 
 
 @pytest.fixture(autouse=True)
-def clean_throttle_cache():
-    cache.clear()
-    yield
-    cache.clear()
+def plain_static_files(settings):
+    """Tests never depend on collectstatic: pages that link static files (the admin) render
+    without the manifest, like on a fresh CI machine."""
+    settings.STORAGES = {
+        **settings.STORAGES,
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
 
 
 @pytest.fixture

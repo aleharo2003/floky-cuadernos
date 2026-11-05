@@ -90,7 +90,7 @@ jobs:
             --image "$IMAGE" \
             --service-account "${{ vars.GCP_RUNTIME_SA }}" \
             --set-secrets "DATABASE_URL=database-url:latest,DJANGO_SECRET_KEY=django-secret-key:latest" \
-            --set-env-vars "^;^APP_VERSION=${VERSION};DJANGO_ALLOWED_HOSTS=${APP_HOSTS}" \
+            --set-env-vars "^;^APP_VERSION=${VERSION};DJANGO_ALLOWED_HOSTS=${APP_HOSTS};TRUSTED_PROXY_HOPS=1" \
             --allow-unauthenticated \
             --min-instances 0 \
             --max-instances 2 \
