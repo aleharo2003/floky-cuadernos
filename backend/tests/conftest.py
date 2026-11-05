@@ -15,6 +15,16 @@ def fast_password_hasher(settings):
     settings.PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 
+@pytest.fixture(autouse=True)
+def plain_static_files(settings):
+    """Tests never depend on collectstatic: pages that link static files (the admin) render
+    without the manifest, like on a fresh CI machine."""
+    settings.STORAGES = {
+        **settings.STORAGES,
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
+
+
 @pytest.fixture
 def centro(db) -> Tenant:
     return Tenant.objects.create(name="Local Centro")
