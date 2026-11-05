@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tecla } from '../atajos/Atajos';
-import { MONTO_ILEGIBLE, diaLegible, fechaHora, leerMonto, pesos } from '../lib/formato';
+import { diaLegible, fechaHora, leerMonto, pesos, problemaDeMonto } from '../lib/formato';
 import { servicios } from '../services';
 import { NOMBRE_TURNO, type Caja, type CierreCaja, type HaberInicial, type Turno } from '../types';
 import Badge from './Badge';
@@ -46,7 +46,7 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
       <Card titulo={titulo} className="panel-ancho panel-completo">
         {puedeCargarInicial ? (
           <>
-            <p className="nota">
+            <p className="nota nota-inicial">
               Para calcular la caja hace falta el punto de partida: el último haber anotado en el cuaderno, con su fecha y su turno.
             </p>
             <FormularioInicial onGuardado={guardado} />
@@ -130,8 +130,9 @@ function useFormularioInicial(inicial?: HaberInicial) {
   const guardar = async (onGuardado: () => void) => {
     if (guardando) return;
     if (!fecha) return setAviso('Elegí la fecha del último haber anotado.');
+    const problema = problemaDeMonto(monto, { permitirCero: true });
+    if (problema) return setAviso(problema);
     const importe = leerMonto(monto);
-    if (!Number.isFinite(importe)) return setAviso(MONTO_ILEGIBLE);
     setGuardando(true);
     try {
       await servicios.cuadernos.cargarHaberInicial(fecha, turno, importe, motivo);
@@ -172,9 +173,12 @@ function FormularioInicial({ onGuardado }: { onGuardado(): void }) {
       }}
     >
       {f.campos}
-      <p className="login-error" role="alert">
-        {f.aviso}
-      </p>
+      {/* Vacío no ocupa lugar: antes dejaba un hueco grande arriba del botón. */}
+      <div className="formulario-mensajes">
+        <p className="login-error" role="alert">
+          {f.aviso}
+        </p>
+      </div>
       <div className="acciones">
         <Button type="submit" variante="primario" disabled={f.guardando}>
           Guardar haber inicial

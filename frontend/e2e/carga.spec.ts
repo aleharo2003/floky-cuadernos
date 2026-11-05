@@ -183,3 +183,13 @@ test('un gasto con débito suma también su venta; se corrige y se anula junto c
   await f.getByRole('button', { name: /Guardar movimiento/ }).click();
   await expect(f.locator('.aviso-ok')).toHaveText('Guardado: gasto de Proveedores, $ 5.000,00.');
 });
+
+test('un monto con más de 2 decimales avisa en lugar de redondear', async ({ page }) => {
+  await ingresar(page, 'tomas');
+  const f = formulario(page);
+  await f.locator('select').first().selectOption({ label: 'Proveedores' });
+  await f.locator('input[inputmode=decimal]').fill('10,999');
+  await f.getByRole('button', { name: /Guardar movimiento/ }).click();
+  await expect(f.getByRole('alert')).toHaveText('El monto puede tener hasta 2 decimales.');
+  await expect(primeraTabla(page).locator('tbody tr')).toHaveCount(2);
+});

@@ -26,6 +26,7 @@ jobs:
   deploy:
     needs: checks
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     environment: production
     permissions:
       contents: read

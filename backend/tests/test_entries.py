@@ -305,3 +305,17 @@ def test_dates_are_plain_dates(as_role, categories):
     body = create(api, categories).json()
 
     assert body["date"] == date(2026, 10, 10).isoformat()
+
+
+# ---------- review of 05/11/2026 ----------
+
+
+def test_amount_errors_speak_with_vos(as_role, categories):
+    api = as_role(Role.EDITOR)
+
+    too_many_decimals = create(api, categories, amount="10.999")
+    too_big = create(api, categories, amount="99999999999999")
+
+    assert too_many_decimals.status_code == 400
+    assert too_many_decimals.json()["amount"] == ["El monto puede tener hasta 2 decimales."]
+    assert too_big.json()["amount"] == ["El monto es demasiado grande."]

@@ -136,3 +136,11 @@ def test_choosing_a_shop_needs_a_session(api, norte):
     response = api.post("/api/auth/tenant/", {"tenant_id": str(norte.id)}, format="json")
 
     assert response.status_code == 403
+
+
+def test_an_ended_session_says_so_with_a_code(api):
+    """Without a session, the notebooks do not ask to choose a shop: they say the session ended."""
+    response = api.get("/api/notebooks/categories/")
+
+    assert response.status_code == 403
+    assert response.json() == {"detail": "Tu sesión se cerró. Volvé a ingresar.", "code": "not_authenticated"}

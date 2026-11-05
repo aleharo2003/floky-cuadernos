@@ -24,6 +24,7 @@ jobs:
     # Skipped until the backup variables are set (docs/operacion/puesta-en-marcha.md, step 6).
     if: vars.R2_BUCKET != '' && vars.BACKUP_AGE_RECIPIENT != ''
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment: backup
     env:
       PG_MAJOR: ${{ vars.PG_MAJOR || '17' }}

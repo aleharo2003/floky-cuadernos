@@ -59,9 +59,10 @@ test('resumen del año: solo meses con movimientos; tocar uno muestra el mes ent
   await anual.getByRole('button', { name: /Ver solo los meses/ }).click();
   await expect(anual.locator('tbody tr')).toHaveCount(1);
 
-  await anual.getByRole('button', { name: 'Año anterior' }).click();
+  // El nombre del botón incluye el año que se ve, para lectores de pantalla y control por voz.
+  await anual.getByRole('button', { name: '2025, año anterior' }).click();
   await expect(page.getByText('Sin movimientos en 2025.')).toBeVisible();
-  await page.getByRole('button', { name: 'Año siguiente' }).click();
+  await page.getByRole('button', { name: '2026, año siguiente' }).click();
   await page.locator('.filtro-fechas').getByRole('button', { name: 'Hoy' }).click();
   await page.locator('.tarjeta', { hasText: 'Resumen del año 2026' }).getByRole('button', { name: 'Marzo' }).click();
   await expect(page.locator('.filtro-fechas input').nth(0)).toHaveValue('2026-03-01');
@@ -111,4 +112,17 @@ test('en el celular, consulta arranca con los filtros cerrados y puede exportar'
   await ana.locator('.filtros-panel select').nth(0).selectOption('ingreso');
   await expect(ana.getByText('Ingresos del período')).toBeVisible();
   expect(await sinDesborde(ana)).toBeLessThanOrEqual(0);
+});
+
+test('un período de más de un año avisa sin vaciar la pantalla, y se corrige desde ahí', async ({ page }) => {
+  await ingresar(page, 'tomas');
+  await irAReportes(page);
+  await page.locator('.filtro-fechas input').nth(0).fill('2024-01-01');
+
+  await expect(page.getByRole('alert')).toContainText('un año');
+  await expect(page.locator('.filtros-panel'), 'los filtros siguen a la vista').toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bajar Excel' }), 'sin datos no se ofrece el Excel').toHaveCount(0);
+
+  await page.locator('.filtro-fechas').getByRole('button', { name: 'Este mes' }).click();
+  await expect(filas(page)).toHaveCount(5);
 });

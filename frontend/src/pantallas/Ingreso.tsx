@@ -6,7 +6,7 @@ import { useSesion } from '../estado/Sesion';
 
 /** Usuario y contraseña. Con un solo local se entra directo; con varios, se elige (FUN-01). */
 export default function Ingreso() {
-  const { ingresar } = useSesion();
+  const { ingresar, sesionCerrada } = useSesion();
   const navegar = useNavigate();
   const [usuario, setUsuario] = useState('');
   const [clave, setClave] = useState('');
@@ -38,6 +38,11 @@ export default function Ingreso() {
       <div className="login-cuerpo login-cuerpo-simple">
         <form className="tarjeta" onSubmit={enviar}>
           <h2>Ingresar</h2>
+          {sesionCerrada && (
+            <p className="aviso-sesion" role="status">
+              Tu sesión se cerró, por ejemplo porque se cambió la contraseña en otro dispositivo. Volvé a ingresar.
+            </p>
+          )}
           <label className="campo">
             <span>Usuario</span>
             <input

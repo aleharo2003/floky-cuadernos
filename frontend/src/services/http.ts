@@ -18,6 +18,14 @@ export const BASE_API = '/api';
 
 const SIN_DETALLE = 'No pudimos completar la operación. Probá de nuevo.';
 
+/**
+ * Se dispara cuando la API dice que la sesión se cerró o que ya no hay local elegido (por ejemplo,
+ * porque se cambió la contraseña en otro dispositivo). El estado de la sesión lo escucha y vuelve a
+ * preguntar quién está adentro, así la app lleva a la pantalla que corresponde.
+ */
+export const EVENTO_SESION = 'cuadernos:sesion';
+const CODIGOS_DE_SESION = new Set(['not_authenticated', 'no_active_tenant']);
+
 function leerCookie(nombre: string): string | undefined {
   return document.cookie
     .split('; ')
@@ -58,6 +66,7 @@ export async function pedir<T>(
   const datos = respuesta.status === 204 ? null : await respuesta.json().catch(() => null);
   if (!respuesta.ok) {
     const { mensaje, codigo } = mensajeDe(datos);
+    if (codigo && CODIGOS_DE_SESION.has(codigo)) window.dispatchEvent(new Event(EVENTO_SESION));
     throw new ErrorDeApi(respuesta.status === 429 ? 'Demasiados intentos. Esperá unos minutos y probá de nuevo.' : mensaje, respuesta.status, codigo);
   }
   return datos as T;

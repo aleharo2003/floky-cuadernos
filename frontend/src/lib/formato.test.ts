@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { diaConNombre, leerMonto, pesos } from './formato';
+import { MONTO_ILEGIBLE, diaConNombre, leerMonto, pesos, problemaDeMonto } from './formato';
 
 describe('leerMonto', () => {
   it.each([
@@ -36,5 +36,24 @@ describe('diaConNombre', () => {
     expect(diaConNombre('2026-11-03')).toBe('martes 3/11');
     expect(diaConNombre('2026-11-01')).toBe('domingo 1/11');
     expect(diaConNombre('2026-12-31')).toBe('jueves 31/12');
+  });
+});
+
+describe('problemaDeMonto', () => {
+  it.each(['45.000', '45.000,50', '1.300.000', '0,01', '999.999.999.999,99'])('"%s" se puede guardar', (texto) => {
+    expect(problemaDeMonto(texto)).toBeNull();
+  });
+
+  it('no redondea en silencio: más de 2 decimales avisa', () => {
+    expect(problemaDeMonto('10,999')).toBe('El monto puede tener hasta 2 decimales.');
+    expect(problemaDeMonto('10.999')).toBeNull(); // sin coma, el punto es de miles: diez mil novecientos noventa y nueve
+    expect(problemaDeMonto('12.5555')).toBe('El monto puede tener hasta 2 decimales.');
+  });
+
+  it('avisa si es demasiado grande, cero o ilegible', () => {
+    expect(problemaDeMonto('99999999999999')).toBe('El monto es demasiado grande.');
+    expect(problemaDeMonto('0')).toBe('El monto tiene que ser mayor que cero.');
+    expect(problemaDeMonto('0', { permitirCero: true })).toBeNull();
+    expect(problemaDeMonto('abc')).toBe(MONTO_ILEGIBLE);
   });
 });

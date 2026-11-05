@@ -1,4 +1,4 @@
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotAuthenticated, PermissionDenied
 from rest_framework.permissions import BasePermission
 
 from accounts.session import get_active_membership
@@ -19,6 +19,9 @@ class HasTenantPermission(BasePermission):
     message = "Tu rol no permite hacer esto en este local."
 
     def has_permission(self, request, view) -> bool:
+        if not request.user.is_authenticated:
+            # The session ended (logged out, or the password was changed on another device).
+            raise NotAuthenticated()
         membership = get_active_membership(request)
         if membership is None:
             raise NoActiveTenant()

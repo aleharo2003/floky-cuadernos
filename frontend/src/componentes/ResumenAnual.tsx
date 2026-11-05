@@ -43,10 +43,10 @@ export default function ResumenAnual({ anio, onAnio, onVerMes, vuelta }: Props) 
       className="panel-ancho no-imprimir"
       accion={
         <span className="acciones-fila">
-          <Button tamano="chico" aria-label="Año anterior" onClick={() => onAnio(anio - 1)}>
+          <Button tamano="chico" aria-label={`${anio - 1}, año anterior`} onClick={() => onAnio(anio - 1)}>
             ‹ {anio - 1}
           </Button>
-          <Button tamano="chico" aria-label="Año siguiente" disabled={anio >= esteAnio} onClick={() => onAnio(anio + 1)}>
+          <Button tamano="chico" aria-label={`${anio + 1}, año siguiente`} disabled={anio >= esteAnio} onClick={() => onAnio(anio + 1)}>
             {anio + 1} ›
           </Button>
         </span>
