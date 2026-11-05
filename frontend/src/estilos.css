@@ -3221,3 +3221,9 @@ textarea:focus-visible {
     height: 24px;
   }
 }
+
+/* "Ver más" al pie de una lista que viene de a partes. */
+.ver-mas {
+  justify-content: center;
+  margin-top: var(--esp-4);
+}

@@ -27,3 +27,14 @@ def test_seed_refuses_to_run_twice():
     call_command("seed_demo", today=date(2026, 3, 11), stdout=StringIO())
     with pytest.raises(CommandError):
         call_command("seed_demo", stdout=StringIO())
+
+
+def test_volume_seed_only_runs_on_a_test_database(settings):
+    call_command("seed_demo", today=date(2026, 3, 11), stdout=StringIO())
+    settings.DEBUG = False
+    with pytest.raises(CommandError):
+        call_command("seed_volume", days=2, per_day=3, stdout=StringIO())
+
+    settings.DEBUG = True
+    call_command("seed_volume", days=2, per_day=3, today=date(2026, 3, 11), stdout=StringIO())
+    assert Entry.objects.filter(tenant__name__startswith="Local Volumen").count() == 6

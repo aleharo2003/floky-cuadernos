@@ -29,8 +29,12 @@ interface Props {
  * La caja en efectivo, turno por turno, como el cuaderno "Comedor TJ" (P-01, ADR-0008).
  * Haber = haber anterior + ventas en efectivo, menos gastos en efectivo. No sigue los filtros de la lista.
  */
+/** Unos 30 días de dos turnos. */
+const TURNOS_POR_PARTE = 62;
+
 export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio }: Props) {
   const [editando, setEditando] = useState(false);
+  const [verTurnos, setVerTurnos] = useState(TURNOS_POR_PARTE);
 
   const titulo = 'Caja en efectivo (haber) por turno';
   if (error) return <Card titulo={titulo} className="panel-ancho panel-completo"><p className="vacio">{error}</p></Card>;
@@ -59,6 +63,9 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
   }
 
   const negativos = caja.cierres.filter((c) => c.negativo);
+  // Un año son más de 700 turnos: se muestran los últimos y el resto a pedido.
+  const todos = [...caja.cierres].reverse();
+  const ultimos = todos.slice(0, verTurnos);
 
   return (
     <Card
@@ -80,7 +87,7 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
         </p>
       )}
       <DataTable<CierreCaja>
-        filas={[...caja.cierres].reverse()}
+        filas={ultimos}
         clave={(c) => `${c.fecha}-${c.turno}`}
         vacio="Sin cierres en este período."
         columnas={[
@@ -104,6 +111,13 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
           },
         ]}
       />
+      {todos.length > ultimos.length && (
+        <div className="acciones ver-mas no-imprimir">
+          <Button onClick={() => setVerTurnos((n) => n + TURNOS_POR_PARTE)}>
+            Ver {Math.min(TURNOS_POR_PARTE, todos.length - ultimos.length)} turnos más (quedan {todos.length - ultimos.length})
+          </Button>
+        </div>
+      )}
       <p className="nota nota-caja">
         Lo cobrado con Mercado Pago, tarjeta o transferencia es venta, pero no entra a la caja. Los gastos pagados por transferencia o
         tarjeta tampoco salen de la caja.

@@ -6,6 +6,7 @@ import type {
   MesDelAnio,
   Movimiento,
   MovimientoNuevo,
+  PaginaMovimientos,
   RangoFechas,
   ResumenCuadernos,
   Sesion,
@@ -29,7 +30,8 @@ export interface CuadernosService {
   /** Solo el dueño. Si existía desactivada con el mismo nombre, vuelve en lugar de duplicarse. */
   crearCategoria(nombre: string, tipo: TipoMovimiento): Promise<Categoria>;
   /** La lista, el resumen y el Excel usan los mismos filtros: nunca muestran cosas distintas. */
-  movimientos(rango: RangoFechas, filtros: FiltrosMovimientos): Promise<Movimiento[]>;
+  /** Los movimientos de a partes: los primeros `cuantos` y el total del período (la API pagina). */
+  movimientos(rango: RangoFechas, filtros: FiltrosMovimientos, cuantos?: number): Promise<PaginaMovimientos>;
   /** Los anulados nunca suman, aunque se pida verlos en la lista. */
   resumen(rango: RangoFechas, filtros: FiltrosMovimientos): Promise<ResumenCuadernos>;
   /** Los doce meses del año, con ingresos, gastos y saldo de cada uno. */

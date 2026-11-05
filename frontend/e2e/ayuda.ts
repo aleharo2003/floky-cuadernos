@@ -20,6 +20,16 @@ export function reiniciarDatos() {
   });
 }
 
+/** Un local "Local Volumen" con muchos movimientos inventados, de la dueña Lucía (seed_volume). */
+export function cargarVolumen(dias: number, porDia: number) {
+  const python = process.env.E2E_PYTHON ?? 'python';
+  execSync(`${python} manage.py seed_volume --days ${dias} --per-day ${porDia} --today ${HOY}`, {
+    cwd: new URL('../../backend', import.meta.url).pathname,
+    stdio: 'pipe',
+    env: { ...process.env, DJANGO_DEBUG: '1' },
+  });
+}
+
 /** Errores de JavaScript de todas las páginas de una prueba: al final tiene que estar vacío. */
 export const test = base.extend<{ errores: string[]; nuevaPagina: (opciones?: BrowserContextOptions) => Promise<Page> }>({
   // Playwright lee de este argumento qué fixtures usa: vacío quiere decir ninguno.

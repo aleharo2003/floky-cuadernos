@@ -60,7 +60,11 @@ def build_workbook(
         cell.font = BOLD
     income = expense = 0
     by_category: dict[tuple[str, str], list] = {}
-    for e in entries.order_by("date", "created_at"):
+    # The sheet's own row count (max_row) walks every cell each time it is asked: asked once per
+    # entry it made a year take 50 seconds. The row number is kept here instead.
+    row = 1
+    # The links between debit costs and their sales are not part of the file: skip that query.
+    for e in entries.prefetch_related(None).order_by("date", "created_at").iterator(chunk_size=2000):
         signed = e.amount if e.kind == Kind.INCOME else -e.amount
         detail.append(
             [
@@ -75,7 +79,7 @@ def build_workbook(
                 e.created_by.get_full_name() or e.created_by.get_username(),
             ]
         )
-        row = detail.max_row
+        row += 1
         detail.cell(row, 1).number_format = DATE
         detail.cell(row, 7).number_format = MONEY
         if e.is_voided:

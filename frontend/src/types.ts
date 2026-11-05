@@ -51,6 +51,12 @@ export interface Movimiento {
   gastoConDebitoId: string | null;
 }
 
+/** Una parte de la lista: los movimientos que vinieron y cuántos hay en total con esos filtros. */
+export interface PaginaMovimientos {
+  movimientos: Movimiento[];
+  total: number;
+}
+
 export interface MovimientoNuevo {
   fecha: string;
   tipo: TipoMovimiento;

@@ -195,7 +195,8 @@ def test_back_to_debit_with_add_sale_brings_a_new_sale(as_role, categories):
     cost = Entry.objects.get(kind=Kind.EXPENSE)
     api.put(f"{URL}{cost.id}/", correction(cost, payment_method="cash"), format="json")
     cost.refresh_from_db()
-    assert api.get(URL, {"from": "2026-10-01", "to": "2026-10-31"}).json()[0]["debit_sale_id"] is None
+    listed = api.get(URL, {"from": "2026-10-01", "to": "2026-10-31"}).json()["results"]
+    assert listed[0]["debit_sale_id"] is None
 
     response = api.put(
         f"{URL}{cost.id}/", correction(cost, payment_method="debit", add_sale=True), format="json"
@@ -262,6 +263,6 @@ def test_a_voided_sale_does_not_count_as_the_standing_one(as_role, categories):
     cost = Entry.objects.get(kind=Kind.EXPENSE)
     api.post(f"{URL}{cost.id}/void/", {"reason": "error"}, format="json")
 
-    listed = api.get(URL, {"from": "2026-10-01", "to": "2026-10-31", "voided": "1"}).json()
+    listed = api.get(URL, {"from": "2026-10-01", "to": "2026-10-31", "voided": "1"}).json()["results"]
 
     assert [e["debit_sale_id"] for e in listed if e["kind"] == Kind.EXPENSE] == [None]
