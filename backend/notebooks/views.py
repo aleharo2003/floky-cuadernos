@@ -74,12 +74,31 @@ class CategoryListView(TenantView):
         )
 
 
+def _number(text: str | None, *, default: int, low: int, high: int | None = None) -> int:
+    """A page parameter. Anything odd falls back to the default instead of failing."""
+    try:
+        value = int(text) if text is not None else default
+    except ValueError:
+        return default
+    value = max(value, low)
+    return min(value, high) if high is not None else value
+
+
 class EntryListView(TenantView):
     required_permissions = {"GET": Perm.VIEW, "POST": Perm.ADD_ENTRY}
 
+    # A year of a busy shop is about 22.000 rows (8 MB): too much for a cheap phone at once.
+    # The list comes in pages; the totals come from the summary, over the whole period.
+    PAGE = 200
+    MAX_PAGE = 1000
+
     def get(self, request: Request) -> Response:
         entries, _ = apply_filters(self.entries(), request.query_params)
-        return Response(EntrySerializer(entries, many=True).data)
+        limit = _number(request.query_params.get("limit"), default=self.PAGE, low=1, high=self.MAX_PAGE)
+        offset = _number(request.query_params.get("offset"), default=0, low=0)
+        # The id breaks ties, so a row never shows up in two pages.
+        page = entries.order_by("-date", "-created_at", "-id")[offset : offset + limit]
+        return Response({"count": entries.count(), "results": EntrySerializer(page, many=True).data})
 
     def post(self, request: Request) -> Response:
         data = NewEntrySerializer(data=request.data)

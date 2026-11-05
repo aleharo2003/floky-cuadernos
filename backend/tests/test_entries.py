@@ -121,8 +121,8 @@ def test_list_shows_only_the_active_shop_and_hides_voided(api, make_person, cent
     create(api, categories, tenant="Local Centro")
     api.post("/api/auth/tenant/", {"tenant_id": str(norte.id)}, format="json")
 
-    default = api.get("/api/notebooks/entries/", RANGE).json()
-    with_voided = api.get("/api/notebooks/entries/", RANGE | {"voided": "1"}).json()
+    default = api.get("/api/notebooks/entries/", RANGE).json()["results"]
+    with_voided = api.get("/api/notebooks/entries/", RANGE | {"voided": "1"}).json()["results"]
 
     assert [e["id"] for e in default] == [kept]
     assert {e["id"] for e in with_voided} == {kept, voided}

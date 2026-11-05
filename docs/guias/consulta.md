@@ -15,6 +15,7 @@ Tocando tu nombre, arriba a la derecha, podés cambiar tu contraseña, elegir el
 - **Período:** Hoy, Esta semana, Este mes, Mes pasado, o las fechas que quieras en Desde y Hasta.
 - **Filtros:** tipo (ingresos o gastos), categoría, medio de pago, o una palabra de la descripción. Con **Ver anulados** aparecen también los movimientos anulados, marcados; nunca suman.
 - Los totales, la lista y el Excel siguen el período y los filtros.
+- El período puede ser de hasta un año. En períodos largos, la lista aparece de a 200 renglones, con el botón **Ver más** al pie; los totales y el Excel siempre incluyen todo.
 
 ## Los totales
 
@@ -27,7 +28,7 @@ Tocando tu nombre, arriba a la derecha, podés cambiar tu contraseña, elegir el
 
 <img src="img/caja.png" alt="Caja en efectivo por turno">
 
-Cada renglón es un cierre de caja: haber anterior, más ventas, menos lo cobrado sin efectivo y los gastos en efectivo, igual al haber. La caja no sigue los filtros: siempre es la caja entera del local.
+Cada renglón es un cierre de caja: haber anterior, más ventas, menos lo cobrado sin efectivo y los gastos en efectivo, igual al haber. La caja no sigue los filtros: siempre es la caja entera del local. Se ven los últimos turnos primero, y los anteriores con **Ver turnos más**.
 
 ## Historial y exportar
 

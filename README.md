@@ -57,6 +57,17 @@ cd frontend && npm run lint && npm test && npm run build
 
 Y las pruebas en navegador, que recorren la app entera como lo haría una persona: [frontend/e2e/README.md](frontend/e2e/README.md).
 
+Si el cambio toca listas, totales o el Excel, medí también la velocidad con muchos datos (solo en una base de pruebas, con `DJANGO_DEBUG=1`):
+
+```text
+cd backend
+python manage.py seed_demo        # si la base está vacía
+python manage.py seed_volume      # un local con 3 años de movimientos (unos 65.000)
+python manage.py speed_report     # tiempos de lista, resumen, caja y Excel
+```
+
+`speed_report` tiene anotados los tiempos de referencia: compará con esos.
+
 Es lo mismo que corre el CI.
 
 ## Desplegar

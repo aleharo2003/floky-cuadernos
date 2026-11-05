@@ -10,6 +10,7 @@ from openpyxl import load_workbook
 from accounts.models import Role
 from notebooks.export import HEADERS
 from notebooks.models import Category, Entry, Kind
+from notebooks.views import EntryListView
 
 pytestmark = pytest.mark.django_db
 
@@ -52,7 +53,7 @@ def book(norte, centro, categories, make_person):
 
 def descriptions(response):
     assert response.status_code == 200, response.content
-    return sorted(e["description"] for e in response.json())
+    return sorted(e["description"] for e in response.json()["results"])
 
 
 # ---------- filters ----------
@@ -230,3 +231,37 @@ def test_excel_never_carries_formulas_from_what_people_typed(as_role, book, nort
     texts = [c.value for c in cells if isinstance(c.value, str)]
     assert '=HYPERLINK("http://example.com","clic")' in texts
     assert "=1+1" in texts
+
+
+def test_the_list_comes_in_pages_and_says_how_many_there_are(as_role, book, norte, categories, monkeypatch):
+    """Review of 05/11/2026: a year of a busy shop was 22.000 rows at once."""
+    author = Entry.objects.first().created_by
+    Entry.objects.bulk_create(
+        Entry(
+            tenant=norte,
+            category=book["rent"],
+            kind=Kind.EXPENSE,
+            date=date(2026, 10, 1 + n % 28),
+            amount=Decimal("1.00"),
+            payment_method="cash",
+            shift="morning",
+            description=f"renglón {n}",
+            created_by=author,
+        )
+        for n in range(250)
+    )
+    api = as_role(Role.VIEWER)
+    total = Entry.objects.filter(
+        tenant=norte, is_voided=False, date__range=(date(2026, 10, 1), date(2026, 10, 31))
+    ).count()
+
+    first = api.get("/api/notebooks/entries/", RANGE).json()
+    second = api.get("/api/notebooks/entries/", RANGE | {"offset": "200"}).json()
+    monkeypatch.setattr(EntryListView, "MAX_PAGE", 220)
+    all_at_once = api.get("/api/notebooks/entries/", RANGE | {"limit": "5000"}).json()
+
+    assert first["count"] == total and len(first["results"]) == 200
+    assert len(second["results"]) == total - 200
+    assert not {e["id"] for e in first["results"]} & {e["id"] for e in second["results"]}
+    assert len(all_at_once["results"]) == 220, "never more than the maximum page in one go"
+    assert len(api.get("/api/notebooks/entries/", RANGE | {"limit": "abc"}).json()["results"]) == 200

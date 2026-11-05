@@ -38,6 +38,8 @@ import {
 
 const nombreTipo = (t: TipoMovimiento) => (t === 'ingreso' ? 'Ingreso' : 'Gasto');
 const RESUMEN_VACIO: ResumenCuadernos = { ingresos: 0, egresos: 0, saldo: 0, porCategoria: [] };
+/** Cuántos renglones trae cada parte de la lista de Reportes. */
+const PARTE = 200;
 
 const enBlanco = (): Borrador => ({
   fecha: fechaIso(new Date()),
@@ -284,7 +286,11 @@ function SolapaCargar({ categorias, puedeCrearCategorias, recargarCategorias, vu
 
   const dia = borrador.fecha;
   const { datos: delDia } = useConsulta(
-    () => (dia ? servicios.cuadernos.movimientos({ desde: dia, hasta: dia }, SIN_FILTROS) : Promise.resolve([])),
+    // Un día entra siempre en una sola parte, aun en un local con mucho movimiento.
+    () =>
+      dia
+        ? servicios.cuadernos.movimientos({ desde: dia, hasta: dia }, SIN_FILTROS, 1000).then((p) => p.movimientos)
+        : Promise.resolve([]),
     [dia, vuelta],
   );
   const ingresos = (delDia ?? []).filter((m) => m.tipo === 'ingreso').reduce((t, m) => t + m.monto, 0);
@@ -399,10 +405,20 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
   const [anio, setAnio] = useState(() => new Date().getFullYear());
   // Con una fecha a medio escribir se sigue mostrando lo último que se pidió.
   const pedido = [rango.desde, rango.hasta, aplicados.tipo, aplicados.categoriaId, aplicados.medioPago, texto, aplicados.verAnulados, vuelta];
-  const { datos: movimientos, error } = useConsulta(
-    () => (rangoValido(rango) ? servicios.cuadernos.movimientos(rango, aplicados) : Promise.resolve([])),
-    pedido,
+  // La lista viene de a partes (un año de un local con mucho trabajo son miles de renglones).
+  // Con otro período o filtro se vuelve a la primera parte.
+  const [cuantos, setCuantos] = useState(PARTE);
+  const clavePedido = pedido.join('|');
+  const [pedidoAnterior, setPedidoAnterior] = useState(clavePedido);
+  if (pedidoAnterior !== clavePedido) {
+    setPedidoAnterior(clavePedido);
+    setCuantos(PARTE);
+  }
+  const { datos: pagina, error } = useConsulta(
+    () => (rangoValido(rango) ? servicios.cuadernos.movimientos(rango, aplicados, cuantos) : Promise.resolve({ movimientos: [], total: 0 })),
+    [...pedido, cuantos],
   );
+  const movimientos = pagina?.movimientos;
   const { datos: resumen } = useConsulta(
     () => (rangoValido(rango) ? servicios.cuadernos.resumen(rango, aplicados) : Promise.resolve(RESUMEN_VACIO)),
     pedido,
@@ -497,13 +513,28 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
           />
         </div>
 
-        <Card titulo={`Movimientos ${periodo}`} className="panel-completo">
+        <Card
+          titulo={`Movimientos ${periodo}`}
+          nota={
+            pagina && pagina.total > movimientos.length
+              ? `Se muestran ${movimientos.length.toLocaleString('es-AR')} de ${pagina.total.toLocaleString('es-AR')}. Los totales y el Excel incluyen todos.`
+              : undefined
+          }
+          className="panel-completo"
+        >
           <DataTable<Movimiento>
             filas={movimientos}
             clave={(m) => m.id}
             vacio={textoFiltros === 'Ninguno' ? 'No hay movimientos cargados en este período.' : 'Ningún movimiento coincide con los filtros.'}
             columnas={columnasMovimiento(true, acciones)}
           />
+          {pagina && pagina.total > movimientos.length && (
+            <div className="acciones ver-mas no-imprimir">
+              <Button onClick={() => setCuantos((c) => c + PARTE)}>
+                Ver {Math.min(PARTE, pagina.total - movimientos.length).toLocaleString('es-AR')} más
+              </Button>
+            </div>
+          )}
         </Card>
 
         <TarjetaCaja caja={caja} error={errorCaja} puedeCargarInicial={puedeCargarInicial} onCambio={onCambio} />

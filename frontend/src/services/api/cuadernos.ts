@@ -143,8 +143,9 @@ export const cuadernosApi: CuadernosService = {
     return { id: c.id, nombre: c.name, tipo: aTipo(c.kind) };
   },
 
-  async movimientos(rango, filtros) {
-    return (await pedir<EntryApi[]>('GET', `/notebooks/entries/?${consulta(rango, filtros)}`)).map(aMovimiento);
+  async movimientos(rango, filtros, cuantos = 200) {
+    const r = await pedir<{ count: number; results: EntryApi[] }>('GET', `/notebooks/entries/?${consulta(rango, filtros)}&limit=${cuantos}`);
+    return { movimientos: r.results.map(aMovimiento), total: r.count };
   },
 
   async resumen(rango, filtros) {
