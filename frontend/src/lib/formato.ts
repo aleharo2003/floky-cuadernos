@@ -71,19 +71,41 @@ export const fechaHora = (iso: string | Date): string => `${fecha(iso)} ${hora(i
  * Si no se entiende devuelve NaN, nunca un 0 inventado: quien llama decide qué decirle a la persona.
  */
 export function leerMonto(texto: string): number {
+  const normal = normalizarMonto(texto);
+  return normal === null ? NaN : redondear(Number(normal));
+}
+
+/** "12.345,67" a "12345.67". null si no se entiende. */
+function normalizarMonto(texto: string): string | null {
   const limpio = texto.trim().replace(/\s|\$/g, '');
-  if (!limpio) return NaN;
+  if (!limpio) return null;
   let normal: string;
   if (limpio.includes(',')) {
-    if ((limpio.match(/,/g) ?? []).length > 1) return NaN;
+    if ((limpio.match(/,/g) ?? []).length > 1) return null;
     normal = limpio.replace(/\./g, '').replace(',', '.');
   } else if (/^\d{1,3}(\.\d{3})+$/.test(limpio)) {
     normal = limpio.replace(/\./g, '');
   } else {
     normal = limpio;
   }
-  if (!/^\d+(\.\d+)?$/.test(normal)) return NaN;
-  return redondear(Number(normal));
+  return /^\d+(\.\d+)?$/.test(normal) ? normal : null;
+}
+
+/** El mayor importe que guarda la base: 12 cifras enteras y 2 decimales. */
+const MONTO_MAXIMO = 999_999_999_999.99;
+
+/**
+ * Qué decirle a la persona si el monto no se puede guardar tal cual, o null si está bien.
+ * Nunca se redondea en silencio: 10,999 no se convierte en 11,00 sin avisar.
+ */
+export function problemaDeMonto(texto: string, { permitirCero = false } = {}): string | null {
+  const normal = normalizarMonto(texto);
+  if (normal === null) return MONTO_ILEGIBLE;
+  if ((normal.split('.')[1] ?? '').length > 2) return 'El monto puede tener hasta 2 decimales.';
+  const n = Number(normal);
+  if (n > MONTO_MAXIMO) return 'El monto es demasiado grande.';
+  if (!permitirCero && n <= 0) return 'El monto tiene que ser mayor que cero.';
+  return null;
 }
 
 /** El mensaje para un importe que no se pudo leer. */

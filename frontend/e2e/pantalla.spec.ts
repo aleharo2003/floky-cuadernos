@@ -68,9 +68,14 @@ test('sin elegir nada, un dispositivo en modo oscuro abre en oscuro', async ({ n
   expect(await tema(p)).toBe('oscuro');
 });
 
-for (const modo of ['light', 'dark'] as const) {
-  test(`contraste de texto suficiente en tema ${modo === 'light' ? 'claro' : 'oscuro'}`, async ({ nuevaPagina }) => {
-    const p = await nuevaPagina({ colorScheme: modo });
+for (const [modo, pantalla] of [
+  ['light', 'compu'],
+  ['dark', 'compu'],
+  ['light', 'celular'],
+  ['dark', 'celular'],
+] as const) {
+  test(`contraste de texto suficiente en tema ${modo === 'light' ? 'claro' : 'oscuro'}, en ${pantalla}`, async ({ nuevaPagina }) => {
+    const p = await nuevaPagina({ colorScheme: modo, ...(pantalla === 'celular' ? CELULAR : {}) });
     await ingresar(p, 'tomas');
     expect(await contraste(p), 'Cargar').toEqual([]);
     await irAReportes(p);

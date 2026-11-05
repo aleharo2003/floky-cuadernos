@@ -2854,6 +2854,15 @@ textarea:focus-visible {
     font-weight: var(--peso-fuerte);
   }
 
+  /* A 17 px la cifra ya no es "texto grande": necesita el verde y el rojo para texto chico (4,5:1). */
+  .indicadores-compactos .kpi-positiva .kpi-valor {
+    color: var(--positivo-texto);
+  }
+
+  .indicadores-compactos .kpi-negativa .kpi-valor {
+    color: var(--negativo-texto);
+  }
+
   .indicadores-compactos .kpi-pie {
     grid-column: 1 / -1;
     margin-top: 2px;
@@ -3161,4 +3170,54 @@ textarea:focus-visible {
 
 .modal-nota {
   margin-bottom: var(--esp-3);
+}
+
+/* ---------- avisos: sesión cerrada, error de Reportes ---------- */
+
+.aviso-sesion,
+.aviso-reportes {
+  padding: var(--esp-3) var(--esp-4);
+  border-radius: var(--r);
+  font-weight: var(--peso-medio);
+}
+
+.aviso-sesion {
+  background: var(--aviso-suave);
+  color: var(--aviso-texto);
+}
+
+.aviso-reportes {
+  border-left: var(--filete) solid var(--negativo);
+  background: var(--negativo-suave);
+  color: var(--negativo-texto);
+}
+
+.nota-inicial {
+  margin-bottom: var(--esp-4);
+}
+
+/* En el celular, el total de una tabla lleva una sola línea arriba, no una por renglón. */
+@media (max-width: 700px) {
+  .tabla tfoot td {
+    border-top: none;
+  }
+}
+
+/* En pantallas táctiles (celular y tablet, aunque la tablet sea ancha), lo que se toca con el
+   dedo tiene al menos 44 px. Con mouse se mantienen los tamaños compactos. */
+@media (pointer: coarse) {
+  .boton-mas {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .casilla {
+    min-height: 44px;
+  }
+
+  .casilla input,
+  .campo-tilde input {
+    width: 24px;
+    height: 24px;
+  }
 }

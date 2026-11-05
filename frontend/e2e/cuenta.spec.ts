@@ -1,7 +1,7 @@
 import { CELULAR, expect, formulario, ingresar, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
 
 // Categorías nuevas desde el formulario, cambio de contraseña y salir desde cualquier pantalla.
-test.beforeAll(reiniciarDatos);
+test.beforeEach(reiniciarDatos);
 
 test('la dueña crea una categoría desde el desplegable y la usa en el momento', async ({ page, nuevaPagina }) => {
   await ingresar(page, 'lucia', { local: 'Local Norte' });
@@ -110,4 +110,29 @@ test('se puede salir desde cualquier pantalla, también sin locales', async ({ n
   await tomas.waitForURL('**/ingresar');
   await tomas.goto('/cuadernos');
   await tomas.waitForURL('**/ingresar');
+});
+
+test('si la sesión se cierra en otro lado, al guardar lleva al ingreso y explica por qué', async ({ page, nuevaPagina }) => {
+  await ingresar(page, 'tomas');
+  // Desde otro dispositivo cambia la contraseña: esta sesión deja de valer.
+  const otro = await nuevaPagina();
+  await ingresar(otro, 'tomas');
+  await otro.locator('.barra-usuario-boton').click();
+  await otro.getByRole('menuitem', { name: 'Cambiar contraseña' }).click();
+  const ventana = otro.getByRole('dialog');
+  await ventana.locator('input[type=password]').nth(0).fill('clave-de-prueba-123');
+  await ventana.locator('input[type=password]').nth(1).fill('otra-clave-de-tomas-2026');
+  await ventana.locator('input[type=password]').nth(2).fill('otra-clave-de-tomas-2026');
+  await ventana.getByRole('button', { name: 'Cambiar contraseña' }).click();
+  await expect(otro.getByText('Contraseña cambiada')).toBeVisible();
+
+  const f = formulario(page);
+  await f.locator('select').first().selectOption({ label: 'Proveedores' });
+  await f.locator('input[inputmode=decimal]').fill('1.000');
+  await f.getByRole('button', { name: /Guardar movimiento/ }).click();
+
+  await page.waitForURL('**/ingresar');
+  await expect(page.getByRole('status')).toContainText('Tu sesión se cerró');
+  await ingresar(page, 'tomas', { clave: 'otra-clave-de-tomas-2026' });
+  await expect(page.locator('.aviso-sesion')).toHaveCount(0);
 });

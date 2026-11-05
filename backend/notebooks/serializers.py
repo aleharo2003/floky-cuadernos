@@ -9,6 +9,17 @@ from notebooks.services import EntryData
 MAX_RANGE = timedelta(days=366)
 
 
+# DRF's own messages are in "usted"; the portal talks with "vos". Up to 12 whole digits: 999.999.999.999,99.
+AMOUNT_ERRORS = {
+    "invalid": "Escribí un monto válido.",
+    "max_digits": "El monto es demasiado grande.",
+    "max_whole_digits": "El monto es demasiado grande.",
+    "max_decimal_places": "El monto puede tener hasta 2 decimales.",
+    "min_value": "El monto tiene que ser mayor que cero.",
+    "max_string_length": "El monto es demasiado grande.",
+}
+
+
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
@@ -60,7 +71,9 @@ class EntryInputSerializer(serializers.Serializer):
     kind = serializers.ChoiceField(choices=Kind.choices)
     category_id = serializers.UUIDField()
     description = serializers.CharField(max_length=120, allow_blank=True, default="")
-    amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=Decimal("0.01"))
+    amount = serializers.DecimalField(
+        max_digits=14, decimal_places=2, min_value=Decimal("0.01"), error_messages=AMOUNT_ERRORS
+    )
     payment_method = serializers.ChoiceField(choices=PaymentMethod.choices)
     shift = serializers.ChoiceField(choices=Shift.choices)
 
@@ -91,7 +104,9 @@ class CashOpeningSerializer(serializers.ModelSerializer):
 class CashOpeningInputSerializer(serializers.Serializer):
     date = serializers.DateField()
     shift = serializers.ChoiceField(choices=Shift.choices)
-    amount = serializers.DecimalField(max_digits=14, decimal_places=2, min_value=Decimal("0"))
+    amount = serializers.DecimalField(
+        max_digits=14, decimal_places=2, min_value=Decimal("0"), error_messages=AMOUNT_ERRORS
+    )
     reason = serializers.CharField(max_length=200, required=False, allow_blank=True, default="")
 
 

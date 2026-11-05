@@ -16,7 +16,7 @@ import ResumenAnual from '../componentes/ResumenAnual';
 import TarjetaCaja from '../componentes/TarjetaCaja';
 import { useSesion } from '../estado/Sesion';
 import { rangoDelMes, rangoEsteMes, rangoValido } from '../lib/fechas';
-import { MONTO_ILEGIBLE, diaConNombre, diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros } from '../lib/formato';
+import { MONTO_ILEGIBLE, diaConNombre, diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros, problemaDeMonto } from '../lib/formato';
 import { recordarTurno, turnoSugerido } from '../lib/turno';
 import { useConsulta } from '../lib/useConsulta';
 import { useDemorado } from '../lib/useDemorado';
@@ -297,9 +297,10 @@ function SolapaCargar({ categorias, puedeCrearCategorias, recargarCategorias, vu
   const guardar = async (e: FormEvent) => {
     e.preventDefault();
     if (guardando) return;
+    const problema = problemaDeMonto(borrador.monto);
     const datos = datosDe(borrador);
-    if (!datos) {
-      setAviso(MONTO_ILEGIBLE);
+    if (problema || !datos) {
+      setAviso(problema ?? MONTO_ILEGIBLE);
       return;
     }
     setGuardando(true);
@@ -411,23 +412,16 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
     [rango.desde, rango.hasta, vuelta],
   );
 
-  if (error) return <p className="vacio">{error}</p>;
-  if (!movimientos || !resumen || !cambios) return <p className="cargando">Cargando los reportes…</p>;
-
   const periodo = rangoValido(rango)
     ? rango.desde === rango.hasta
       ? `del ${diaLegible(rango.desde)}`
       : `del ${diaLegible(rango.desde)} al ${diaLegible(rango.hasta)}`
     : '';
   const textoFiltros = describirFiltros(aplicados, categorias);
-  const proporcion = resumen.ingresos > 0 ? Math.round((resumen.egresos / resumen.ingresos) * 100) : null;
 
-  const verMes = (mes: number) => {
-    setRango(rangoDelMes(anio, mes));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
+  // Período y filtros quedan siempre a la vista: si el pedido falla (por ejemplo, un período de
+  // más de un año), se corrige desde ahí sin recargar la página.
+  const cabecera = (
     <>
       {/* Solo en papel o PDF: qué local, qué período y con qué filtros (HU-027). */}
       <div className="solo-impresion encabezado-impreso">
@@ -439,7 +433,7 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
 
       <div className="reportes-periodo no-imprimir">
         <FiltroFechas valor={rango} onChange={setRango} />
-        {puedeExportar && rangoValido(rango) && (
+        {puedeExportar && rangoValido(rango) && !error && (
           <div className="acciones reportes-exportar">
             {/* El Excel lo arma el servidor con el mismo período y filtros que se ven (HU-027). */}
             <a className="boton boton-secundario boton-normal" href={servicios.cuadernos.urlExcel(rango, aplicados)} download>
@@ -451,6 +445,36 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
         )}
       </div>
       <FiltrosMovimientos valor={filtros} onChange={setFiltros} categorias={categorias} />
+    </>
+  );
+
+  if (error)
+    return (
+      <>
+        {cabecera}
+        <p className="aviso-reportes" role="alert">
+          {error}
+        </p>
+      </>
+    );
+  if (!movimientos || !resumen || !cambios)
+    return (
+      <>
+        {cabecera}
+        <p className="cargando">Cargando los reportes…</p>
+      </>
+    );
+
+  const proporcion = resumen.ingresos > 0 ? Math.round((resumen.egresos / resumen.ingresos) * 100) : null;
+
+  const verMes = (mes: number) => {
+    setRango(rangoDelMes(anio, mes));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  return (
+    <>
+      {cabecera}
 
       <div className="panel">
         {/* "Resultado" es lo que ganó o perdió el local; "Caja" es el efectivo que quedó (el haber). No son lo mismo. */}
@@ -539,9 +563,10 @@ function Correccion({
   const guardar = async (e: FormEvent) => {
     e.preventDefault();
     if (guardando) return;
+    const problema = problemaDeMonto(borrador.monto);
     const datos = datosDe(borrador);
-    if (!datos) {
-      setAviso(MONTO_ILEGIBLE);
+    if (problema || !datos) {
+      setAviso(problema ?? MONTO_ILEGIBLE);
       return;
     }
     setGuardando(true);

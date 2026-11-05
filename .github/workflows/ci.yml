@@ -17,6 +17,7 @@ concurrency:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: backend
@@ -55,6 +56,7 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: frontend
@@ -76,6 +78,7 @@ jobs:
   # The whole app in a real browser: Django serves the API and the React build (frontend/e2e).
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:16
@@ -107,7 +110,18 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci --no-audit --no-fund
         working-directory: frontend
+      # The browser download is cached by Playwright version; the system packages are installed
+      # every time. Its own limit: if the package mirror hangs, fail in minutes and re-run.
+      - name: Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('./node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+        working-directory: frontend
+      - uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - name: Browser
+        timeout-minutes: 8
         run: npx playwright install --with-deps chromium
         working-directory: frontend
       - name: Types of the tests
@@ -134,6 +148,7 @@ jobs:
 
   image:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: [backend, frontend, e2e]
     steps:
       - uses: actions/checkout@v7

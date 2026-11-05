@@ -110,6 +110,7 @@ STORAGES = {
 AUTHENTICATION_BACKENDS = ["accounts.backends.LockoutBackend"]
 
 REST_FRAMEWORK = {
+    "EXCEPTION_HANDLER": "config.exceptions.handler",
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework.authentication.SessionAuthentication"],
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
