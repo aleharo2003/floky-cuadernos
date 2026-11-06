@@ -496,7 +496,8 @@ a {
   gap: var(--esp-2);
 }
 
-.campo > span:first-child {
+.campo > span:first-child,
+.campo > label:first-child {
   font-size: var(--texto-s);
   font-weight: var(--peso-medio);
   color: var(--tinta-2);
@@ -3258,4 +3259,39 @@ textarea:focus-visible {
   height: 20px;
   margin: 0;
   accent-color: var(--accion);
+}
+
+
+/* Sugerencias de la descripción: una lista corta pegada abajo del campo. */
+.sugerir {
+  position: relative;
+}
+
+.sugerir-lista {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: var(--esp-1) 0;
+  list-style: none;
+  border: 1px solid var(--linea);
+  border-radius: var(--r);
+  background: var(--superficie);
+  color: var(--tinta);
+  box-shadow: var(--sombra-alta);
+}
+
+.sugerir-lista li {
+  padding: var(--esp-2) var(--esp-3);
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sugerir-lista li:hover,
+.sugerir-lista li[aria-selected='true'] {
+  background: var(--accion-suave);
 }

@@ -324,3 +324,17 @@ Como dueño, quiero el sistema publicado, con mis usuarios y categorías listos 
 - Dado los cuadernos de ejemplo revisados (P-01), cuando se configuran las categorías, entonces cada local tiene las suyas.
 - Dado el backup, cuando se pone en marcha, entonces ya se hizo uno y se restauró en un entorno aislado (HU-016).
 - Dado la capacitación, cuando termina, entonces cada rol tiene una guía de una página para celular y PC.
+
+### HU-030. Sugerir la descripción al cargar
+**Prioridad:** Should · **Etiquetas:** `backend`, `frontend`, `cuadernos` · **Diagramas:** FUN-01
+
+Como quien carga, quiero que al escribir la descripción aparezcan las que ya usé, para cargar más rápido y que los nombres queden parejos en los filtros y el Excel.
+
+- Dado un texto escrito en la descripción, cuando hay descripciones del mismo tipo (gasto o ingreso) en el local con alguna palabra que empieza así, entonces aparecen hasta 8, sin importar tildes ni mayúsculas ("carni" encuentra "Carnicería" y "Pago carnicería").
+- Dado la lista, cuando se ordena, entonces van primero las que empiezan con lo escrito, después las más usadas y después las más recientes. El mismo texto con otras mayúsculas o tildes cuenta una vez, con la forma más usada.
+- Dado una sugerencia, cuando la elijo con flechas y Enter o con el mouse, entonces se completa solo la descripción. El monto, la categoría y el medio de pago no cambian.
+- Dado la lista abierta sin nada marcado, cuando aprieto Enter, entonces se guarda lo escrito, como siempre. Esc cierra la lista sin cerrar la ventana de corrección.
+- Dado los movimientos anulados y las ventas que salen de un gasto, cuando se buscan sugerencias, entonces no aparecen.
+- Dado quien solo consulta, cuando pide sugerencias, entonces no puede: no carga.
+
+> Las decisiones (todo el tipo, solo la descripción, cualquier palabra) son del 06/11/2026. Con 65.700 movimientos responde en 0,025 s; si un local llegara a tener decenas de miles de textos distintos, la búsqueda pasa a la base con un índice.

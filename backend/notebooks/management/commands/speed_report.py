@@ -2,7 +2,8 @@
 
 Run it before a release that touches lists, totals or the Excel, and compare with the last time.
 Reference on a laptop, 65.700 entries (05/11/2026): a year of entries 0,03 s, summary 0,02 s,
-cash 0,05 s, Excel 3,5 s.
+cash 0,05 s, Excel 3,5 s. Suggestions (06/11/2026): 0,025 s with the seed's 60 different texts;
+0,12 to 0,28 s in the worst case, every entry with its own text.
 """
 
 import time
@@ -25,7 +26,7 @@ URLS = {
 
 
 class Command(BaseCommand):
-    help = "Times the list, summary, cash and Excel on the Local Volumen shop. Test databases only."
+    help = "Times the list, summary, cash, Excel and suggestions on the Local Volumen shop. Test DBs only."
 
     def handle(self, *args, **options):
         if not settings.DEBUG:
@@ -49,3 +50,10 @@ class Command(BaseCommand):
                     took = time.perf_counter() - start
                     parts.append(f"{name} {took:5.2f} s ({len(response.content) // 1024} KB)")
                 self.stdout.write(f"{label:8} " + " | ".join(parts))
+            # The suggestions do not depend on the period: they read every entry of the shop.
+            parts = []
+            for text in ("p", "prov", "luz"):
+                start = time.perf_counter()
+                client.get("/api/notebooks/descriptions/", {"kind": "expense", "q": text})
+                parts.append(f"'{text}' {time.perf_counter() - start:5.3f} s")
+            self.stdout.write("sugerencias " + " | ".join(parts))

@@ -28,6 +28,7 @@ from notebooks.serializers import (
     SettingsSerializer,
     VoidSerializer,
 )
+from notebooks.suggestions import description_suggestions
 
 
 class TenantView(APIView):
@@ -393,3 +394,16 @@ class SettingsView(TenantView):
         except services.RuleError as exc:
             raise rule_error(exc) from exc
         return Response({"sale_methods": methods})
+
+
+class DescriptionSuggestionsView(TenantView):
+    """While loading: descriptions already used in this shop, for the same kind (HU-030)."""
+
+    required_permissions = {"GET": Perm.ADD_ENTRY}
+
+    def get(self, request: Request) -> Response:
+        kind = request.query_params.get("kind")
+        if kind not in Kind.values:
+            raise ValidationError({"kind": "Elegí gasto o ingreso."})
+        query = request.query_params.get("q", "")[:120]
+        return Response({"results": description_suggestions(request.membership.tenant, kind, query)})

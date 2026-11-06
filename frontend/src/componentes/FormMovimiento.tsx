@@ -4,6 +4,7 @@ import { diaConNombre, fechaIso } from '../lib/formato';
 import { MEDIO_EN_FRASE, NOMBRE_MEDIO, type Categoria, type MedioPago, type TipoMovimiento, type Turno } from '../types';
 import Badge from './Badge';
 import Button from './Button';
+import CampoDescripcion from './CampoDescripcion';
 import { CampoMonto } from './Campos';
 import SegmentedControl from './SegmentedControl';
 
@@ -145,17 +146,7 @@ export default function FormMovimiento({
           {onNuevaCategoria && <option value={NUEVA}>+ Nueva categoría…</option>}
         </select>
       </label>
-      <label className="campo">
-        <span>Descripción</span>
-        <input
-          className="campo-texto"
-          type="text"
-          maxLength={120}
-          value={borrador.descripcion}
-          placeholder="Por ejemplo: verdura"
-          onChange={(e) => onCambio({ descripcion: e.target.value })}
-        />
-      </label>
+      <CampoDescripcion tipo={borrador.tipo} valor={borrador.descripcion} onChange={(descripcion) => onCambio({ descripcion })} />
       <CampoMonto rotulo="Monto" valor={borrador.monto} onChange={(monto) => onCambio({ monto })} />
       <label className="campo">
         <span>Medio de pago</span>

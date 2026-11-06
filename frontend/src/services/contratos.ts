@@ -41,6 +41,8 @@ export interface CuadernosService {
   caja(rango: RangoFechas): Promise<Caja>;
   /** Solo el dueño. Cambiarlo pide motivo, porque mueve todos los haberes siguientes. */
   cargarHaberInicial(fecha: string, turno: Turno, monto: number, motivo: string): Promise<void>;
+  /** Descripciones ya usadas en el local para ese tipo, para sugerirlas al cargar (HU-030). */
+  descripciones(tipo: TipoMovimiento, texto: string): Promise<string[]>;
   /** Lo ve todo el que entra al local: la carga lo necesita para saber cuándo proponer la venta. */
   ajustes(): Promise<AjustesLocal>;
   /** Solo el dueño. Vale para lo que se cargue o corrija después; lo ya cargado queda igual. */
