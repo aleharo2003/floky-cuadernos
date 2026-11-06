@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
+import AjustesDelLocal from './componentes/AjustesDelLocal';
 import BotonSalir from './componentes/BotonSalir';
 import Menu, { type ItemMenu } from './componentes/Menu';
 import CambiarClave from './componentes/CambiarClave';
@@ -14,7 +15,7 @@ function Cargando() {
 }
 
 /** Lo que la persona hace con su propia cuenta. Pensado para sumar opciones más adelante. */
-function MenuUsuario({ nombre, onCambiarClave }: { nombre: string; onCambiarClave(): void }) {
+function MenuUsuario({ nombre, onCambiarClave, onAjustes }: { nombre: string; onCambiarClave(): void; onAjustes?(): void }) {
   const { salir } = useSesion();
   const navegar = useNavigate();
   const [tema, elegirTema] = useTema();
@@ -34,6 +35,8 @@ function MenuUsuario({ nombre, onCambiarClave }: { nombre: string; onCambiarClav
       }
       etiqueta={`${nombre}: opciones de tu cuenta`}
       items={[
+        // Solo el dueño: lo del local va primero, lo de la cuenta después.
+        ...(onAjustes ? [{ etiqueta: 'Ajustes del local', onElegir: onAjustes }] : []),
         { etiqueta: 'Cambiar contraseña', onElegir: onCambiarClave },
         { tipo: 'separador' },
         { tipo: 'titulo', etiqueta: 'Tema' },
@@ -54,8 +57,9 @@ function MenuUsuario({ nombre, onCambiarClave }: { nombre: string; onCambiarClav
 }
 
 function Barra() {
-  const { sesion, elegirLocal } = useSesion();
+  const { sesion, elegirLocal, puede } = useSesion();
   const [cambiandoClave, setCambiandoClave] = useState(false);
+  const [ajustando, setAjustando] = useState(false);
   if (!sesion?.user || !sesion.active_tenant) return null;
   const activo = sesion.active_tenant;
 
@@ -76,10 +80,15 @@ function Barra() {
           ) : (
             <span className="barra-local-nombre">{activo.name}</span>
           )}
-          <MenuUsuario nombre={sesion.user.name} onCambiarClave={() => setCambiandoClave(true)} />
+          <MenuUsuario
+            nombre={sesion.user.name}
+            onCambiarClave={() => setCambiandoClave(true)}
+            onAjustes={puede('notebooks.manage_settings') ? () => setAjustando(true) : undefined}
+          />
         </div>
       </div>
       {cambiandoClave && <CambiarClave onCerrar={() => setCambiandoClave(false)} />}
+      {ajustando && <AjustesDelLocal local={activo.name} onCerrar={() => setAjustando(false)} />}
     </header>
   );
 }

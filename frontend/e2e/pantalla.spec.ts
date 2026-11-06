@@ -83,3 +83,39 @@ for (const [modo, pantalla] of [
     await irACargar(p);
   });
 }
+
+// Las ventanas que abre la barra de arriba heredaban su letra blanca: el título no se veía.
+// axe no lo marca (la ventana está sobre un fondo oscurecido), así que se mide el contraste a mano.
+async function contrasteDeLaVentana(p: Page) {
+  return p.evaluate(() => {
+    const ventana = document.querySelector('[role=dialog]') as HTMLElement;
+    const luz = (color: string) => {
+      const [r, g, b] = color.match(/\d+(\.\d+)?/g)!.slice(0, 3).map((x) => Number(x) / 255);
+      const canal = (c: number) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+      return 0.2126 * canal(r) + 0.7152 * canal(g) + 0.0722 * canal(b);
+    };
+    const fondo = luz(getComputedStyle(ventana).backgroundColor);
+    const textos = Array.from(ventana.querySelectorAll('h2, legend, label, p')).filter((e) => e.textContent?.trim());
+    return Math.min(
+      ...textos.map((e) => {
+        const [a, b] = [luz(getComputedStyle(e).color), fondo].sort((x, y) => y - x);
+        return (a + 0.05) / (b + 0.05);
+      }),
+    );
+  });
+}
+
+for (const modo of ['light', 'dark'] as const) {
+  test(`las ventanas del menú de la cuenta se leen, en tema ${modo === 'light' ? 'claro' : 'oscuro'}`, async ({ nuevaPagina }) => {
+    const p = await nuevaPagina({ colorScheme: modo });
+    await ingresar(p, 'lucia', { local: 'Local Norte' });
+    for (const item of ['Cambiar contraseña', 'Ajustes del local']) {
+      await p.getByRole('button', { name: /opciones de tu cuenta/ }).click();
+      await p.getByRole('menuitem', { name: item }).click();
+      await expect(p.getByRole('dialog').locator('input').first()).toBeVisible();
+      expect(await contrasteDeLaVentana(p), item).toBeGreaterThanOrEqual(4.5);
+      await p.keyboard.press('Escape');
+      await expect(p.getByRole('dialog')).toHaveCount(0);
+    }
+  });
+}

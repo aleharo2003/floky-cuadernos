@@ -2,6 +2,7 @@ import uuid
 from decimal import Decimal
 
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 from core.models import Tenant
@@ -75,17 +76,17 @@ class Entry(models.Model):
     is_voided = models.BooleanField("anulado", default=False)
     void_reason = models.CharField("motivo de anulación", max_length=200, blank=True)
 
-    # The sale that a cost paid with debit adds to the shift, as the owner does on paper (ADR-0010).
-    # It lives on the sale and points to its cost. It is changed and voided only through the cost.
-    # A cost can have more than one over time (a voided one and a new one, ADR-0012), never two
-    # standing at once: the services make sure of it.
-    from_debit_expense = models.ForeignKey(
+    # The sale that a cost paid with debit or transfer adds to the shift, as the owner does on paper
+    # (ADR-0010, ADR-0013). It lives on the sale and points to its cost. It is changed and voided only
+    # through the cost. A cost can have more than one over time (a voided one and a new one,
+    # ADR-0012), never two standing at once: the services make sure of it.
+    from_expense = models.ForeignKey(
         "self",
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        related_name="debit_sales",
-        verbose_name="venta del gasto con débito",
+        related_name="linked_sales",
+        verbose_name="gasto del que sale esta venta",
     )
 
     idempotency_key = models.UUIDField(null=True, blank=True, editable=False)
@@ -155,3 +156,52 @@ class CashOpening(models.Model):
 
     def snapshot(self) -> dict:
         return {"date": self.date.isoformat(), "shift": self.shift, "amount": str(self.amount)}
+
+
+# Which payment methods can add a sale. Cash cannot: a cash cost and a cash sale would both move the box.
+SALE_METHOD_CHOICES = [(v, label) for v, label in PaymentMethod.choices if v != PaymentMethod.CASH]
+
+
+def default_sale_methods() -> list[str]:
+    """What a shop uses until the owner changes it: debit and transfer, as Emanuel does on paper."""
+    return [PaymentMethod.DEBIT, PaymentMethod.TRANSFER]
+
+
+class ShopSettings(models.Model):
+    """What the owner sets up for the notebooks of one shop. A shop without a row uses the defaults."""
+
+    tenant = models.OneToOneField(
+        Tenant,
+        on_delete=models.PROTECT,
+        primary_key=True,
+        related_name="notebook_settings",
+        verbose_name="local",
+    )
+    # A cost paid with one of these methods offers to add its sale, ticked (ADR-0013).
+    sale_methods = ArrayField(
+        models.CharField(max_length=10, choices=SALE_METHOD_CHOICES),
+        default=default_sale_methods,
+        blank=True,
+        verbose_name="medios que suman venta",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="+",
+        verbose_name="cambiado por",
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "ajustes del local"
+        verbose_name_plural = "ajustes de los locales"
+
+    def __str__(self) -> str:
+        return f"Ajustes de {self.tenant}"
+
+
+def sale_methods_of(tenant: Tenant) -> list[str]:
+    row = ShopSettings.objects.filter(tenant=tenant).only("sale_methods").first()
+    return list(row.sale_methods) if row else default_sale_methods()

@@ -19,6 +19,24 @@ export const NOMBRE_MEDIO: Record<MedioPago, string> = {
   transfer: 'Transferencia',
 };
 
+/** Cómo se nombra el medio dentro de una frase: "un gasto con débito", "un gasto por transferencia". */
+export const MEDIO_EN_FRASE: Record<MedioPago, string> = {
+  cash: 'en efectivo',
+  debit: 'con débito',
+  credit: 'con crédito',
+  qr: 'con Mercado Pago',
+  transfer: 'por transferencia',
+};
+
+/** Los medios que pueden sumar venta: todos menos efectivo (ADR-0013). */
+export const MEDIOS_QUE_PUEDEN_SUMAR_VENTA: MedioPago[] = ['debit', 'credit', 'qr', 'transfer'];
+
+/** Lo que el dueño ajusta para los cuadernos de su local (ADR-0013). */
+export interface AjustesLocal {
+  /** Un gasto con uno de estos medios propone sumar también su venta, como en el cuaderno. */
+  mediosQueSumanVenta: MedioPago[];
+}
+
 /** La caja se cierra dos veces por día (P-01). El turno noche que termina después de medianoche
  * conserva la fecha en que empezó. */
 export type Turno = 'morning' | 'night';
@@ -45,10 +63,10 @@ export interface Movimiento {
   anulado: boolean;
   motivoAnulacion: string;
   cargadoPor: string;
-  /** Gasto con débito: la venta que se sumó con él (ADR-0010). */
-  ventaDelDebitoId: string | null;
-  /** Venta que sale de un gasto con débito: solo se corrige o anula desde ese gasto. */
-  gastoConDebitoId: string | null;
+  /** Gasto con débito o transferencia: la venta que se sumó con él (ADR-0010, ADR-0013). */
+  ventaId: string | null;
+  /** Venta que sale de un gasto: solo se corrige o anula desde ese gasto. */
+  deGastoId: string | null;
 }
 
 /** Una parte de la lista: los movimientos que vinieron y cuántos hay en total con esos filtros. */
@@ -65,7 +83,7 @@ export interface MovimientoNuevo {
   monto: number;
   medioPago: MedioPago;
   turno: Turno;
-  /** Solo en un gasto con débito sin venta: sumar también la venta con débito, como en el cuaderno. */
+  /** Solo en un gasto sin venta, con un medio que suma venta en el local: sumar también la venta, como en el cuaderno. */
   sumarAVenta?: boolean;
 }
 
@@ -148,7 +166,8 @@ export type Permiso =
   | 'notebooks.change_entry'
   | 'notebooks.void_entry'
   | 'notebooks.manage_categories'
-  | 'notebooks.set_cash_opening';
+  | 'notebooks.set_cash_opening'
+  | 'notebooks.manage_settings';
 
 export interface LocalDisponible {
   id: string;

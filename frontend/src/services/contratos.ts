@@ -1,4 +1,5 @@
 import type {
+  AjustesLocal,
   Caja,
   Cambio,
   Categoria,
@@ -40,6 +41,10 @@ export interface CuadernosService {
   caja(rango: RangoFechas): Promise<Caja>;
   /** Solo el dueño. Cambiarlo pide motivo, porque mueve todos los haberes siguientes. */
   cargarHaberInicial(fecha: string, turno: Turno, monto: number, motivo: string): Promise<void>;
+  /** Lo ve todo el que entra al local: la carga lo necesita para saber cuándo proponer la venta. */
+  ajustes(): Promise<AjustesLocal>;
+  /** Solo el dueño. Vale para lo que se cargue o corrija después; lo ya cargado queda igual. */
+  guardarAjustes(ajustes: AjustesLocal): Promise<AjustesLocal>;
   /** Dirección del Excel del período y filtros en pantalla. Lo baja el navegador. */
   urlExcel(rango: RangoFechas, filtros: FiltrosMovimientos): string;
   /** La misma clave dos veces guarda un solo movimiento (doble toque, reintento de red). */

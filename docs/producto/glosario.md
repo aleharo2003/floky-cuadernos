@@ -15,10 +15,11 @@ Si una palabra significa una cosa en una reunión y otra en el código, tarde o 
 | Haber | El efectivo que hay en la caja al cerrar un turno: haber anterior más ventas en efectivo, menos gastos en efectivo. No se guarda: se calcula (ADR-0008) | `notebooks.cash` |
 | Haber inicial | El último haber anotado en papel, con su fecha y turno. La caja del sistema arranca de ahí. Lo carga el dueño | `CashOpening` |
 | Cobrado sin efectivo | Ventas cobradas con débito, tarjeta, Mercado Pago o transferencia. Son venta, pero esa plata no está en la caja. En Comedor TJ son las ventas de los gastos con D (ADR-0010) | `sales_not_cash` |
-| D (débito) | Marca al final de algunos gastos del cuaderno de Costos: se pagaron con tarjeta de débito. El dueño anota cada uno dos veces: el gasto y una venta por el mismo monto, en un renglón aparte. En el sistema se carga el gasto con Débito y el tilde "Sumarlo también a la venta" crea la venta (ADR-0010) | `from_debit_expense` |
+| D (débito) | Marca al final de algunos gastos del cuaderno de Costos: se pagaron con tarjeta de débito. El dueño anota cada uno dos veces: el gasto y una venta por el mismo monto, en un renglón aparte. En el sistema se carga el gasto con Débito y el tilde "Sumarlo también a la venta" crea la venta (ADR-0010). Los gastos por transferencia funcionan igual (ADR-0013) | `from_expense` |
 | Cuentas personales | Los cuadernos son las cuentas del dueño, no la contabilidad del local. Las ventas del local están en iCOM y no se cruzan con los cuadernos (ADR-0009, ADR-0010) | |
 | Categoría | Agrupa movimientos del mismo tipo para los reportes. Cada local tiene las suyas | `Category` |
 | Medio de pago | Efectivo, débito, crédito, QR o transferencia | `payment_method` |
+| Medios que suman venta | Ajuste del local que elige el dueño: un gasto con uno de estos medios suma también su venta. De entrada, débito y transferencia (ADR-0013) | `ShopSettings.sale_methods` |
 | Venta espejo | Idea descartada (ADR-0008): crear una fila extra para compensar lo que no es efectivo. Hoy el medio de pago dice si un movimiento toca la caja | |
 | Resultado | Ingresos menos gastos del período, con cualquier medio de pago, sin contar los anulados. No es lo mismo que el haber | |
 | Corregir | Cambiar datos de un movimiento, con motivo. Queda en el historial | |

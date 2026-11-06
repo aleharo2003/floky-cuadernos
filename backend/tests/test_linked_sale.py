@@ -1,4 +1,4 @@
-"""A cost paid with debit also adds a sale with debit, as the owner does on paper (ADR-0010)."""
+"""A cost paid with debit or transfer also adds its sale, as the owner does on paper (ADR-0010, ADR-0013)."""
 
 from datetime import date
 from decimal import Decimal
@@ -8,11 +8,12 @@ import pytest
 from accounts.models import Membership, Role
 from core.models import AuditEntry
 from notebooks import cash
-from notebooks.models import Category, Entry, Kind
+from notebooks.models import Category, Entry, Kind, ShopSettings, sale_methods_of
 
 pytestmark = pytest.mark.django_db
 
 URL = "/api/notebooks/entries/"
+SETTINGS = "/api/notebooks/settings/"
 
 
 def body(categories, **overrides):
@@ -51,8 +52,8 @@ def test_a_debit_cost_with_add_sale_creates_both_in_one_go(as_role, categories):
     assert response.status_code == 201
     cost = Entry.objects.get(kind=Kind.EXPENSE)
     sale = Entry.objects.get(kind=Kind.INCOME)
-    assert response.data["debit_sale_id"] == str(sale.id)
-    assert sale.from_debit_expense == cost
+    assert response.data["sale_id"] == str(sale.id)
+    assert sale.from_expense == cost
     assert (sale.date, sale.shift, sale.amount, sale.payment_method) == (
         cost.date,
         "night",
@@ -90,7 +91,7 @@ def test_the_pair_does_not_move_the_haber_and_matches_the_paper(as_role, categor
     assert close.sales == Decimal("400000.00")
 
 
-def test_only_a_debit_cost_can_add_a_sale(as_role, categories):
+def test_cash_costs_and_incomes_cannot_add_a_sale(as_role, categories):
     api = as_role(Role.EDITOR)
 
     cash_cost = api.post(URL, body(categories, payment_method="cash"), format="json")
@@ -101,7 +102,7 @@ def test_only_a_debit_cost_can_add_a_sale(as_role, categories):
     )
 
     assert cash_cost.status_code == 400 and income.status_code == 400
-    assert "Solo un gasto con débito" in str(cash_cost.data)
+    assert "no se suma a la venta" in str(cash_cost.data)
     assert Entry.objects.count() == 0
 
 
@@ -145,10 +146,10 @@ def test_correcting_the_cost_carries_the_sale_along(as_role, categories):
     sale = Entry.objects.get(kind=Kind.INCOME)
     assert (sale.amount, sale.date, sale.shift) == (Decimal("120000.00"), date(2026, 10, 11), "morning")
     audit = AuditEntry.objects.get(entity_id=sale.id, action="entry.correct")
-    assert audit.reason.startswith("Acompaña la corrección del gasto con débito")
+    assert audit.reason.startswith("Acompaña la corrección de su gasto")
 
 
-def test_if_the_cost_stops_being_debit_its_sale_is_voided(as_role, categories):
+def test_if_the_cost_moves_to_cash_its_sale_is_voided(as_role, categories):
     api = as_role(Role.EDITOR)
     api.post(URL, body(categories), format="json")
     cost = Entry.objects.get(kind=Kind.EXPENSE)
@@ -157,7 +158,7 @@ def test_if_the_cost_stops_being_debit_its_sale_is_voided(as_role, categories):
 
     sale = Entry.objects.get(kind=Kind.INCOME)
     assert sale.is_voided
-    assert sale.void_reason.startswith("El gasto ya no es con débito")
+    assert sale.void_reason.startswith("El gasto ya no suma venta")
 
 
 def test_voiding_the_cost_voids_its_sale(as_role, categories):
@@ -169,7 +170,7 @@ def test_voiding_the_cost_voids_its_sale(as_role, categories):
 
     assert response.status_code == 200
     sale = Entry.objects.get(kind=Kind.INCOME)
-    assert sale.is_voided and sale.void_reason == "Se anuló el gasto con débito. cargado dos veces"
+    assert sale.is_voided and sale.void_reason == "Se anuló su gasto. cargado dos veces"
 
 
 def test_the_sale_cannot_be_changed_or_voided_on_its_own(as_role, categories):
@@ -196,7 +197,7 @@ def test_back_to_debit_with_add_sale_brings_a_new_sale(as_role, categories):
     api.put(f"{URL}{cost.id}/", correction(cost, payment_method="cash"), format="json")
     cost.refresh_from_db()
     listed = api.get(URL, {"from": "2026-10-01", "to": "2026-10-31"}).json()["results"]
-    assert listed[0]["debit_sale_id"] is None
+    assert listed[0]["sale_id"] is None
 
     response = api.put(
         f"{URL}{cost.id}/", correction(cost, payment_method="debit", add_sale=True), format="json"
@@ -205,8 +206,8 @@ def test_back_to_debit_with_add_sale_brings_a_new_sale(as_role, categories):
     assert response.status_code == 200
     old, new = Entry.objects.filter(kind=Kind.INCOME).order_by("created_at")
     assert old.is_voided and not new.is_voided
-    assert new.from_debit_expense == cost and new.amount == cost.amount
-    assert response.data["debit_sale_id"] == str(new.id)
+    assert new.from_expense == cost and new.amount == cost.amount
+    assert response.data["sale_id"] == str(new.id)
 
 
 def test_without_add_sale_back_to_debit_stays_without_sale(as_role, categories):
@@ -265,4 +266,124 @@ def test_a_voided_sale_does_not_count_as_the_standing_one(as_role, categories):
 
     listed = api.get(URL, {"from": "2026-10-01", "to": "2026-10-31", "voided": "1"}).json()["results"]
 
-    assert [e["debit_sale_id"] for e in listed if e["kind"] == Kind.EXPENSE] == [None]
+    assert [e["sale_id"] for e in listed if e["kind"] == Kind.EXPENSE] == [None]
+
+
+# ---------- transfer and the shop's own list (ADR-0013) ----------
+
+
+def test_a_transfer_cost_adds_a_transfer_sale(as_role, categories):
+    api = as_role(Role.EDITOR)
+
+    response = api.post(URL, body(categories, payment_method="transfer"), format="json")
+
+    assert response.status_code == 201
+    sale = Entry.objects.get(kind=Kind.INCOME)
+    assert sale.payment_method == "transfer"
+    assert sale.description == "Gasto por transferencia: Proveedores (don José)"
+    audit = AuditEntry.objects.get(entity_id=sale.id)
+    assert audit.reason == "Venta del gasto por transferencia"
+
+
+def test_credit_adds_a_sale_only_after_the_owner_turns_it_on(as_role, categories):
+    owner = as_role(Role.OWNER)
+
+    before = owner.post(URL, body(categories, payment_method="credit"), format="json")
+    owner.put(SETTINGS, {"sale_methods": ["debit", "transfer", "credit"]}, format="json")
+    after = owner.post(URL, body(categories, payment_method="credit"), format="json")
+
+    assert before.status_code == 400
+    assert after.status_code == 201
+    assert Entry.objects.get(kind=Kind.INCOME).payment_method == "credit"
+
+
+def test_debit_to_transfer_keeps_the_sale_and_changes_its_method(as_role, categories):
+    api = as_role(Role.EDITOR)
+    api.post(URL, body(categories), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+
+    api.put(f"{URL}{cost.id}/", correction(cost, payment_method="transfer"), format="json")
+
+    sale = Entry.objects.get(kind=Kind.INCOME)
+    assert not sale.is_voided
+    assert sale.payment_method == "transfer"
+    assert sale.description.startswith("Gasto por transferencia")
+
+
+def test_taking_a_method_off_the_list_does_not_touch_old_sales(as_role, categories):
+    """The setting is for what comes next. Fixing the amount of an old cost keeps its sale."""
+    owner = as_role(Role.OWNER)
+    owner.post(URL, body(categories, payment_method="transfer"), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+    owner.put(SETTINGS, {"sale_methods": ["debit"]}, format="json")
+
+    owner.put(f"{URL}{cost.id}/", correction(cost, amount="90000.00"), format="json")
+
+    sale = Entry.objects.get(kind=Kind.INCOME)
+    assert not sale.is_voided and sale.amount == Decimal("90000.00")
+    refused = owner.post(URL, body(categories, payment_method="transfer"), format="json")
+    assert refused.status_code == 400
+
+
+def test_moving_to_a_method_off_the_list_voids_the_sale(as_role, categories):
+    api = as_role(Role.EDITOR)
+    api.post(URL, body(categories), format="json")
+    cost = Entry.objects.get(kind=Kind.EXPENSE)
+
+    api.put(f"{URL}{cost.id}/", correction(cost, payment_method="qr"), format="json")
+
+    assert Entry.objects.get(kind=Kind.INCOME).is_voided
+
+
+# ---------- the settings themselves ----------
+
+
+def test_a_shop_without_settings_uses_debit_and_transfer(as_role):
+    response = as_role(Role.VIEWER).get(SETTINGS)
+    assert response.status_code == 200
+    assert response.data == {"sale_methods": ["debit", "transfer"]}
+
+
+def test_the_owner_changes_the_list_and_it_is_audited(as_role):
+    owner = as_role(Role.OWNER)
+
+    response = owner.put(SETTINGS, {"sale_methods": ["transfer", "qr", "transfer"]}, format="json")
+
+    assert response.status_code == 200
+    # Same order every time, no repeats.
+    assert response.data == {"sale_methods": ["qr", "transfer"]}
+    assert ShopSettings.objects.get().sale_methods == ["qr", "transfer"]
+    audit = AuditEntry.objects.get(action="settings.change")
+    assert audit.before == {"sale_methods": ["debit", "transfer"]}
+    assert audit.after == {"sale_methods": ["qr", "transfer"]}
+
+
+def test_saving_the_same_list_writes_no_audit(as_role):
+    as_role(Role.OWNER).put(SETTINGS, {"sale_methods": ["debit", "transfer"]}, format="json")
+    assert not AuditEntry.objects.filter(action="settings.change").exists()
+
+
+def test_an_empty_list_turns_the_sale_off(as_role, categories):
+    owner = as_role(Role.OWNER)
+    owner.put(SETTINGS, {"sale_methods": []}, format="json")
+    assert owner.post(URL, body(categories), format="json").status_code == 400
+
+
+@pytest.mark.parametrize("role", [Role.EDITOR, Role.VIEWER])
+def test_only_the_owner_changes_the_settings(as_role, role):
+    response = as_role(role).put(SETTINGS, {"sale_methods": []}, format="json")
+    assert response.status_code == 403
+    assert not ShopSettings.objects.exists()
+
+
+def test_cash_cannot_add_a_sale(as_role):
+    response = as_role(Role.OWNER).put(SETTINGS, {"sale_methods": ["cash"]}, format="json")
+    assert response.status_code == 400
+    assert "no sean efectivo" in str(response.data)
+
+
+def test_settings_are_per_shop(as_role, centro, norte):
+    """Changing them in one shop leaves the other with the defaults (ADR-0003)."""
+    as_role(Role.OWNER).put(SETTINGS, {"sale_methods": []}, format="json")
+    assert sale_methods_of(norte) == []
+    assert sale_methods_of(centro) == ["debit", "transfer"]

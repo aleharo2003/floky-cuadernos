@@ -171,7 +171,7 @@ test('un gasto con débito suma también su venta; se corrige y se anula junto c
   // Anular el gasto se lleva la venta.
   await gasto.locator('.boton-mas').click();
   await page.getByRole('menuitem', { name: 'Anular' }).click();
-  await expect(ventana).toContainText('También se anula su venta con débito');
+  await expect(ventana).toContainText('También se anula su venta.');
   await ventana.getByPlaceholder('Por ejemplo: cargado dos veces').fill('era otro local');
   await ventana.getByRole('button', { name: /Sí, anular/ }).click();
   await expect(primeraTabla(page).locator('tr', { hasText: 'don José' })).toHaveCount(0);

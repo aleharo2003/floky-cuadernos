@@ -751,6 +751,8 @@ textarea:focus-visible {
 }
 
 .modal {
+  /* Su propio color de letra: las ventanas que abre la barra de arriba no heredan su blanco. */
+  color: var(--tinta);
   width: min(100%, 440px);
   max-height: calc(100vh - var(--esp-6));
   display: flex;
@@ -3226,4 +3228,34 @@ textarea:focus-visible {
 .ver-mas {
   justify-content: center;
   margin-top: var(--esp-4);
+}
+
+/* Ajustes del local: una lista corta de tildes. */
+.ajustes-grupo {
+  display: grid;
+  gap: var(--esp-2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ajustes-grupo legend {
+  padding: 0;
+  margin-bottom: var(--esp-1);
+  font-weight: var(--peso-fuerte);
+}
+
+.ajustes-opcion {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
+  min-height: 40px;
+  cursor: pointer;
+}
+
+.ajustes-opcion input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  accent-color: var(--accion);
 }

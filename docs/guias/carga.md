@@ -29,7 +29,7 @@ Después de guardar, la fecha, el turno, el tipo y el medio de pago quedan como 
 
 <br clear="right">
 
-## Los renglones con D
+## Los renglones con D y las transferencias
 
 <img src="img/gasto-debito.png" width="230" alt="Gasto con débito con el tilde para sumarlo a la venta" align="right">
 
@@ -43,7 +43,11 @@ En el sistema se carga **una sola vez**:
 
 Por ejemplo, "Verdu 89.000 D" queda como un gasto de Proveedores por $ 89.000 con Débito, y una venta de $ 89.000 con Débito que dice "Gasto con débito: Proveedores". Ninguno de los dos mueve la caja, igual que en el papel.
 
-Si después corregís o anulás el gasto, su venta se corrige o se anula con él. La venta sola no se puede tocar. Si corregís un gasto y lo pasás a Débito, la ventana te ofrece el mismo tilde para sumar su venta.
+Los gastos pagados **por transferencia** funcionan igual: elegí Transferencia y dejá el tilde marcado. La venta se carga por transferencia ("Gasto por transferencia: Proveedores").
+
+Si después corregís o anulás el gasto, su venta se corrige o se anula con él. La venta sola no se puede tocar. Si corregís un gasto y lo pasás a Débito o Transferencia, la ventana te ofrece el mismo tilde para sumar su venta.
+
+Qué medios de pago suman venta lo decide el dueño del local. Si el tilde no aparece con un medio, es porque en tu local ese medio no suma venta.
 
 <br clear="right">
 

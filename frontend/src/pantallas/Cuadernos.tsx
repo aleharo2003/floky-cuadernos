@@ -1,6 +1,7 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Tecla } from '../atajos/Atajos';
+import { EVENTO_AJUSTES } from '../componentes/AjustesDelLocal';
 import Badge from '../componentes/Badge';
 import Button from '../componentes/Button';
 import Card from '../componentes/Card';
@@ -22,6 +23,7 @@ import { useConsulta } from '../lib/useConsulta';
 import { useDemorado } from '../lib/useDemorado';
 import { servicios } from '../services';
 import {
+  MEDIO_EN_FRASE,
   NOMBRE_MEDIO,
   NOMBRE_TURNO,
   SIN_FILTROS,
@@ -53,7 +55,7 @@ const enBlanco = (): Borrador => ({
   sumarAVenta: true,
 });
 
-const deMovimiento = (m: Movimiento): Borrador => ({
+const deMovimiento = (m: Movimiento, mediosVenta: MedioPago[]): Borrador => ({
   fecha: m.fecha,
   tipo: m.tipo,
   categoriaId: m.categoriaId,
@@ -62,12 +64,12 @@ const deMovimiento = (m: Movimiento): Borrador => ({
   medioPago: m.medioPago,
   turno: m.turno,
   motivo: '',
-  // Si pasa a ser con débito al corregirlo, se propone sumar la venta (la ida y vuelta, ADR-0012).
-  // Si ya era con débito y se cargó sin venta, no se propone de entrada.
-  sumarAVenta: m.medioPago !== 'debit',
+  // Si al corregirlo pasa a un medio que suma venta, se propone sumarla (la ida y vuelta, ADR-0012).
+  // Si ya tenía uno de esos medios y se cargó sin venta, no se propone de entrada.
+  sumarAVenta: !(m.tipo === 'egreso' && mediosVenta.includes(m.medioPago)),
 });
 
-const sumaVenta = (b: Borrador) => b.sumarAVenta && b.tipo === 'egreso' && b.medioPago === 'debit';
+const sumaVenta = (b: Borrador, mediosVenta: MedioPago[]) => b.sumarAVenta && b.tipo === 'egreso' && mediosVenta.includes(b.medioPago);
 
 /** Lo que se le manda al servicio. Devuelve null si el monto no se entiende. */
 function datosDe(b: Borrador) {
@@ -127,9 +129,9 @@ function columnasMovimiento(conFecha: boolean, a: AccionesFila): Columna<Movimie
       render: (m) => {
         // Las tres acciones en un solo botón: la fila respira y "Anular" no queda a un clic distraído.
         const items: ItemMenu[] = [];
-        // La venta de un gasto con débito se corrige y se anula desde su gasto (ADR-0010).
-        const libre = !m.anulado && !m.gastoConDebitoId;
-        if (m.gastoConDebitoId && !m.anulado) items.push({ tipo: 'titulo', etiqueta: 'Sale de un gasto con débito' });
+        // La venta de un gasto se corrige y se anula desde su gasto (ADR-0010).
+        const libre = !m.anulado && !m.deGastoId;
+        if (m.deGastoId && !m.anulado) items.push({ tipo: 'titulo', etiqueta: `Sale de un gasto ${MEDIO_EN_FRASE[m.medioPago]}` });
         if (a.puedeCorregir && libre) items.push({ etiqueta: 'Corregir', onElegir: () => a.onCorregir(m) });
         items.push({ etiqueta: 'Historial', onElegir: () => a.onHistorial(m) });
         if (a.puedeAnular && libre) items.push({ tipo: 'separador' }, { etiqueta: 'Anular', peligro: true, onElegir: () => a.onAnular(m) });
@@ -164,6 +166,12 @@ export default function Cuadernos() {
   const [vuelta, setVuelta] = useState(0);
   const otraVuelta = () => setVuelta((v) => v + 1);
   const { datos: categorias, recargar: recargarCategorias, error } = useConsulta(() => servicios.cuadernos.categorias(), []);
+  // Qué medios suman venta. Si el dueño los cambia desde su menú, se vuelven a pedir (ADR-0013).
+  const { datos: ajustes, recargar: recargarAjustes, error: errorAjustes } = useConsulta(() => servicios.cuadernos.ajustes(), []);
+  useEffect(() => {
+    window.addEventListener(EVENTO_AJUSTES, recargarAjustes);
+    return () => window.removeEventListener(EVENTO_AJUSTES, recargarAjustes);
+  }, [recargarAjustes]);
 
   const [corrigiendo, setCorrigiendo] = useState<Movimiento | null>(null);
   const [porAnular, setPorAnular] = useState<Movimiento | null>(null);
@@ -177,8 +185,9 @@ export default function Cuadernos() {
     onHistorial: setVerHistorial,
   };
 
-  if (error) return <p className="vacio">{error}</p>;
-  if (!categorias) return <p className="cargando">Cargando los cuadernos…</p>;
+  if (error || errorAjustes) return <p className="vacio">{error ?? errorAjustes}</p>;
+  if (!categorias || !ajustes) return <p className="cargando">Cargando los cuadernos…</p>;
+  const mediosVenta = ajustes.mediosQueSumanVenta;
 
   const local = sesion?.active_tenant?.name ?? '';
 
@@ -191,6 +200,7 @@ export default function Cuadernos() {
         {solapa === 'cargar' ? (
           <SolapaCargar
             categorias={categorias}
+            mediosVenta={mediosVenta}
             puedeCrearCategorias={puedeCrearCategorias}
             recargarCategorias={recargarCategorias}
             vuelta={vuelta}
@@ -206,6 +216,7 @@ export default function Cuadernos() {
         <Correccion
           movimiento={corrigiendo}
           categorias={categorias}
+          mediosVenta={mediosVenta}
           onCerrar={() => setCorrigiendo(null)}
           onGuardada={() => {
             setCorrigiendo(null);
@@ -265,6 +276,7 @@ function Solapas({ activa, onCambio }: { activa: Solapa; onCambio(s: Solapa): vo
 
 interface PropsCargar {
   categorias: Record<TipoMovimiento, Categoria[]>;
+  mediosVenta: MedioPago[];
   puedeCrearCategorias: boolean;
   recargarCategorias(): void;
   vuelta: number;
@@ -273,7 +285,7 @@ interface PropsCargar {
 }
 
 /** La carga de todos los días: el formulario y, al lado, lo ya cargado en esa fecha para comparar con el papel. */
-function SolapaCargar({ categorias, puedeCrearCategorias, recargarCategorias, vuelta, onGuardado, acciones }: PropsCargar) {
+function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarCategorias, vuelta, onGuardado, acciones }: PropsCargar) {
   const [borrador, setBorrador] = useState<Borrador>(enBlanco);
   const [aviso, setAviso] = useState('');
   const [avisoOk, setAvisoOk] = useState('');
@@ -314,7 +326,7 @@ function SolapaCargar({ categorias, puedeCrearCategorias, recargarCategorias, vu
     setGuardando(true);
     let nuevo: Movimiento;
     try {
-      nuevo = await servicios.cuadernos.crear({ ...datos, sumarAVenta: sumaVenta(borrador) }, clave.current);
+      nuevo = await servicios.cuadernos.crear({ ...datos, sumarAVenta: sumaVenta(borrador, mediosVenta) }, clave.current);
     } catch (err) {
       setAviso((err as Error).message);
       return;
@@ -324,7 +336,7 @@ function SolapaCargar({ categorias, puedeCrearCategorias, recargarCategorias, vu
     clave.current = crypto.randomUUID();
     recordarTurno(datos.turno);
     const categoria = categorias[datos.tipo].find((c) => c.id === datos.categoriaId)?.nombre ?? '';
-    const yVenta = nuevo.ventaDelDebitoId ? ', y su venta con débito' : '';
+    const yVenta = nuevo.ventaId ? `, y su venta ${MEDIO_EN_FRASE[datos.medioPago]}` : '';
     setAvisoOk(`Guardado: ${nombreTipo(datos.tipo).toLowerCase()} de ${categoria}, ${pesos(datos.monto)}${yVenta}.`);
     setUltimo(nuevo.id);
     // Carga en serie: fecha, turno, tipo y medio de pago quedan para el próximo renglón.
@@ -340,6 +352,7 @@ function SolapaCargar({ categorias, puedeCrearCategorias, recargarCategorias, vu
           borrador={borrador}
           onCambio={cambiar}
           categorias={categorias}
+          mediosVenta={mediosVenta}
           onNuevaCategoria={puedeCrearCategorias ? () => setCreandoCategoria(true) : undefined}
           fechaYTurno="resumen"
           campoCategoria={campoCategoria}
@@ -581,15 +594,17 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
 function Correccion({
   movimiento,
   categorias,
+  mediosVenta,
   onCerrar,
   onGuardada,
 }: {
   movimiento: Movimiento;
   categorias: Record<TipoMovimiento, Categoria[]>;
+  mediosVenta: MedioPago[];
   onCerrar(): void;
   onGuardada(): void;
 }) {
-  const [borrador, setBorrador] = useState<Borrador>(() => deMovimiento(movimiento));
+  const [borrador, setBorrador] = useState<Borrador>(() => deMovimiento(movimiento, mediosVenta));
   const [aviso, setAviso] = useState('');
   const [guardando, setGuardando] = useState(false);
 
@@ -604,7 +619,7 @@ function Correccion({
     }
     setGuardando(true);
     try {
-      const sumarAVenta = !movimiento.ventaDelDebitoId && sumaVenta(borrador);
+      const sumarAVenta = !movimiento.ventaId && sumaVenta(borrador, mediosVenta);
       await servicios.cuadernos.corregir(movimiento.id, { ...datos, sumarAVenta }, borrador.motivo);
     } catch (err) {
       setAviso((err as Error).message);
@@ -617,8 +632,10 @@ function Correccion({
 
   return (
     <Modal titulo="Corregir movimiento" onCerrar={onCerrar}>
-      {movimiento.ventaDelDebitoId && (
-        <p className="nota modal-nota">Tiene su venta con débito: se corrige sola. Si deja de ser con débito, la venta se anula.</p>
+      {movimiento.ventaId && (
+        <p className="nota modal-nota">
+          Tiene su venta {MEDIO_EN_FRASE[movimiento.medioPago]}: se corrige sola. Si pasa a efectivo o a otro medio que no suma venta, la venta se anula.
+        </p>
       )}
       <FormMovimiento
         borrador={borrador}
@@ -627,9 +644,10 @@ function Correccion({
           setAviso('');
         }}
         categorias={categorias}
+        mediosVenta={mediosVenta}
         fechaYTurno="campos"
         correccion
-        ofrecerVenta={!movimiento.ventaDelDebitoId}
+        ofrecerVenta={!movimiento.ventaId}
         aviso={aviso}
         guardando={guardando}
         textoGuardar="Guardar corrección"
@@ -677,7 +695,7 @@ function Anulacion({ movimiento, onCerrar, onAnulado }: { movimiento: Movimiento
       <p>
         {nombreTipo(movimiento.tipo)} del {diaLegible(movimiento.fecha)}, {movimiento.categoria}, por <strong>{pesos(movimiento.monto)}</strong>. Deja de
         sumar en los saldos, pero sigue visible en el historial.
-        {movimiento.ventaDelDebitoId && ' También se anula su venta con débito.'}
+        {movimiento.ventaId && ' También se anula su venta.'}
       </p>
       <label className="campo">
         <span>Motivo</span>

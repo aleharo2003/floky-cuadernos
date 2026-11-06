@@ -16,7 +16,7 @@ from core.models import AuditEntry
 from notebooks import cash, services
 from notebooks.export import build_workbook
 from notebooks.filters import apply_filters
-from notebooks.models import CashOpening, Category, Entry, Kind
+from notebooks.models import CashOpening, Category, Entry, Kind, sale_methods_of
 from notebooks.serializers import (
     CashOpeningInputSerializer,
     CategoryInputSerializer,
@@ -25,6 +25,7 @@ from notebooks.serializers import (
     EntrySerializer,
     NewEntrySerializer,
     RangeSerializer,
+    SettingsSerializer,
     VoidSerializer,
 )
 
@@ -36,7 +37,7 @@ class TenantView(APIView):
 
     def entries(self):
         standing_sales = Prefetch(
-            "debit_sales", queryset=Entry.objects.filter(is_voided=False), to_attr="standing_debit_sales"
+            "linked_sales", queryset=Entry.objects.filter(is_voided=False), to_attr="standing_sales"
         )
         return (
             Entry.objects.filter(tenant=self.request.membership.tenant)
@@ -373,3 +374,22 @@ class CashOpeningView(TenantView):
         except services.RuleError as exc:
             raise rule_error(exc) from exc
         return Response(opening_payload(opening))
+
+
+class SettingsView(TenantView):
+    """The shop's notebook settings. Everyone reads them (the load form needs them); only the owner
+    changes them (ADR-0013)."""
+
+    required_permissions = {"GET": Perm.VIEW, "PUT": Perm.MANAGE_SETTINGS}
+
+    def get(self, request: Request) -> Response:
+        return Response({"sale_methods": sale_methods_of(request.membership.tenant)})
+
+    def put(self, request: Request) -> Response:
+        data = SettingsSerializer(data=request.data)
+        data.is_valid(raise_exception=True)
+        try:
+            methods = services.set_sale_methods(request.membership, data.validated_data["sale_methods"])
+        except services.RuleError as exc:
+            raise rule_error(exc) from exc
+        return Response({"sale_methods": methods})

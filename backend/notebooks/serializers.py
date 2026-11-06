@@ -3,7 +3,7 @@ from decimal import Decimal
 
 from rest_framework import serializers
 
-from notebooks.models import CashOpening, Category, Entry, Kind, PaymentMethod, Shift
+from notebooks.models import SALE_METHOD_CHOICES, CashOpening, Category, Entry, Kind, PaymentMethod, Shift
 from notebooks.services import EntryData
 
 MAX_RANGE = timedelta(days=366)
@@ -35,8 +35,8 @@ class EntrySerializer(serializers.ModelSerializer):
     category_id = serializers.UUIDField(source="category.id")
     category_name = serializers.CharField(source="category.name")
     created_by = serializers.SerializerMethodField()
-    debit_sale_id = serializers.SerializerMethodField()
-    from_debit_expense_id = serializers.UUIDField(read_only=True, allow_null=True)
+    sale_id = serializers.SerializerMethodField()
+    from_expense_id = serializers.UUIDField(read_only=True, allow_null=True)
 
     class Meta:
         model = Entry
@@ -54,18 +54,18 @@ class EntrySerializer(serializers.ModelSerializer):
             "void_reason",
             "created_by",
             "created_at",
-            "debit_sale_id",
-            "from_debit_expense_id",
+            "sale_id",
+            "from_expense_id",
         ]
 
     def get_created_by(self, entry: Entry) -> str:
         return entry.created_by.get_full_name() or entry.created_by.get_username()
 
-    def get_debit_sale_id(self, entry: Entry) -> str | None:
-        """The standing sale of a debit cost. A voided one does not count (ADR-0012)."""
-        sales = getattr(entry, "standing_debit_sales", None)
+    def get_sale_id(self, entry: Entry) -> str | None:
+        """The standing sale of a cost. A voided one does not count (ADR-0012)."""
+        sales = getattr(entry, "standing_sales", None)
         if sales is None:  # not prefetched: a single entry, after saving it
-            sales = list(entry.debit_sales.filter(is_voided=False)[:1])
+            sales = list(entry.linked_sales.filter(is_voided=False)[:1])
         return str(sales[0].id) if sales else None
 
 
@@ -86,13 +86,13 @@ class EntryInputSerializer(serializers.Serializer):
 
 
 class NewEntrySerializer(EntryInputSerializer):
-    # A cost paid with debit also adds the sale, as on paper (ADR-0010).
+    # A cost paid with one of the shop's sale methods also adds the sale, as on paper (ADR-0010, ADR-0013).
     add_sale = serializers.BooleanField(default=False)
 
 
 class CorrectionSerializer(EntryInputSerializer):
     reason = serializers.CharField(max_length=200)
-    # A debit cost without a standing sale can get one when corrected (ADR-0012).
+    # A cost without a standing sale can get one when corrected (ADR-0012).
     add_sale = serializers.BooleanField(default=False)
 
     def to_data_without_reason(self) -> EntryData:
@@ -137,3 +137,14 @@ class RangeSerializer(serializers.Serializer):
     @property
     def range(self) -> tuple[date, date]:
         return self.validated_data["from"], self.validated_data["to"]
+
+
+class SettingsSerializer(serializers.Serializer):
+    sale_methods = serializers.ListField(
+        child=serializers.ChoiceField(
+            choices=SALE_METHOD_CHOICES,
+            error_messages={"invalid_choice": "Elegí medios de pago que no sean efectivo."},
+        ),
+        allow_empty=True,
+        max_length=len(SALE_METHOD_CHOICES),
+    )

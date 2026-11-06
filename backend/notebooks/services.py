@@ -13,7 +13,15 @@ from django.db import IntegrityError, transaction
 
 from accounts.models import Membership
 from core.models import record
-from notebooks.models import Category, Entry, Kind, PaymentMethod
+from notebooks.models import (
+    SALE_METHOD_CHOICES,
+    Category,
+    Entry,
+    Kind,
+    PaymentMethod,
+    ShopSettings,
+    sale_methods_of,
+)
 
 
 class RuleError(ValueError):
@@ -49,8 +57,21 @@ def _reason(text: str) -> str:
     return text
 
 
+# How a sale names the method of its cost: "Gasto con débito: Proveedores".
+_PAID_WITH = {
+    PaymentMethod.DEBIT: "con débito",
+    PaymentMethod.CREDIT: "con crédito",
+    PaymentMethod.QR: "con Mercado Pago",
+    PaymentMethod.TRANSFER: "por transferencia",
+}
+
+
+def paid_with(method: str) -> str:
+    return _PAID_WITH.get(method, "")
+
+
 def _sale_category(membership: Membership) -> Category:
-    """Where the sale of a debit cost goes: the income category "Ventas", or the first income one."""
+    """Where the sale of a cost goes: the income category "Ventas", or the first income one."""
     incomes = Category.objects.filter(
         tenant=membership.tenant, kind=Kind.INCOME, is_active=True, is_system=False
     )
@@ -61,17 +82,23 @@ def _sale_category(membership: Membership) -> Category:
 
 
 def _sale_description(expense: Entry) -> str:
-    text = f"Gasto con débito: {expense.category.name}"
+    text = f"Gasto {paid_with(expense.payment_method)}: {expense.category.name}"
     if expense.description:
         text += f" ({expense.description})"
     return text[:120]
 
 
-def _is_debit_expense(entry: Entry) -> bool:
-    return entry.kind == Kind.EXPENSE and entry.payment_method == PaymentMethod.DEBIT
+def _adds_sale(membership: Membership, kind: str, method: str) -> bool:
+    """A cost paid with one of the shop's sale methods (ADR-0013)."""
+    return kind == Kind.EXPENSE and method in sale_methods_of(membership.tenant)
 
 
-def _create_debit_sale(membership: Membership, expense: Entry) -> Entry:
+def _check_add_sale(membership: Membership, data: "EntryData") -> None:
+    if not _adds_sale(membership, data.kind, data.payment_method):
+        raise RuleError("Con ese medio de pago, en este local el gasto no se suma a la venta.")
+
+
+def _create_sale(membership: Membership, expense: Entry) -> Entry:
     sale = Entry.objects.create(
         tenant=membership.tenant,
         category=_sale_category(membership),
@@ -79,9 +106,9 @@ def _create_debit_sale(membership: Membership, expense: Entry) -> Entry:
         date=expense.date,
         description=_sale_description(expense),
         amount=expense.amount,
-        payment_method=PaymentMethod.DEBIT,
+        payment_method=expense.payment_method,
         shift=expense.shift,
-        from_debit_expense=expense,
+        from_expense=expense,
         created_by=membership.user,
     )
     record(
@@ -91,7 +118,7 @@ def _create_debit_sale(membership: Membership, expense: Entry) -> Entry:
         entity="entry",
         entity_id=sale.id,
         after=sale.snapshot(),
-        reason="Venta del gasto con débito",
+        reason=f"Venta del gasto {paid_with(expense.payment_method)}",
     )
     return sale
 
@@ -104,16 +131,16 @@ def create_entry(
 ) -> Entry:
     """Load an entry. The same idempotency key returns the first entry instead of a duplicate (HU-021).
 
-    add_sale: a cost paid with debit also adds a sale with debit for the same amount, as on paper
-    (ADR-0010). Both are created in the same transaction.
+    add_sale: a cost paid with one of the shop's sale methods also adds a sale with that method for
+    the same amount, as on paper (ADR-0010, ADR-0013). Both are created in the same transaction.
     """
     if idempotency_key:
         existing = Entry.objects.filter(tenant=membership.tenant, idempotency_key=idempotency_key).first()
         if existing:
             return existing
     category = _category_for(membership, data)
-    if add_sale and not (data.kind == Kind.EXPENSE and data.payment_method == PaymentMethod.DEBIT):
-        raise RuleError("Solo un gasto con débito se puede sumar a la venta.")
+    if add_sale:
+        _check_add_sale(membership, data)
     try:
         with transaction.atomic():
             entry = Entry.objects.create(
@@ -137,7 +164,7 @@ def create_entry(
                 after=entry.snapshot(),
             )
             if add_sale:
-                _create_debit_sale(membership, entry)
+                _create_sale(membership, entry)
     except IntegrityError:
         # Two identical requests at the same time: the other one won, return it.
         if idempotency_key:
@@ -160,14 +187,14 @@ def _locked(membership: Membership, entry_id) -> Entry:
     return entry
 
 
-def _not_a_debit_sale(entry: Entry) -> None:
-    if entry.from_debit_expense_id:
-        raise RuleError("Esta venta sale de un gasto con débito: corregí o anulá el gasto.")
+def _not_a_linked_sale(entry: Entry) -> None:
+    if entry.from_expense_id:
+        raise RuleError("Esta venta sale de un gasto: corregí o anulá el gasto.")
 
 
 def _linked_sale(entry: Entry) -> Entry | None:
-    """The sale of a debit cost, locked, if it is still standing."""
-    return Entry.objects.select_for_update().filter(from_debit_expense=entry, is_voided=False).first()
+    """The sale of a cost, locked, if it is still standing."""
+    return Entry.objects.select_for_update().filter(from_expense=entry, is_voided=False).first()
 
 
 def _void(membership: Membership, entry: Entry, reason: str) -> None:
@@ -190,18 +217,23 @@ def _void(membership: Membership, entry: Entry, reason: str) -> None:
 def correct_entry(
     membership: Membership, entry_id, data: EntryData, reason: str, add_sale: bool = False
 ) -> Entry:
-    """Correct an entry. If it is a debit cost with its sale, the sale follows in the same transaction.
+    """Correct an entry. If it is a cost with its sale, the sale follows in the same transaction.
 
-    add_sale: a debit cost that has no standing sale gets one, as when it is loaded (ADR-0012).
+    add_sale: a cost that has no standing sale gets one, as when it is loaded (ADR-0012).
     It covers the round trip: debit to cash voids the sale, and back to debit brings a new one.
+
+    The sale is voided only when the cost stops being a cost, or moves to a method that does not add
+    a sale in this shop. Fixing the amount of an old cost keeps its sale, even if the owner took that
+    method out of the list later (ADR-0013).
     """
     reason = _reason(reason)
     category = _category_for(membership, data)
-    if add_sale and not (data.kind == Kind.EXPENSE and data.payment_method == PaymentMethod.DEBIT):
-        raise RuleError("Solo un gasto con débito se puede sumar a la venta.")
+    if add_sale:
+        _check_add_sale(membership, data)
     with transaction.atomic():
         entry = _locked(membership, entry_id)
-        _not_a_debit_sale(entry)
+        _not_a_linked_sale(entry)
+        old_method = entry.payment_method
         before = entry.snapshot()
         entry.category = category
         entry.kind = data.kind
@@ -225,12 +257,16 @@ def correct_entry(
                 after=entry.snapshot(),
                 reason=reason,
             )
-        if sale and not _is_debit_expense(entry):
-            # It is no longer a cost paid with debit, so the sale has no reason to be there.
-            _void(membership, sale, f"El gasto ya no es con débito. {reason}")
+        keeps_sale = entry.kind == Kind.EXPENSE and (
+            entry.payment_method == old_method or _adds_sale(membership, entry.kind, entry.payment_method)
+        )
+        if sale and not keeps_sale:
+            # It no longer adds a sale (now it is cash, for example), so the sale has no reason to be there.
+            _void(membership, sale, f"El gasto ya no suma venta. {reason}"[:200])
         elif sale:
             sale_before = sale.snapshot()
             sale.date, sale.shift, sale.amount = entry.date, entry.shift, entry.amount
+            sale.payment_method = entry.payment_method
             sale.description = _sale_description(entry)
             if sale.snapshot() != sale_before:
                 sale.save()
@@ -242,23 +278,23 @@ def correct_entry(
                     entity_id=sale.id,
                     before=sale_before,
                     after=sale.snapshot(),
-                    reason=f"Acompaña la corrección del gasto con débito. {reason}"[:200],
+                    reason=f"Acompaña la corrección de su gasto. {reason}"[:200],
                 )
         elif add_sale:
-            _create_debit_sale(membership, entry)
+            _create_sale(membership, entry)
     return entry
 
 
 def void_entry(membership: Membership, entry_id, reason: str) -> Entry:
-    """Void an entry. A debit cost takes its sale with it."""
+    """Void an entry. A cost takes its sale with it."""
     reason = _reason(reason)
     with transaction.atomic():
         entry = _locked(membership, entry_id)
-        _not_a_debit_sale(entry)
+        _not_a_linked_sale(entry)
         _void(membership, entry, reason)
         sale = _linked_sale(entry)
         if sale:
-            _void(membership, sale, f"Se anuló el gasto con débito. {reason}")
+            _void(membership, sale, f"Se anuló su gasto. {reason}"[:200])
     return entry
 
 
@@ -299,3 +335,32 @@ def create_category(membership: Membership, name: str, kind: str) -> tuple[Categ
             after={"name": category.name, "kind": category.kind, "is_active": True},
         )
     return category, created
+
+
+def set_sale_methods(membership: Membership, methods: list[str]) -> list[str]:
+    """The owner picks which payment methods add a sale in this shop (ADR-0013).
+
+    Only new loads and corrections follow it: sales already loaded stay as they are. Audited.
+    """
+    allowed = [value for value, _ in SALE_METHOD_CHOICES]
+    if any(m not in allowed for m in methods):
+        raise RuleError("Elegí medios de pago que no sean efectivo.")
+    chosen = [m for m in allowed if m in set(methods)]  # always in the same order, no repeats
+    with transaction.atomic():
+        row, _ = ShopSettings.objects.select_for_update().get_or_create(tenant=membership.tenant)
+        before = list(row.sale_methods)
+        if before == chosen:
+            return chosen
+        row.sale_methods = chosen
+        row.updated_by = membership.user
+        row.save()
+        record(
+            tenant=membership.tenant,
+            actor=membership.user,
+            action="settings.change",
+            entity="settings",
+            entity_id=membership.tenant_id,
+            before={"sale_methods": before},
+            after={"sale_methods": chosen},
+        )
+    return chosen

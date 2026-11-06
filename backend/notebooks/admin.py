@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from notebooks.models import CashOpening, Category, Entry
+from notebooks.models import CashOpening, Category, Entry, ShopSettings
 
 
 @admin.register(Category)
@@ -37,6 +37,22 @@ class CashOpeningAdmin(admin.ModelAdmin):
     """Read only: the owner loads it from the portal, with a reason when it changes (audited)."""
 
     list_display = ["tenant", "date", "shift", "amount", "updated_by", "updated_at"]
+
+    def has_add_permission(self, request) -> bool:
+        return False
+
+    def has_change_permission(self, request, obj=None) -> bool:
+        return False
+
+    def has_delete_permission(self, request, obj=None) -> bool:
+        return False
+
+
+@admin.register(ShopSettings)
+class ShopSettingsAdmin(admin.ModelAdmin):
+    """Read only: the owner changes them from the portal, and the change is audited."""
+
+    list_display = ["tenant", "sale_methods", "updated_by", "updated_at"]
 
     def has_add_permission(self, request) -> bool:
         return False
