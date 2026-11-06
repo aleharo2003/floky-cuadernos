@@ -77,7 +77,9 @@ jobs:
 
   # The whole app in a real browser: Django serves the API and the React build (frontend/e2e).
   e2e:
-    runs-on: ubuntu-latest
+    # Pinned: Chromium uses the libraries of this image (see the Browser step). Moving to a new
+    # Ubuntu is a change we make on purpose, not one that arrives on its own.
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     services:
       postgres:
@@ -110,8 +112,10 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci --no-audit --no-fund
         working-directory: frontend
-      # The browser download is cached by Playwright version; the system packages are installed
-      # every time. Its own limit: if the package mirror hangs, fail in minutes and re-run.
+      # The browser download is cached by Playwright version. No system packages: this runner image
+      # already has every library Chromium needs, and the Ubuntu mirror hung twice installing extra
+      # fonts we do not use. If an image ever drops a library, Chromium fails to start and says
+      # which one: then add --with-deps back.
       - name: Playwright version
         id: playwright
         run: echo "version=$(node -p "require('./node_modules/@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
@@ -121,8 +125,8 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - name: Browser
-        timeout-minutes: 8
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
+        run: npx playwright install chromium
         working-directory: frontend
       - name: Types of the tests
         run: npm run typecheck:e2e
