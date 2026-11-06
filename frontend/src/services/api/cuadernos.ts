@@ -1,4 +1,4 @@
-import type { Caja, Cambio, Categoria, FiltrosMovimientos, MedioPago, Movimiento, MovimientoNuevo, RangoFechas, TipoMovimiento, Turno } from '../../types';
+import type { AjustesLocal, Caja, Cambio, Categoria, FiltrosMovimientos, MedioPago, Movimiento, MovimientoNuevo, RangoFechas, TipoMovimiento, Turno } from '../../types';
 import type { CuadernosService } from '../contratos';
 import { BASE_API, pedir } from '../http';
 
@@ -21,8 +21,8 @@ interface EntryApi {
   is_voided: boolean;
   void_reason: string;
   created_by: string;
-  debit_sale_id: string | null;
-  from_debit_expense_id: string | null;
+  sale_id: string | null;
+  from_expense_id: string | null;
 }
 
 interface ChangeApi {
@@ -55,8 +55,8 @@ const aMovimiento = (e: EntryApi): Movimiento => ({
   anulado: e.is_voided,
   motivoAnulacion: e.void_reason,
   cargadoPor: e.created_by,
-  ventaDelDebitoId: e.debit_sale_id ?? null,
-  gastoConDebitoId: e.from_debit_expense_id ?? null,
+  ventaId: e.sale_id ?? null,
+  deGastoId: e.from_expense_id ?? null,
 });
 
 const aCambio = (c: ChangeApi): Cambio => ({
@@ -119,6 +119,8 @@ const aCaja = (c: CashApi): Caja => ({
   })),
 });
 
+const aAjustes = (r: { sale_methods: MedioPago[] }): AjustesLocal => ({ mediosQueSumanVenta: r.sale_methods });
+
 /** Período y filtros a query string. Lo vacío no viaja. */
 function consulta(r: RangoFechas, f: FiltrosMovimientos): string {
   const q = new URLSearchParams({ from: r.desde, to: r.hasta });
@@ -177,6 +179,16 @@ export const cuadernosApi: CuadernosService = {
 
   async cargarHaberInicial(fecha, turno, monto, motivo) {
     await pedir('PUT', '/notebooks/cash/opening/', { date: fecha, shift: turno, amount: monto.toFixed(2), reason: motivo });
+  },
+
+  async ajustes() {
+    const r = await pedir<{ sale_methods: MedioPago[] }>('GET', '/notebooks/settings/');
+    return aAjustes(r);
+  },
+
+  async guardarAjustes(ajustes: AjustesLocal) {
+    const r = await pedir<{ sale_methods: MedioPago[] }>('PUT', '/notebooks/settings/', { sale_methods: ajustes.mediosQueSumanVenta });
+    return aAjustes(r);
   },
 
   urlExcel(rango, filtros) {

@@ -36,7 +36,7 @@ Es la misma cuenta que hacés en el cuaderno, turno por turno:
 | Costos sin los D | Gastos en efectivo |
 | Haber nuevo | Haber |
 
-Los gastos con D se cargan con Débito, y el sistema suma su venta con débito sola, como el renglón que anotás en el cuaderno. En el papel el D suma en la venta y resta en los costos; acá ni el gasto ni su venta mueven la caja. La cuenta da lo mismo.
+Los gastos con D se cargan con Débito, y el sistema suma su venta con débito sola, como el renglón que anotás en el cuaderno. Con los gastos por transferencia pasa lo mismo. En el papel el D suma en la venta y resta en los costos; acá ni el gasto ni su venta mueven la caja. La cuenta da lo mismo.
 
 Si un turno sale en rojo con **Revisar**, la caja dio negativa: falta una venta o sobra un gasto.
 
@@ -57,10 +57,20 @@ Aparecen solo los meses con movimientos; **Ver los 12 meses** los muestra todos.
 
 <br clear="right">
 
+## Qué gastos suman también la venta
+
+<img src="img/ajustes-local.png" width="300" alt="Ajustes del local: medios de pago que suman venta" align="right">
+
+Tocando tu nombre, arriba a la derecha, está **Ajustes del local**. Ahí elegís con qué medios de pago un gasto se suma también a la venta, como hacés en el cuaderno. De entrada están marcados **Débito** y **Transferencia**.
+
+Si un día empezás a anotar así otro medio (por ejemplo, Mercado Pago), lo tildás y listo: desde ese momento, al cargar un gasto con ese medio aparece el tilde para sumar su venta. Lo que ya estaba cargado no cambia. Cada local tiene sus propios ajustes, y queda anotado quién los cambió.
+
+<br clear="right">
+
 ## Categorías nuevas
 
 Si al cargar falta una categoría, elegí **+ Nueva categoría…** al final de la lista. Queda solo en este local y ya la pueden usar todos los que cargan. Si escribís una que ya existe (aunque sea con otras mayúsculas), te avisa.
 
 ## Personas
 
-Por ahora, para dar de alta a alguien o cambiarle el permiso, avisanos y lo hacemos nosotros. Hay tres permisos: **dueño** (todo, incluido el haber inicial y las categorías nuevas), **carga** (carga, corrige y anula movimientos) y **consulta** (mira y exporta, pero no cambia nada).
+Por ahora, para dar de alta a alguien o cambiarle el permiso, avisanos y lo hacemos nosotros. Hay tres permisos: **dueño** (todo, incluido el haber inicial, las categorías nuevas y los ajustes del local), **carga** (carga, corrige y anula movimientos) y **consulta** (mira y exporta, pero no cambia nada).

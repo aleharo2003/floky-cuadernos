@@ -11,6 +11,7 @@ from notebooks.views import (
     ExportView,
     MonthlyView,
     RecentChangesView,
+    SettingsView,
     SummaryView,
 )
 
@@ -26,4 +27,5 @@ urlpatterns = [
     path("export/", ExportView.as_view()),
     path("cash/", CashView.as_view()),
     path("cash/opening/", CashOpeningView.as_view()),
+    path("settings/", SettingsView.as_view()),
 ]

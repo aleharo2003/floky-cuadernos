@@ -108,7 +108,19 @@ const tarjeta = (p, titulo) => p.locator(`.tarjeta:has(h2:text-is("${titulo}"))`
   await p.screenshot({ path: path.join(IMG, 'menu-cuenta.png'), clip: { x: 130, y: 0, width: 260, height: Math.round(menu.y + menu.height + 12) } });
   await p.keyboard.press('Escape');
 
+  // Ajustes del local (Lucía, dueña): qué medios suman venta
+  p = await abrir(browser, celular);
+  await ingresar(p, 'lucia', 'Local Norte');
+  await p.click('.barra-usuario-boton');
+  await p.locator('[role=menu] [role=menuitem]:has-text("Ajustes del local")').click();
+  await p.locator('[role=dialog] input[type=checkbox]').first().waitFor();
+  await p.waitForTimeout(300);
+  await foto(p.locator('[role=dialog]'), 'ajustes-local');
+  await p.keyboard.press('Escape');
+
   // Corregir y anular (desde Reportes, donde están los de todo el mes), para que el historial tenga algo
+  p = await abrir(browser, celular);
+  await ingresar(p, 'tomas');
   await reportes(p);
   await accion(p, 'Verdura', 'Corregir');
   const correccion = p.locator('[role=dialog]');

@@ -1,7 +1,7 @@
 import { useState, type FormEvent, type ReactNode, type Ref } from 'react';
 import { Tecla } from '../atajos/Atajos';
 import { diaConNombre, fechaIso } from '../lib/formato';
-import { NOMBRE_MEDIO, type Categoria, type MedioPago, type TipoMovimiento, type Turno } from '../types';
+import { MEDIO_EN_FRASE, NOMBRE_MEDIO, type Categoria, type MedioPago, type TipoMovimiento, type Turno } from '../types';
 import Badge from './Badge';
 import Button from './Button';
 import { CampoMonto } from './Campos';
@@ -16,7 +16,7 @@ export interface Borrador {
   medioPago: MedioPago;
   turno: Turno;
   motivo: string;
-  /** Gasto con débito: sumar también la venta con débito, como en el cuaderno (ADR-0010). */
+  /** Gasto con un medio que suma venta: sumar también la venta, como en el cuaderno (ADR-0010, ADR-0013). */
   sumarAVenta: boolean;
 }
 
@@ -49,10 +49,12 @@ interface Props {
   /** Corrección: pide el motivo. */
   correccion?: boolean;
   /**
-   * Mostrar el tilde "Sumarlo también a la venta" en un gasto con débito. Al cargar, siempre; al
-   * corregir, solo si el gasto no tiene ya su venta (ADR-0012).
+   * Mostrar el tilde "Sumarlo también a la venta" en un gasto con uno de `mediosVenta`. Al cargar,
+   * siempre; al corregir, solo si el gasto no tiene ya su venta (ADR-0012).
    */
   ofrecerVenta?: boolean;
+  /** Los medios que suman venta en este local, según los ajustes del dueño (ADR-0013). */
+  mediosVenta: MedioPago[];
   campoCategoria?: Ref<HTMLSelectElement>;
   aviso: string;
   /** Confirmación de lo último que se guardó. */
@@ -73,6 +75,7 @@ export default function FormMovimiento({
   fechaYTurno,
   correccion = false,
   ofrecerVenta = !correccion,
+  mediosVenta,
   campoCategoria,
   aviso,
   avisoOk,
@@ -164,11 +167,11 @@ export default function FormMovimiento({
           ))}
         </select>
       </label>
-      {ofrecerVenta && borrador.tipo === 'egreso' && borrador.medioPago === 'debit' && (
+      {ofrecerVenta && borrador.tipo === 'egreso' && mediosVenta.includes(borrador.medioPago) && (
         <label className="campo-tilde">
           <input type="checkbox" checked={borrador.sumarAVenta} onChange={(e) => onCambio({ sumarAVenta: e.target.checked })} />
           <span>
-            Sumarlo también a la venta, con débito
+            Sumarlo también a la venta, {MEDIO_EN_FRASE[borrador.medioPago]}
             <small>Como en el cuaderno: se carga una venta por el mismo monto.</small>
           </span>
         </label>

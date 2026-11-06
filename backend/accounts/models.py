@@ -22,11 +22,12 @@ class Perm(models.TextChoices):
     VOID_ENTRY = "notebooks.void_entry", "Anular movimientos"
     MANAGE_CATEGORIES = "notebooks.manage_categories", "Administrar categorías"
     SET_CASH_OPENING = "notebooks.set_cash_opening", "Cargar el haber inicial de la caja"
+    MANAGE_SETTINGS = "notebooks.manage_settings", "Cambiar los ajustes del local"
 
 
 _VIEWER = frozenset({Perm.VIEW, Perm.EXPORT})
 _EDITOR = _VIEWER | {Perm.ADD_ENTRY, Perm.CHANGE_ENTRY, Perm.VOID_ENTRY}
-_OWNER = _EDITOR | {Perm.MANAGE_CATEGORIES, Perm.SET_CASH_OPENING}
+_OWNER = _EDITOR | {Perm.MANAGE_CATEGORIES, Perm.SET_CASH_OPENING, Perm.MANAGE_SETTINGS}
 
 ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
     Role.VIEWER: _VIEWER,
