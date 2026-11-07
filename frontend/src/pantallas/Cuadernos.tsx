@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Tecla } from '../atajos/Atajos';
 import { EVENTO_AJUSTES } from '../componentes/AjustesDelLocal';
 import Badge from '../componentes/Badge';
+import CajaDelTurno from '../componentes/CajaDelTurno';
 import Button from '../componentes/Button';
 import Card from '../componentes/Card';
 import DataTable, { type Columna } from '../componentes/DataTable';
@@ -371,6 +372,7 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
         nota={delDia && delDia.length > 0 ? `Ingresos ${pesos(ingresos)}, gastos ${pesos(gastos)}. Los anulados no se muestran.` : undefined}
         className="carga-dia"
       >
+        {dia && <CajaDelTurno dia={dia} turno={borrador.turno} vuelta={vuelta} />}
         {!delDia ? (
           <p className="cargando">Cargando…</p>
         ) : (

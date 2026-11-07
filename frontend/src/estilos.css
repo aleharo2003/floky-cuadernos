@@ -3295,3 +3295,39 @@ textarea:focus-visible {
 .sugerir-lista li[aria-selected='true'] {
   background: var(--accion-suave);
 }
+
+
+/* Cargar: el efectivo que debería haber al cerrar el turno que se carga. */
+.caja-turno {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--esp-1) var(--esp-3);
+  margin: 0 0 var(--esp-3);
+  padding: var(--esp-2) var(--esp-3);
+  border-left: 4px solid var(--accion);
+  border-radius: var(--r);
+  background: var(--accion-suave);
+}
+
+.caja-turno strong {
+  font-size: var(--texto-l);
+  font-variant-numeric: tabular-nums;
+}
+
+.caja-turno small {
+  flex-basis: 100%;
+}
+
+.caja-turno-negativa {
+  border-left-color: var(--negativo);
+  background: var(--negativo-suave);
+  color: var(--negativo-texto);
+}
+
+.caja-turno-sin {
+  display: block;
+  border-left-color: var(--linea);
+  background: var(--superficie-2);
+  color: var(--tinta-2);
+}

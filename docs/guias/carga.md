@@ -27,6 +27,8 @@ Al entrar estás en la solapa **Cargar**: el formulario arriba y, al lado (o aba
 
 Después de guardar, la fecha, el turno, el tipo y el medio de pago quedan como estaban, así pasás el cuaderno renglón por renglón sin volver a elegirlos. El movimiento nuevo aparece marcado en la lista del día, con el total de ingresos y gastos de ese día para comparar con el papel.
 
+Arriba de esa lista está **Caja al cerrar la noche** (o la mañana): el efectivo que debería haber en la caja al terminar el turno que estás cargando. Se actualiza cada vez que guardás. Sirve para contar la plata al cerrar y ver si coincide. Si aparece en rojo, quedó en negativo: casi siempre es un gasto cargado como efectivo que no lo era, o una venta que falta.
+
 <br clear="right">
 
 ## Los renglones con D y las transferencias
