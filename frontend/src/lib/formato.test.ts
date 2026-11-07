@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { MONTO_ILEGIBLE, diaConNombre, leerMonto, pesos, problemaDeMonto } from './formato';
+import {
+  MONTO_ILEGIBLE,
+  cursorDespuesDeFormatear,
+  diaConNombre,
+  leerMonto,
+  montoMientrasSeEscribe,
+  montoPegado,
+  pesos,
+  problemaDeMonto,
+} from './formato';
 
 describe('leerMonto', () => {
   it.each([
@@ -55,5 +64,60 @@ describe('problemaDeMonto', () => {
     expect(problemaDeMonto('0')).toBe('El monto tiene que ser mayor que cero.');
     expect(problemaDeMonto('0', { permitirCero: true })).toBeNull();
     expect(problemaDeMonto('abc')).toBe(MONTO_ILEGIBLE);
+  });
+});
+
+describe('montoMientrasSeEscribe', () => {
+  it.each([
+    ['', ''],
+    ['4', '4'],
+    ['4500', '4.500'],
+    ['45000', '45.000'],
+    ['1234567', '1.234.567'],
+    ['45.000', '45.000'],
+    ['4.5000', '45.000'], // los puntos los pone el campo, no quien escribe
+    ['45000,5', '45.000,5'],
+    ['45000,50', '45.000,50'],
+    ['45.000,999', '45.000,999'], // no corta: el aviso de decimales lo da problemaDeMonto
+    [',5', '0,5'],
+    ['007', '7'],
+    ['0,50', '0,50'],
+    ['12a3', '123'],
+    ['1,2,3', '1,23'],
+  ])('%s queda %s', (texto, esperado) => {
+    expect(montoMientrasSeEscribe(texto)).toBe(esperado);
+  });
+});
+
+describe('cursorDespuesDeFormatear', () => {
+  it('al final sigue al final', () => {
+    expect(cursorDespuesDeFormatear('45000', 5, '45.000')).toBe(6);
+  });
+
+  it('en el medio queda detrás de las mismas cifras', () => {
+    // Se escribió el 9 después del 1 en "1.234": "19.234" -> el cursor queda después del 9.
+    expect(cursorDespuesDeFormatear('19.234', 2, '19.234')).toBe(2);
+    // Se borró el 2 de "1.234": "1.34" -> "134", el cursor queda después del 1.
+    expect(cursorDespuesDeFormatear('1.34', 2, '134')).toBe(1);
+  });
+
+  it('al principio queda al principio', () => {
+    expect(cursorDespuesDeFormatear('45000', 0, '45.000')).toBe(0);
+  });
+});
+
+describe('montoPegado', () => {
+  it.each([
+    ['45.000,50', '45.000,50'],
+    ['$ 45.000', '45.000'],
+    ['12345.67', '12.345,67'],
+    ['10,999', '10,999'],
+    ['1300000', '1.300.000'],
+  ])('%s queda %s', (texto, esperado) => {
+    expect(montoPegado(texto)).toBe(esperado);
+  });
+
+  it('lo que no se entiende devuelve null', () => {
+    expect(montoPegado('cuarenta mil')).toBeNull();
   });
 });

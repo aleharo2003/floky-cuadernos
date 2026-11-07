@@ -21,7 +21,7 @@ Al entrar estás en la solapa **Cargar**: el formulario arriba y, al lado (o aba
 1. **Fecha y turno.** Arriba del formulario dice qué día y qué turno se está cargando. Si hay que cambiarlo, tocá **Cambiar**. El turno noche que termina después de las 12 va con la fecha en que empezó. Si la fecha no es la de hoy, aparece el aviso **No es hoy**.
 2. **Tipo:** gasto o ingreso (las ventas son ingresos).
 3. **Categoría** y, si querés, una **descripción** ("verdura", "ventas del turno"). Al escribir la descripción aparecen las que ya se usaron: elegí una con las flechas y Enter, o tocándola. Así los nombres quedan iguales y después se filtran mejor.
-4. **Monto.** Escribilo como siempre: `45.000` o `45.000,50`.
+4. **Monto.** Escribí solo los números: los puntos de los miles se ponen solos (`45000` queda `45.000`). Para los centavos, la coma; en la compu también sirve el punto del teclado numérico, que escribe la coma.
 5. **Medio de pago.** Decide si la plata entra o sale de la caja: Efectivo la mueve; débito, tarjeta, Mercado Pago o transferencia no. Los renglones con D van con **Débito** (mirá abajo).
 6. **Guardar movimiento.** En la compu también se guarda con Enter.
 
