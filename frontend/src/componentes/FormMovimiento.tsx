@@ -50,11 +50,11 @@ interface Props {
   /** Corrección: pide el motivo. */
   correccion?: boolean;
   /**
-   * Mostrar el tilde "Sumarlo también a la venta" en un gasto con uno de `mediosVenta`. Al cargar,
-   * siempre; al corregir, solo si el gasto no tiene ya su venta (ADR-0012).
+   * Mostrar el tilde "Sumarlo también a la venta" en un gasto que no sea en efectivo. Al cargar,
+   * siempre; al corregir, solo si el gasto no tiene ya su venta (ADR-0012, ADR-0014).
    */
   ofrecerVenta?: boolean;
-  /** Los medios que suman venta en este local, según los ajustes del dueño (ADR-0013). */
+  /** Los medios con los que el tilde viene marcado en este local, según los ajustes del dueño. */
   mediosVenta: MedioPago[];
   campoCategoria?: Ref<HTMLSelectElement>;
   aviso: string;
@@ -150,7 +150,14 @@ export default function FormMovimiento({
       <CampoMonto rotulo="Monto" valor={borrador.monto} onChange={(monto) => onCambio({ monto })} />
       <label className="campo">
         <span>Medio de pago</span>
-        <select value={borrador.medioPago} onChange={(e) => onCambio({ medioPago: e.target.value as MedioPago })}>
+        <select
+          value={borrador.medioPago}
+          onChange={(e) => {
+            const medioPago = e.target.value as MedioPago;
+            // El tilde de la venta viene marcado o no según el medio, como lo ajustó el dueño (ADR-0014).
+            onCambio({ medioPago, sumarAVenta: mediosVenta.includes(medioPago) });
+          }}
+        >
           {MEDIOS.map((m) => (
             <option key={m} value={m}>
               {NOMBRE_MEDIO[m]}
@@ -158,7 +165,7 @@ export default function FormMovimiento({
           ))}
         </select>
       </label>
-      {ofrecerVenta && borrador.tipo === 'egreso' && mediosVenta.includes(borrador.medioPago) && (
+      {ofrecerVenta && borrador.tipo === 'egreso' && borrador.medioPago !== 'cash' && (
         <label className="campo-tilde">
           <input type="checkbox" checked={borrador.sumarAVenta} onChange={(e) => onCambio({ sumarAVenta: e.target.checked })} />
           <span>

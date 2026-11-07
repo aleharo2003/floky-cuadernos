@@ -61,9 +61,9 @@ Aparecen solo los meses con movimientos; **Ver los 12 meses** los muestra todos.
 
 <img src="img/ajustes-local.png" width="300" alt="Ajustes del local: medios de pago que suman venta" align="right">
 
-Tocando tu nombre, arriba a la derecha, está **Ajustes del local**. Ahí elegís con qué medios de pago un gasto se suma también a la venta, como hacés en el cuaderno. De entrada están marcados **Débito** y **Transferencia**.
+Cualquier gasto que no sea en efectivo se puede sumar también a la venta, con un tilde, como hacés en el cuaderno. Tocando tu nombre, arriba a la derecha, está **Ajustes del local**: ahí elegís con qué medios de pago ese tilde viene **marcado** de entrada. Al principio están **Débito** y **Transferencia**.
 
-Si un día empezás a anotar así otro medio (por ejemplo, Mercado Pago), lo tildás y listo: desde ese momento, al cargar un gasto con ese medio aparece el tilde para sumar su venta. Lo que ya estaba cargado no cambia. Cada local tiene sus propios ajustes, y queda anotado quién los cambió.
+Si un día empezás a anotar siempre así otro medio (por ejemplo, Mercado Pago), lo tildás y desde ese momento viene marcado. Lo que ya estaba cargado no cambia. Cada local tiene sus propios ajustes, y queda anotado quién los cambió.
 
 <br clear="right">
 

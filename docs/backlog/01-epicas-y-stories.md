@@ -272,7 +272,7 @@ Como dueño, quiero ver cuánto efectivo hay en la caja al cerrar cada turno, co
 - Dado el Excel, cuando exporto con haber inicial, entonces hay una hoja "Caja" con los cierres del período.
 - Dado un gasto con débito, cuando lo cargo con el tilde "Sumarlo también a la venta", entonces se crea una venta con débito por el mismo monto, en la misma operación. Corregir el gasto la actualiza, anularlo la anula, y la venta no se puede corregir ni anular sola (ADR-0010).
 - Dado un gasto que pasa de débito a efectivo y otra vez a débito, cuando lo corrijo, entonces se ofrece el tilde y la venta vuelve, como una venta nueva (ADR-0012).
-- Dado un gasto por transferencia, cuando lo cargo con el tilde, entonces se crea su venta por transferencia, igual que con débito. Los medios que suman venta los elige el dueño en "Ajustes del local" (de entrada, débito y transferencia), y el cambio queda en la auditoría (ADR-0013).
+- Dado un gasto por transferencia, cuando lo cargo con el tilde, entonces se crea su venta por transferencia, igual que con débito. Cualquier gasto que no sea en efectivo muestra el tilde; con los medios que elige el dueño en "Ajustes del local" viene marcado (de entrada, débito y transferencia), y el cambio queda en la auditoría (ADR-0013, ADR-0014).
 - Dado el cálculo, cuando corren los tests, entonces hay un caso que reproduce la cuenta del cuaderno en papel (venta del turno, más la venta de los D, menos los costos con los D incluidos) y da lo mismo.
 
 > Reemplaza a la venta espejo (ADR-0008). La venta de un gasto con débito no es un truco para la caja: es el renglón que el dueño escribe en su cuaderno (ADR-0010).

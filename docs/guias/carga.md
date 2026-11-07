@@ -47,7 +47,7 @@ Los gastos pagados **por transferencia** funcionan igual: elegí Transferencia y
 
 Si después corregís o anulás el gasto, su venta se corrige o se anula con él. La venta sola no se puede tocar. Si corregís un gasto y lo pasás a Débito o Transferencia, la ventana te ofrece el mismo tilde para sumar su venta.
 
-Qué medios de pago suman venta lo decide el dueño del local. Si el tilde no aparece con un medio, es porque en tu local ese medio no suma venta.
+Con cualquier gasto que no sea en efectivo aparece el mismo tilde: con débito y transferencia viene marcado, y con crédito o Mercado Pago sin marcar. Si ese gasto también lo sumás a la venta en el cuaderno, tildalo. Con efectivo no aparece, porque ese gasto sale de la caja.
 
 <br clear="right">
 

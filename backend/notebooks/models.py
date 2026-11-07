@@ -158,7 +158,7 @@ class CashOpening(models.Model):
         return {"date": self.date.isoformat(), "shift": self.shift, "amount": str(self.amount)}
 
 
-# Which payment methods can add a sale. Cash cannot: a cash cost and a cash sale would both move the box.
+# The methods a cost can add its sale with. Cash cannot: a cash cost and a cash sale would both move the box.
 SALE_METHOD_CHOICES = [(v, label) for v, label in PaymentMethod.choices if v != PaymentMethod.CASH]
 
 
@@ -177,12 +177,13 @@ class ShopSettings(models.Model):
         related_name="notebook_settings",
         verbose_name="local",
     )
-    # A cost paid with one of these methods offers to add its sale, ticked (ADR-0013).
+    # A cost paid with one of these methods comes with "add its sale" already ticked (ADR-0014).
+    # Any other method that is not cash shows the tick too, unticked.
     sale_methods = ArrayField(
         models.CharField(max_length=10, choices=SALE_METHOD_CHOICES),
         default=default_sale_methods,
         blank=True,
-        verbose_name="medios que suman venta",
+        verbose_name="medios que vienen marcados para sumar venta",
     )
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
