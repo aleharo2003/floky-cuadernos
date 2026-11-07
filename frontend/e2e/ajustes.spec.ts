@@ -44,10 +44,13 @@ test('el dueño elige qué medios vienen marcados, y el formulario lo sigue en e
   await ventana.getByRole('button', { name: /Guardar/ }).click();
   await expect(ventana).toBeHidden();
 
-  // Sin recargar la página: el formulario sigue los ajustes cuando se elige el medio.
-  await medio.selectOption({ label: 'Débito' });
-  await medio.selectOption({ label: 'Crédito' });
-  await expect(tilde).toBeChecked();
+  // Sin recargar la página: el formulario sigue los ajustes cuando se elige el medio. Los ajustes
+  // nuevos llegan un instante después de guardar, así que se reintenta hasta que estén.
+  await expect(async () => {
+    await medio.selectOption({ label: 'Débito' });
+    await medio.selectOption({ label: 'Crédito' });
+    await expect(tilde).toBeChecked({ timeout: 500 });
+  }).toPass();
   await expect(f).toContainText('Sumarlo también a la venta, con crédito');
   await medio.selectOption({ label: 'Transferencia' });
   await expect(tilde).not.toBeChecked();
