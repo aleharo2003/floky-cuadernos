@@ -89,6 +89,6 @@ flowchart LR
 | C08 Corregir o anular | Carga | Arreglar un error sin esconderlo | Siempre con motivo. Nada se borra. La caja se recalcula sola | HU-026 |
 | C09 Calcular la caja por turno | Sistema | Saber cuánto efectivo hay al cerrar cada turno | Haber anterior más ventas en efectivo, menos gastos en efectivo. Mercado Pago, tarjetas y transferencias no la mueven. Si da negativa, avisa | HU-025 |
 | C10 Administrar categorías | Dueño | Ordenar los movimientos como piensa el negocio | Una categoría con movimientos se desactiva, no se borra | HU-022 |
-| C13 Cargar el haber inicial | Dueño | Que la caja arranque del último haber anotado en papel | Fecha, turno e importe. Cambiarlo pide motivo, porque mueve todos los haberes siguientes | HU-025, HU-029 |
+| C13 Cargar el haber inicial | Dueño | Que la caja arranque de la plata que hay en la caja (ADR-0016) | Solo el importe. Cambiarlo pide motivo, porque mueve todos los haberes | HU-025, HU-029 |
 | C11 Registrar en la auditoría | Sistema | Que todo cambio quede registrado | En la misma transacción que el cambio | HU-014, HU-024 |
 | C12 Alta de locales y personas | Equipo | Dejar listo el acceso de cada persona | Una membresía por persona y local, con su rol | HU-010, HU-013, HU-029 |

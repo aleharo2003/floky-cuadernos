@@ -67,7 +67,7 @@ class Command(BaseCommand):
         def day_for(days_ago: int) -> date:
             return max(today - timedelta(days=days_ago), first_of_month)
 
-        # The cash the shop starts with (P-01, ADR-0017).
+        # The cash the shop starts with (P-01, ADR-0016).
         set_opening(lucia_norte, amount=Decimal("500000"), reason="")
         for days_ago, shift, kind, category, description, amount, method in samples:
             create_entry(

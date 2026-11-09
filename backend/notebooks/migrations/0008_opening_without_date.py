@@ -1,4 +1,4 @@
-# The opening haber has no date or shift any more (ADR-0017). Nullable for one version; dropped later.
+# The opening haber has no date or shift any more (ADR-0016). Nullable for one version; dropped later.
 
 from django.db import migrations, models
 

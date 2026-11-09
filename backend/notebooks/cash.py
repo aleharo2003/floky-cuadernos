@@ -50,7 +50,7 @@ def _key(day: date, shift: str) -> tuple[date, int]:
 def closes(tenant: Tenant, opening: CashOpening, until: date) -> list[Close]:
     """Every shift with entries up to `until`, with the haber carried forward from the opening.
 
-    Every entry counts, whatever its date (ADR-0017): the opening is one amount, not a moment.
+    Every entry counts, whatever its date (ADR-0016): the opening is one amount, not a moment.
     """
     cash = Q(payment_method=PaymentMethod.CASH)
     income, expense = Q(kind=Kind.INCOME), Q(kind=Kind.EXPENSE)

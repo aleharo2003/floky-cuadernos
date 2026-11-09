@@ -115,7 +115,7 @@ export interface MesDelAnio {
 }
 
 /** El último haber anotado en papel: la caja arranca de ahí (P-01). */
-/** El efectivo con el que arranca la caja. Un solo monto: cada movimiento en efectivo lo suma o resta (ADR-0017). */
+/** El efectivo con el que arranca la caja. Un solo monto: cada movimiento en efectivo lo suma o resta (ADR-0016). */
 export interface HaberInicial {
   monto: number;
   cargadoPor: string;

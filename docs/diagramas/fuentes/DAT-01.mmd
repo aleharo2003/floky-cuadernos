@@ -41,9 +41,9 @@ erDiagram
     }
     CASH_OPENING {
         uuid tenant_id PK "uno por local"
-        date date
-        string shift
-        numeric amount "último haber en papel"
+        date date "ya no se usa, ADR-0016"
+        string shift "ya no se usa, ADR-0016"
+        numeric amount "plata con la que arranca la caja"
         uuid updated_by FK
     }
     NOTEBOOK_CATEGORY {

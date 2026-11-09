@@ -1,6 +1,7 @@
 # ADR-0008. El haber se calcula desde el medio de pago, sin ventas espejo
 
 - **Estado:** propuesta, 02/11/2026. Reemplaza la regla de la venta espejo (P-09 vieja, HU-025 vieja). En [ADR-0002](0002-stack-django-react.md) la app `notebooks` y la regla de dinero mencionan la venta espejo: esas menciones quedan reemplazadas por esta decisión.
+- **Nota del 09/11/2026:** el haber inicial pasó a ser un solo monto, sin fecha ni turno, y todo lo cargado en efectivo lo mueve: [ADR-0016](0016-haber-inicial-sin-fecha-y-caja-en-vivo.md).
 - **Nota del 03/11/2026:** el contexto sobre Mercado Pago resultó equivocado y "My" era "Pan" (P-12). La decisión sigue vigente. Cómo se cargan los renglones del cuaderno: [ADR-0009](0009-cuadernos-como-en-el-papel.md).
 
 ## Contexto

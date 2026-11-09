@@ -1,7 +1,7 @@
 import { accion, cargarMovimiento, CELULAR, expect, ingresar, irACargar, irAReportes, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
 import type { Page } from '@playwright/test';
 
-// Caja en efectivo por turno (ADR-0008, ADR-0017). El seed arranca con haber inicial de $ 500.000.
+// Caja en efectivo por turno (ADR-0008, ADR-0016). El seed arranca con haber inicial de $ 500.000.
 test.beforeEach(reiniciarDatos);
 
 const caja = (p: Page) => p.locator('.tarjeta', { has: p.getByRole('heading', { name: /Caja en efectivo/ }) });

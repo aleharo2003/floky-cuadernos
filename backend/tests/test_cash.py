@@ -92,7 +92,7 @@ def test_shifts_carry_forward_in_order(owner, add):
 
 
 def test_every_entry_counts_whatever_its_date(owner, add):
-    """The opening is one amount, not a moment (ADR-0017): what was loaded the same day it was set,
+    """The opening is one amount, not a moment (ADR-0016): what was loaded the same day it was set,
     or earlier, also moves the box. That was the "nunca resta nada" of 09/11/2026."""
     start = opening(owner, amount="100.00")
     add(5, "night", Kind.EXPENSE, "10.00")
@@ -101,6 +101,17 @@ def test_every_entry_counts_whatever_its_date(owner, add):
     rows = cash.closes(owner.tenant, start, until=date(2026, 1, 31))
 
     assert [(r.date.day, r.after) for r in rows] == [(5, D("90.00")), (6, D("140.00"))]
+
+
+def test_entries_after_the_end_of_the_period_do_not_count_yet(owner, add):
+    """Loaded ahead of time: they move the box only from their own day ("Caja hoy" waits for them)."""
+    start = opening(owner, amount="100.00")
+    add(2, "morning", Kind.EXPENSE, "30.00")
+    add(20, "morning", Kind.EXPENSE, "50.00")
+
+    rows = cash.closes(owner.tenant, start, until=date(2026, 1, 10))
+
+    assert [r.after for r in rows] == [D("70.00")]
 
 
 def test_voided_entries_and_other_shops_do_not_count(owner, add, centro, categories):

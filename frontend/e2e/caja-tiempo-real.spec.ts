@@ -1,7 +1,7 @@
-import { cargarMovimiento, expect, ingresar, reiniciarDatos, test } from './ayuda';
+import { cargarMovimiento, expect, formulario, ingresar, reiniciarDatos, test } from './ayuda';
 
 // La caja arranca del haber inicial y cada movimiento en efectivo la actualiza, también los que
-// cargan otras personas (ADR-0017). Local Norte: $ 500.000 de haber inicial; hoy termina en $ 995.000.
+// cargan otras personas (ADR-0016). Local Norte: $ 500.000 de haber inicial; hoy termina en $ 995.000.
 test.beforeEach(reiniciarDatos);
 
 const reportes = async (page: import('@playwright/test').Page) => {
@@ -21,9 +21,15 @@ test('lo cargado el mismo día que el haber inicial también mueve la caja', asy
   await cargarMovimiento(page, { tipo: 'Gasto', categoria: 'Proveedores', descripcion: 'Verdura', monto: '60.000', medio: 'Efectivo', turno: 'Mañana' });
   await cargarMovimiento(page, { tipo: 'Ingreso', categoria: 'Ventas', descripcion: 'Mostrador', monto: '200.000', medio: 'Efectivo', turno: 'Noche' });
   await cargarMovimiento(page, { tipo: 'Gasto', categoria: 'Proveedores', descripcion: 'Carne', monto: '80.000', medio: 'Transferencia', turno: 'Noche' });
+  // Un gasto de ayer, cargado tarde: también cuenta.
+  const f = formulario(page);
+  if (!(await f.locator('input[type=date]').isVisible())) await f.getByRole('button', { name: 'Cambiar fecha o turno' }).click();
+  await f.locator('input[type=date]').fill('2026-03-10');
+  await cargarMovimiento(page, { tipo: 'Gasto', categoria: 'Proveedores', descripcion: 'Hielo', monto: '10.000', medio: 'Efectivo', turno: 'Noche' });
 
   await reportes(page);
-  await expect(page.locator('.burbuja-caja')).toContainText('$ 1.140.000,00'); // 1.000.000 - 60.000 + 200.000
+  // 1.000.000 - 60.000 + 200.000 - 10.000; la transferencia no sale de la caja.
+  await expect(page.locator('.burbuja-caja')).toContainText('$ 1.130.000,00');
 });
 
 test('si otra persona carga, la caja se actualiza sola, sin recargar', async ({ page, nuevaPagina }) => {

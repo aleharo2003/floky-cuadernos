@@ -127,13 +127,13 @@ class Entry(models.Model):
 
 class CashOpening(models.Model):
     """The cash on hand when the shop starts using the system (P-01). One amount per shop: every
-    cash entry loaded, of any date, adds to it or takes from it (ADR-0017). Changing it is audited.
+    cash entry loaded, of any date, adds to it or takes from it (ADR-0016). Changing it is audited.
     """
 
     tenant = models.OneToOneField(
         Tenant, on_delete=models.PROTECT, primary_key=True, related_name="cash_opening", verbose_name="local"
     )
-    # No longer used (ADR-0017): the opening has no date or shift. Kept nullable for one version so
+    # No longer used (ADR-0016): the opening has no date or shift. Kept nullable for one version so
     # going back to the previous one still works; a later migration drops them.
     date = models.DateField("fecha (ya no se usa)", null=True, blank=True)
     shift = models.CharField(  # noqa: DJ001 - null means "no shift" until the column is dropped

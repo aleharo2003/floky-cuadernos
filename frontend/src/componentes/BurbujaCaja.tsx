@@ -30,7 +30,7 @@ function guardarOculta(oculta: boolean) {
  */
 export default function BurbujaCaja({ vuelta }: { vuelta: number }) {
   const hoy = fechaIso(new Date());
-  // Cada 15 segundos: así se ve lo que cargan otras personas, sin recargar la página (ADR-0017).
+  // Cada 15 segundos: así se ve lo que cargan otras personas, sin recargar la página (ADR-0016).
   const { datos: caja, error } = useConsulta(() => servicios.cuadernos.caja({ desde: hoy, hasta: hoy }), [hoy, vuelta], { cadaMs: REFRESCO_MS });
   const [oculta, setOculta] = useState(ocultaGuardada);
 

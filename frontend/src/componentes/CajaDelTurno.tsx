@@ -9,7 +9,7 @@ import { NOMBRE_TURNO, type Turno } from '../types';
  * plata y compararla. Se vuelve a pedir cada vez que se guarda, corrige o anula algo (`vuelta`).
  */
 export default function CajaDelTurno({ dia, turno, vuelta }: { dia: string; turno: Turno; vuelta: number }) {
-  // Cada 15 segundos, para ver también lo que cargan otras personas (ADR-0017).
+  // Cada 15 segundos, para ver también lo que cargan otras personas (ADR-0016).
   const { datos: caja, error } = useConsulta(() => servicios.cuadernos.caja({ desde: dia, hasta: dia }), [dia, vuelta], { cadaMs: REFRESCO_MS });
   if (error || !caja) return null; // la carga sigue andando aunque la caja no llegue
 

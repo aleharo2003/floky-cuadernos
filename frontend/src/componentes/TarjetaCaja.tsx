@@ -125,7 +125,7 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
 const textoInicial = (i: HaberInicial) =>
   `Arranca con ${pesos(i.monto)}; cada movimiento en efectivo la suma o la resta. Lo cargó ${i.cargadoPor} el ${fechaHora(i.cargadoEl)}.`;
 
-/** El monto del haber inicial: uno solo, sin fecha ni turno (ADR-0017). El motivo se pide solo al cambiarlo. */
+/** El monto del haber inicial: uno solo, sin fecha ni turno (ADR-0016). El motivo se pide solo al cambiarlo. */
 function useFormularioInicial(inicial?: HaberInicial) {
   const [monto, setMonto] = useState(inicial ? inicial.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }) : '');
   const [motivo, setMotivo] = useState('');

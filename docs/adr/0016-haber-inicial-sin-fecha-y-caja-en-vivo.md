@@ -1,4 +1,4 @@
-# ADR-0017. El haber inicial es un solo monto, sin fecha ni turno, y la caja se refresca sola
+# ADR-0016. El haber inicial es un solo monto, sin fecha ni turno, y la caja se refresca sola
 
 - **Estado:** aceptada, 09/11/2026. Cambia el punto de partida de [ADR-0008](0008-haber-calculado-sin-espejo.md); la cuenta del haber por turno sigue igual.
 
