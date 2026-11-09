@@ -270,6 +270,7 @@ Como dueño, quiero ver cuánto efectivo hay en la caja al cerrar cada turno, co
 - Dado el haber inicial, cuando lo carga el dueño, entonces queda con fecha, turno, importe y quién lo cargó. Cambiarlo pide motivo y queda en la auditoría. Carga y consulta no pueden.
 - Dado los filtros de la lista, cuando filtro, entonces la caja no cambia: es la caja entera del local.
 - Dado la pantalla Cargar, cuando elijo fecha y turno, entonces veo el efectivo que debería haber al cerrar ese turno, y se actualiza al guardar, corregir o anular. Si queda en negativo, aparece en rojo con el aviso (06/11/2026).
+- Dado Reportes, cuando entro, entonces arriba de todo veo una burbuja con la caja de hoy (todo hasta hoy, nada futuro), que no cambia con el período ni los filtros y queda fija al bajar. Un ojito la tapa y el dispositivo se acuerda (09/11/2026).
 - Dado el Excel, cuando exporto con haber inicial, entonces hay una hoja "Caja" con los cierres del período.
 - Dado un gasto con débito, cuando lo cargo con el tilde "Sumarlo también a la venta", entonces se crea una venta con débito por el mismo monto, en la misma operación. Corregir el gasto la actualiza, anularlo la anula, y la venta no se puede corregir ni anular sola (ADR-0010).
 - Dado un gasto que pasa de débito a efectivo y otra vez a débito, cuando lo corrijo, entonces se ofrece el tilde y la venta vuelve, como una venta nueva (ADR-0012).

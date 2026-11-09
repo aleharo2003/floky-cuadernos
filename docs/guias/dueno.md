@@ -24,6 +24,8 @@ Desde ese turno en adelante, la caja se calcula sola con lo que se carga. Si des
 
 ## Cómo se lee la caja
 
+En Reportes, arriba de todo, la burbuja **Caja hoy** muestra el efectivo que hay ahora, sin importar qué período o filtro estés mirando. Con el ojito la tapás. En Cargar se ve la caja del turno que estás cargando.
+
 Es la misma cuenta que hacés en el cuaderno, turno por turno:
 
 <img src="img/caja.png" alt="Caja en efectivo por turno">

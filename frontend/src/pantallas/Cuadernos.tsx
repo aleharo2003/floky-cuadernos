@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Tecla } from '../atajos/Atajos';
 import { EVENTO_AJUSTES } from '../componentes/AjustesDelLocal';
 import Badge from '../componentes/Badge';
+import BurbujaCaja from '../componentes/BurbujaCaja';
 import CajaDelTurno from '../componentes/CajaDelTurno';
 import Button from '../componentes/Button';
 import Card from '../componentes/Card';
@@ -458,6 +459,8 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
   // más de un año), se corrige desde ahí sin recargar la página.
   const cabecera = (
     <>
+      {/* La caja de hoy, siempre a la vista y sin filtros: no depende de lo que se esté mirando. */}
+      <BurbujaCaja vuelta={vuelta} />
       {/* Solo en papel o PDF: qué local, qué período y con qué filtros (HU-027). */}
       <div className="solo-impresion encabezado-impreso">
         <h1>Cuadernos de {local}</h1>

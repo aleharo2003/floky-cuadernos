@@ -3331,3 +3331,69 @@ textarea:focus-visible {
   background: var(--superficie-2);
   color: var(--tinta-2);
 }
+
+
+/* Reportes: la caja de hoy, pegada arriba al bajar, como el saldo de una billetera. */
+.burbuja-caja {
+  position: sticky;
+  top: var(--esp-2);
+  z-index: 15;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--esp-3);
+  width: fit-content;
+  min-width: min(100%, 300px);
+  margin: 0 0 var(--esp-4);
+  padding: var(--esp-3) var(--esp-4);
+  border-radius: 999px;
+  background: var(--petroleo);
+  color: var(--sobre-accion);
+  box-shadow: var(--sombra-alta);
+}
+
+.burbuja-caja-texto {
+  display: flex;
+  align-items: baseline;
+  gap: var(--esp-3);
+}
+
+.burbuja-caja-rotulo {
+  font-size: var(--texto-s);
+}
+
+.burbuja-caja strong {
+  font-size: var(--texto-xl);
+  font-variant-numeric: tabular-nums;
+}
+
+.burbuja-caja strong.burbuja-caja-sin {
+  font-size: var(--texto);
+  font-weight: var(--peso-medio);
+}
+
+.burbuja-caja-ojo {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.burbuja-caja-ojo:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.burbuja-caja-ojo:focus-visible {
+  outline: 2px solid var(--sobre-accion);
+  outline-offset: 2px;
+}
+
+.burbuja-caja-negativa {
+  background: var(--negativo-fondo-fuerte);
+}

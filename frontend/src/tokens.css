@@ -31,6 +31,7 @@
   --positivo-texto: #1f6b38; /* el verde para texto chico */
   --positivo-suave: #e3f2e7;
   --negativo: #c93a2b;
+  --negativo-fondo-fuerte: #9f2a1d; /* fondo rojo con letra blanca (burbuja de la caja) */
   --negativo-texto: #b93425; /* el rojo para texto chico, también sobre el fondo suave */
   --negativo-suave: #fae7e4;
   --aviso: #a8650a;
@@ -127,6 +128,7 @@
     --positivo-texto: #6fd08c;
     --positivo-suave: #183526;
     --negativo: #e5604f;
+    --negativo-fondo-fuerte: #9f2a1d;
     --negativo-texto: #ff8a7a;
     --negativo-suave: #3d1e1a;
     --aviso: #e0a33a;
