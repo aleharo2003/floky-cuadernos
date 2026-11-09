@@ -9,7 +9,7 @@ import Modal from './Modal';
 /** Avisa que los ajustes cambiaron, para que la carga los vuelva a pedir sin recargar la página. */
 export const EVENTO_AJUSTES = 'cuadernos:ajustes';
 
-/** Solo el dueño: qué medios de pago suman también la venta cuando se carga un gasto (ADR-0013). */
+/** Solo el dueño: con qué medios de pago el gasto viene con "sumar también la venta" marcado (ADR-0014). */
 export default function AjustesDelLocal({ local, onCerrar }: { local: string; onCerrar(): void }) {
   const { datos, error } = useConsulta(() => servicios.cuadernos.ajustes(), []);
   const [elegidos, setElegidos] = useState<MedioPago[] | null>(null);
@@ -54,9 +54,10 @@ export default function AjustesDelLocal({ local, onCerrar }: { local: string; on
       }
     >
       <fieldset className="ajustes-grupo">
-        <legend>Gastos que también se suman a la venta</legend>
+        <legend>Gastos que vienen marcados para sumarse a la venta</legend>
         <p className="nota">
-          Al cargar un gasto con estos medios aparece marcado el tilde para sumar también su venta, como en el cuaderno. Lo ya cargado queda como está.
+          En cualquier gasto que no sea en efectivo aparece el tilde para sumar también su venta, como en el cuaderno. Con estos medios viene marcado de
+          entrada; con los demás, sin marcar. Lo ya cargado queda como está.
         </p>
         {error && <p className="login-error">{error}</p>}
         {!datos && !error && <p className="cargando">Cargando…</p>}

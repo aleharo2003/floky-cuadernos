@@ -91,6 +91,40 @@ function normalizarMonto(texto: string): string | null {
   return /^\d+(\.\d+)?$/.test(normal) ? normal : null;
 }
 
+/**
+ * El monto como se va escribiendo, con los puntos de miles puestos solos: "45000" queda "45.000" y
+ * "1234567,5" queda "1.234.567,5". Los puntos que traiga se ignoran (los pone el campo) y la primera
+ * coma separa los decimales. No corta ni redondea decimales: si sobran, avisa problemaDeMonto.
+ */
+export function montoMientrasSeEscribe(texto: string): string {
+  const coma = texto.indexOf(',');
+  const entera = (coma === -1 ? texto : texto.slice(0, coma)).replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+  const conPuntos = entera.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  if (coma === -1) return conPuntos;
+  return `${conPuntos || '0'},${texto.slice(coma + 1).replace(/\D/g, '')}`;
+}
+
+/** Dónde dejar el cursor después de poner los puntos: detrás de las mismas cifras que tenía antes. */
+export function cursorDespuesDeFormatear(antes: string, cursor: number, despues: string): number {
+  if (cursor >= antes.length) return despues.length;
+  const cifras = antes.slice(0, cursor).replace(/[^\d,]/g, '').length;
+  let vistas = 0;
+  for (let i = 0; i < despues.length && vistas < cifras; i++) {
+    if (/[\d,]/.test(despues[i])) vistas++;
+    if (vistas === cifras) return i + 1;
+  }
+  return cifras === 0 ? 0 : despues.length;
+}
+
+/**
+ * Un monto pegado de otro lado ("12345.67", "$ 45.000,50") en el formato del campo, o null si no se
+ * entiende. Tampoco redondea: "10,999" queda "10,999" y el aviso lo da problemaDeMonto.
+ */
+export function montoPegado(texto: string): string | null {
+  const normal = normalizarMonto(texto);
+  return normal === null ? null : montoMientrasSeEscribe(normal.replace('.', ','));
+}
+
 /** El mayor importe que guarda la base: 12 cifras enteras y 2 decimales. */
 const MONTO_MAXIMO = 999_999_999_999.99;
 

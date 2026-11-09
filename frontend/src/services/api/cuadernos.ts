@@ -181,6 +181,12 @@ export const cuadernosApi: CuadernosService = {
     await pedir('PUT', '/notebooks/cash/opening/', { date: fecha, shift: turno, amount: monto.toFixed(2), reason: motivo });
   },
 
+  async descripciones(tipo, texto) {
+    const query = new URLSearchParams({ kind: aKind(tipo), q: texto });
+    const r = await pedir<{ results: string[] }>('GET', `/notebooks/descriptions/?${query}`);
+    return r.results;
+  },
+
   async ajustes() {
     const r = await pedir<{ sale_methods: MedioPago[] }>('GET', '/notebooks/settings/');
     return aAjustes(r);

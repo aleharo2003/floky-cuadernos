@@ -31,9 +31,9 @@ export const MEDIO_EN_FRASE: Record<MedioPago, string> = {
 /** Los medios que pueden sumar venta: todos menos efectivo (ADR-0013). */
 export const MEDIOS_QUE_PUEDEN_SUMAR_VENTA: MedioPago[] = ['debit', 'credit', 'qr', 'transfer'];
 
-/** Lo que el dueño ajusta para los cuadernos de su local (ADR-0013). */
+/** Lo que el dueño ajusta para los cuadernos de su local (ADR-0013, ADR-0014). */
 export interface AjustesLocal {
-  /** Un gasto con uno de estos medios propone sumar también su venta, como en el cuaderno. */
+  /** Con estos medios, el tilde "sumar también la venta" viene marcado. Los demás que no son efectivo lo muestran sin marcar. */
   mediosQueSumanVenta: MedioPago[];
 }
 

@@ -102,7 +102,7 @@ def test_cash_costs_and_incomes_cannot_add_a_sale(as_role, categories):
     )
 
     assert cash_cost.status_code == 400 and income.status_code == 400
-    assert "no se suma a la venta" in str(cash_cost.data)
+    assert "no sea en efectivo" in str(cash_cost.data)
     assert Entry.objects.count() == 0
 
 
@@ -285,16 +285,18 @@ def test_a_transfer_cost_adds_a_transfer_sale(as_role, categories):
     assert audit.reason == "Venta del gasto por transferencia"
 
 
-def test_credit_adds_a_sale_only_after_the_owner_turns_it_on(as_role, categories):
-    owner = as_role(Role.OWNER)
+def test_any_method_but_cash_can_add_a_sale(as_role, categories):
+    """The list only says what comes ticked (ADR-0014): credit and Mercado Pago can add it too."""
+    api = as_role(Role.EDITOR)
 
-    before = owner.post(URL, body(categories, payment_method="credit"), format="json")
-    owner.put(SETTINGS, {"sale_methods": ["debit", "transfer", "credit"]}, format="json")
-    after = owner.post(URL, body(categories, payment_method="credit"), format="json")
+    credit = api.post(URL, body(categories, payment_method="credit"), format="json")
+    qr = api.post(URL, body(categories, payment_method="qr", description="otro"), format="json")
 
-    assert before.status_code == 400
-    assert after.status_code == 201
-    assert Entry.objects.get(kind=Kind.INCOME).payment_method == "credit"
+    assert credit.status_code == 201 and qr.status_code == 201
+    methods = sorted(Entry.objects.filter(kind=Kind.INCOME).values_list("payment_method", flat=True))
+    assert methods == ["credit", "qr"]
+    descriptions = set(Entry.objects.filter(kind=Kind.INCOME).values_list("description", flat=True))
+    assert "Gasto con Mercado Pago: Proveedores (otro)" in descriptions
 
 
 def test_debit_to_transfer_keeps_the_sale_and_changes_its_method(as_role, categories):
@@ -310,32 +312,25 @@ def test_debit_to_transfer_keeps_the_sale_and_changes_its_method(as_role, catego
     assert sale.description.startswith("Gasto por transferencia")
 
 
-def test_taking_a_method_off_the_list_does_not_touch_old_sales(as_role, categories):
-    """The setting is for what comes next. Fixing the amount of an old cost keeps its sale."""
+def test_a_method_off_the_list_still_adds_a_sale_when_ticked(as_role, categories):
     owner = as_role(Role.OWNER)
-    owner.post(URL, body(categories, payment_method="transfer"), format="json")
-    cost = Entry.objects.get(kind=Kind.EXPENSE)
     owner.put(SETTINGS, {"sale_methods": ["debit"]}, format="json")
 
-    owner.put(f"{URL}{cost.id}/", correction(cost, amount="90000.00"), format="json")
+    response = owner.post(URL, body(categories, payment_method="transfer"), format="json")
 
-    sale = Entry.objects.get(kind=Kind.INCOME)
-    assert not sale.is_voided and sale.amount == Decimal("90000.00")
-    refused = owner.post(URL, body(categories, payment_method="transfer"), format="json")
-    assert refused.status_code == 400
+    assert response.status_code == 201
+    assert Entry.objects.get(kind=Kind.INCOME).payment_method == "transfer"
 
 
-def test_moving_to_a_method_off_the_list_voids_the_sale(as_role, categories):
+def test_moving_to_another_method_that_is_not_cash_keeps_the_sale(as_role, categories):
     api = as_role(Role.EDITOR)
     api.post(URL, body(categories), format="json")
     cost = Entry.objects.get(kind=Kind.EXPENSE)
 
     api.put(f"{URL}{cost.id}/", correction(cost, payment_method="qr"), format="json")
 
-    assert Entry.objects.get(kind=Kind.INCOME).is_voided
-
-
-# ---------- the settings themselves ----------
+    sale = Entry.objects.get(kind=Kind.INCOME)
+    assert not sale.is_voided and sale.payment_method == "qr"
 
 
 def test_a_shop_without_settings_uses_debit_and_transfer(as_role):
@@ -363,10 +358,10 @@ def test_saving_the_same_list_writes_no_audit(as_role):
     assert not AuditEntry.objects.filter(action="settings.change").exists()
 
 
-def test_an_empty_list_turns_the_sale_off(as_role, categories):
+def test_an_empty_list_only_unticks_everything(as_role, categories):
     owner = as_role(Role.OWNER)
     owner.put(SETTINGS, {"sale_methods": []}, format="json")
-    assert owner.post(URL, body(categories), format="json").status_code == 400
+    assert owner.post(URL, body(categories), format="json").status_code == 201
 
 
 @pytest.mark.parametrize("role", [Role.EDITOR, Role.VIEWER])

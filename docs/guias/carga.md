@@ -20,12 +20,14 @@ Al entrar estás en la solapa **Cargar**: el formulario arriba y, al lado (o aba
 
 1. **Fecha y turno.** Arriba del formulario dice qué día y qué turno se está cargando. Si hay que cambiarlo, tocá **Cambiar**. El turno noche que termina después de las 12 va con la fecha en que empezó. Si la fecha no es la de hoy, aparece el aviso **No es hoy**.
 2. **Tipo:** gasto o ingreso (las ventas son ingresos).
-3. **Categoría** y, si querés, una **descripción** ("verdura", "ventas del turno").
-4. **Monto.** Escribilo como siempre: `45.000` o `45.000,50`.
+3. **Categoría** y, si querés, una **descripción** ("verdura", "ventas del turno"). Al escribir la descripción aparecen las que ya se usaron: elegí una con las flechas y Enter, o tocándola. Así los nombres quedan iguales y después se filtran mejor.
+4. **Monto.** Escribí solo los números: los puntos de los miles se ponen solos (`45000` queda `45.000`). Para los centavos, la coma; en la compu también sirve el punto del teclado numérico, que escribe la coma.
 5. **Medio de pago.** Decide si la plata entra o sale de la caja: Efectivo la mueve; débito, tarjeta, Mercado Pago o transferencia no. Los renglones con D van con **Débito** (mirá abajo).
 6. **Guardar movimiento.** En la compu también se guarda con Enter.
 
 Después de guardar, la fecha, el turno, el tipo y el medio de pago quedan como estaban, así pasás el cuaderno renglón por renglón sin volver a elegirlos. El movimiento nuevo aparece marcado en la lista del día, con el total de ingresos y gastos de ese día para comparar con el papel.
+
+Arriba de esa lista está **Caja al cerrar la noche** (o la mañana): el efectivo que debería haber en la caja al terminar el turno que estás cargando. Se actualiza cada vez que guardás. Sirve para contar la plata al cerrar y ver si coincide. Si aparece en rojo, quedó en negativo: casi siempre es un gasto cargado como efectivo que no lo era, o una venta que falta.
 
 <br clear="right">
 
@@ -47,7 +49,7 @@ Los gastos pagados **por transferencia** funcionan igual: elegí Transferencia y
 
 Si después corregís o anulás el gasto, su venta se corrige o se anula con él. La venta sola no se puede tocar. Si corregís un gasto y lo pasás a Débito o Transferencia, la ventana te ofrece el mismo tilde para sumar su venta.
 
-Qué medios de pago suman venta lo decide el dueño del local. Si el tilde no aparece con un medio, es porque en tu local ese medio no suma venta.
+Con cualquier gasto que no sea en efectivo aparece el mismo tilde: con débito y transferencia viene marcado, y con crédito o Mercado Pago sin marcar. Si ese gasto también lo sumás a la venta en el cuaderno, tildalo. Con efectivo no aparece, porque ese gasto sale de la caja.
 
 <br clear="right">
 

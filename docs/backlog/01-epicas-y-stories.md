@@ -269,10 +269,12 @@ Como dueño, quiero ver cuánto efectivo hay en la caja al cerrar cada turno, co
 - Dado un haber que queda negativo, cuando miro la caja, entonces el turno aparece en rojo con un aviso para revisar la carga. No se bloquea, porque los gastos se pueden cargar antes que las ventas.
 - Dado el haber inicial, cuando lo carga el dueño, entonces queda con fecha, turno, importe y quién lo cargó. Cambiarlo pide motivo y queda en la auditoría. Carga y consulta no pueden.
 - Dado los filtros de la lista, cuando filtro, entonces la caja no cambia: es la caja entera del local.
+- Dado la pantalla Cargar, cuando elijo fecha y turno, entonces veo el efectivo que debería haber al cerrar ese turno, y se actualiza al guardar, corregir o anular. Si queda en negativo, aparece en rojo con el aviso (06/11/2026).
+- Dado Reportes, cuando entro, entonces arriba de todo veo una burbuja con la caja de hoy (todo hasta hoy, nada futuro), que no cambia con el período ni los filtros y queda fija al bajar. Un ojito la tapa y el dispositivo se acuerda (09/11/2026).
 - Dado el Excel, cuando exporto con haber inicial, entonces hay una hoja "Caja" con los cierres del período.
 - Dado un gasto con débito, cuando lo cargo con el tilde "Sumarlo también a la venta", entonces se crea una venta con débito por el mismo monto, en la misma operación. Corregir el gasto la actualiza, anularlo la anula, y la venta no se puede corregir ni anular sola (ADR-0010).
 - Dado un gasto que pasa de débito a efectivo y otra vez a débito, cuando lo corrijo, entonces se ofrece el tilde y la venta vuelve, como una venta nueva (ADR-0012).
-- Dado un gasto por transferencia, cuando lo cargo con el tilde, entonces se crea su venta por transferencia, igual que con débito. Los medios que suman venta los elige el dueño en "Ajustes del local" (de entrada, débito y transferencia), y el cambio queda en la auditoría (ADR-0013).
+- Dado un gasto por transferencia, cuando lo cargo con el tilde, entonces se crea su venta por transferencia, igual que con débito. Cualquier gasto que no sea en efectivo muestra el tilde; con los medios que elige el dueño en "Ajustes del local" viene marcado (de entrada, débito y transferencia), y el cambio queda en la auditoría (ADR-0013, ADR-0014).
 - Dado el cálculo, cuando corren los tests, entonces hay un caso que reproduce la cuenta del cuaderno en papel (venta del turno, más la venta de los D, menos los costos con los D incluidos) y da lo mismo.
 
 > Reemplaza a la venta espejo (ADR-0008). La venta de un gasto con débito no es un truco para la caja: es el renglón que el dueño escribe en su cuaderno (ADR-0010).
@@ -324,3 +326,17 @@ Como dueño, quiero el sistema publicado, con mis usuarios y categorías listos 
 - Dado los cuadernos de ejemplo revisados (P-01), cuando se configuran las categorías, entonces cada local tiene las suyas.
 - Dado el backup, cuando se pone en marcha, entonces ya se hizo uno y se restauró en un entorno aislado (HU-016).
 - Dado la capacitación, cuando termina, entonces cada rol tiene una guía de una página para celular y PC.
+
+### HU-030. Sugerir la descripción al cargar
+**Prioridad:** Should · **Etiquetas:** `backend`, `frontend`, `cuadernos` · **Diagramas:** FUN-01
+
+Como quien carga, quiero que al escribir la descripción aparezcan las que ya usé, para cargar más rápido y que los nombres queden parejos en los filtros y el Excel.
+
+- Dado un texto escrito en la descripción, cuando hay descripciones del mismo tipo (gasto o ingreso) en el local con alguna palabra que empieza así, entonces aparecen hasta 8, sin importar tildes ni mayúsculas ("carni" encuentra "Carnicería" y "Pago carnicería").
+- Dado la lista, cuando se ordena, entonces van primero las que empiezan con lo escrito, después las más usadas y después las más recientes. El mismo texto con otras mayúsculas o tildes cuenta una vez, con la forma más usada.
+- Dado una sugerencia, cuando la elijo con flechas y Enter o con el mouse, entonces se completa solo la descripción. El monto, la categoría y el medio de pago no cambian.
+- Dado la lista abierta sin nada marcado, cuando aprieto Enter, entonces se guarda lo escrito, como siempre. Esc cierra la lista sin cerrar la ventana de corrección.
+- Dado los movimientos anulados y las ventas que salen de un gasto, cuando se buscan sugerencias, entonces no aparecen.
+- Dado quien solo consulta, cuando pide sugerencias, entonces no puede: no carga.
+
+> Las decisiones (todo el tipo, solo la descripción, cualquier palabra) son del 06/11/2026. Con 65.700 movimientos responde en 0,025 s; si un local llegara a tener decenas de miles de textos distintos, la búsqueda pasa a la base con un índice.

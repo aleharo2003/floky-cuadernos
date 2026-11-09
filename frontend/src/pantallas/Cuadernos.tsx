@@ -3,6 +3,8 @@ import { useSearchParams } from 'react-router-dom';
 import { Tecla } from '../atajos/Atajos';
 import { EVENTO_AJUSTES } from '../componentes/AjustesDelLocal';
 import Badge from '../componentes/Badge';
+import BurbujaCaja from '../componentes/BurbujaCaja';
+import CajaDelTurno from '../componentes/CajaDelTurno';
 import Button from '../componentes/Button';
 import Card from '../componentes/Card';
 import DataTable, { type Columna } from '../componentes/DataTable';
@@ -55,7 +57,7 @@ const enBlanco = (): Borrador => ({
   sumarAVenta: true,
 });
 
-const deMovimiento = (m: Movimiento, mediosVenta: MedioPago[]): Borrador => ({
+const deMovimiento = (m: Movimiento): Borrador => ({
   fecha: m.fecha,
   tipo: m.tipo,
   categoriaId: m.categoriaId,
@@ -64,12 +66,13 @@ const deMovimiento = (m: Movimiento, mediosVenta: MedioPago[]): Borrador => ({
   medioPago: m.medioPago,
   turno: m.turno,
   motivo: '',
-  // Si al corregirlo pasa a un medio que suma venta, se propone sumarla (la ida y vuelta, ADR-0012).
-  // Si ya tenía uno de esos medios y se cargó sin venta, no se propone de entrada.
-  sumarAVenta: !(m.tipo === 'egreso' && mediosVenta.includes(m.medioPago)),
+  // Un gasto que se cargó sin venta no la propone de entrada. Si al corregirlo se cambia el medio,
+  // el tilde toma lo que diga el local para ese medio (la ida y vuelta, ADR-0012 y ADR-0014).
+  sumarAVenta: false,
 });
 
-const sumaVenta = (b: Borrador, mediosVenta: MedioPago[]) => b.sumarAVenta && b.tipo === 'egreso' && mediosVenta.includes(b.medioPago);
+/** Cualquier gasto que no sea en efectivo puede sumar su venta (ADR-0014). */
+const sumaVenta = (b: Borrador) => b.sumarAVenta && b.tipo === 'egreso' && b.medioPago !== 'cash';
 
 /** Lo que se le manda al servicio. Devuelve null si el monto no se entiende. */
 function datosDe(b: Borrador) {
@@ -326,7 +329,7 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
     setGuardando(true);
     let nuevo: Movimiento;
     try {
-      nuevo = await servicios.cuadernos.crear({ ...datos, sumarAVenta: sumaVenta(borrador, mediosVenta) }, clave.current);
+      nuevo = await servicios.cuadernos.crear({ ...datos, sumarAVenta: sumaVenta(borrador) }, clave.current);
     } catch (err) {
       setAviso((err as Error).message);
       return;
@@ -339,8 +342,9 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
     const yVenta = nuevo.ventaId ? `, y su venta ${MEDIO_EN_FRASE[datos.medioPago]}` : '';
     setAvisoOk(`Guardado: ${nombreTipo(datos.tipo).toLowerCase()} de ${categoria}, ${pesos(datos.monto)}${yVenta}.`);
     setUltimo(nuevo.id);
-    // Carga en serie: fecha, turno, tipo y medio de pago quedan para el próximo renglón.
-    setBorrador((b) => ({ ...b, categoriaId: '', descripcion: '', monto: '', motivo: '' }));
+    // Carga en serie: fecha, turno, tipo y medio de pago quedan para el próximo renglón. El tilde de
+    // la venta vuelve a lo que diga el local para ese medio.
+    setBorrador((b) => ({ ...b, categoriaId: '', descripcion: '', monto: '', motivo: '', sumarAVenta: mediosVenta.includes(b.medioPago) }));
     onGuardado();
     campoCategoria.current?.focus();
   };
@@ -369,6 +373,7 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
         nota={delDia && delDia.length > 0 ? `Ingresos ${pesos(ingresos)}, gastos ${pesos(gastos)}. Los anulados no se muestran.` : undefined}
         className="carga-dia"
       >
+        {dia && <CajaDelTurno dia={dia} turno={borrador.turno} vuelta={vuelta} />}
         {!delDia ? (
           <p className="cargando">Cargando…</p>
         ) : (
@@ -454,6 +459,8 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
   // más de un año), se corrige desde ahí sin recargar la página.
   const cabecera = (
     <>
+      {/* La caja de hoy, siempre a la vista y sin filtros: no depende de lo que se esté mirando. */}
+      <BurbujaCaja vuelta={vuelta} />
       {/* Solo en papel o PDF: qué local, qué período y con qué filtros (HU-027). */}
       <div className="solo-impresion encabezado-impreso">
         <h1>Cuadernos de {local}</h1>
@@ -604,7 +611,7 @@ function Correccion({
   onCerrar(): void;
   onGuardada(): void;
 }) {
-  const [borrador, setBorrador] = useState<Borrador>(() => deMovimiento(movimiento, mediosVenta));
+  const [borrador, setBorrador] = useState<Borrador>(() => deMovimiento(movimiento));
   const [aviso, setAviso] = useState('');
   const [guardando, setGuardando] = useState(false);
 
@@ -619,7 +626,7 @@ function Correccion({
     }
     setGuardando(true);
     try {
-      const sumarAVenta = !movimiento.ventaId && sumaVenta(borrador, mediosVenta);
+      const sumarAVenta = !movimiento.ventaId && sumaVenta(borrador);
       await servicios.cuadernos.corregir(movimiento.id, { ...datos, sumarAVenta }, borrador.motivo);
     } catch (err) {
       setAviso((err as Error).message);
@@ -634,7 +641,7 @@ function Correccion({
     <Modal titulo="Corregir movimiento" onCerrar={onCerrar}>
       {movimiento.ventaId && (
         <p className="nota modal-nota">
-          Tiene su venta {MEDIO_EN_FRASE[movimiento.medioPago]}: se corrige sola. Si pasa a efectivo o a otro medio que no suma venta, la venta se anula.
+          Tiene su venta {MEDIO_EN_FRASE[movimiento.medioPago]}: se corrige sola. Si pasa a efectivo, la venta se anula.
         </p>
       )}
       <FormMovimiento

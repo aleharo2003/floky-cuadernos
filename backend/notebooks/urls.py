@@ -4,6 +4,7 @@ from notebooks.views import (
     CashOpeningView,
     CashView,
     CategoryListView,
+    DescriptionSuggestionsView,
     EntryDetailView,
     EntryHistoryView,
     EntryListView,
@@ -28,4 +29,5 @@ urlpatterns = [
     path("cash/", CashView.as_view()),
     path("cash/opening/", CashOpeningView.as_view()),
     path("settings/", SettingsView.as_view()),
+    path("descriptions/", DescriptionSuggestionsView.as_view()),
 ]

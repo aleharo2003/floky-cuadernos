@@ -20,7 +20,6 @@ from notebooks.models import (
     Kind,
     PaymentMethod,
     ShopSettings,
-    sale_methods_of,
 )
 
 
@@ -88,14 +87,14 @@ def _sale_description(expense: Entry) -> str:
     return text[:120]
 
 
-def _adds_sale(membership: Membership, kind: str, method: str) -> bool:
-    """A cost paid with one of the shop's sale methods (ADR-0013)."""
-    return kind == Kind.EXPENSE and method in sale_methods_of(membership.tenant)
+def _can_add_sale(kind: str, method: str) -> bool:
+    """Any cost not paid in cash can add its sale (ADR-0014). Cash cannot: both would move the box."""
+    return kind == Kind.EXPENSE and method != PaymentMethod.CASH
 
 
-def _check_add_sale(membership: Membership, data: "EntryData") -> None:
-    if not _adds_sale(membership, data.kind, data.payment_method):
-        raise RuleError("Con ese medio de pago, en este local el gasto no se suma a la venta.")
+def _check_add_sale(data: "EntryData") -> None:
+    if not _can_add_sale(data.kind, data.payment_method):
+        raise RuleError("Solo un gasto que no sea en efectivo se puede sumar a la venta.")
 
 
 def _create_sale(membership: Membership, expense: Entry) -> Entry:
@@ -131,8 +130,8 @@ def create_entry(
 ) -> Entry:
     """Load an entry. The same idempotency key returns the first entry instead of a duplicate (HU-021).
 
-    add_sale: a cost paid with one of the shop's sale methods also adds a sale with that method for
-    the same amount, as on paper (ADR-0010, ADR-0013). Both are created in the same transaction.
+    add_sale: a cost not paid in cash also adds a sale with that method for the same amount, as on
+    paper (ADR-0010, ADR-0014). Both are created in the same transaction.
     """
     if idempotency_key:
         existing = Entry.objects.filter(tenant=membership.tenant, idempotency_key=idempotency_key).first()
@@ -140,7 +139,7 @@ def create_entry(
             return existing
     category = _category_for(membership, data)
     if add_sale:
-        _check_add_sale(membership, data)
+        _check_add_sale(data)
     try:
         with transaction.atomic():
             entry = Entry.objects.create(
@@ -222,18 +221,16 @@ def correct_entry(
     add_sale: a cost that has no standing sale gets one, as when it is loaded (ADR-0012).
     It covers the round trip: debit to cash voids the sale, and back to debit brings a new one.
 
-    The sale is voided only when the cost stops being a cost, or moves to a method that does not add
-    a sale in this shop. Fixing the amount of an old cost keeps its sale, even if the owner took that
-    method out of the list later (ADR-0013).
+    The sale is voided only when the cost stops being a cost or moves to cash (ADR-0014). Between
+    other methods (debit to transfer) the sale follows and changes its method.
     """
     reason = _reason(reason)
     category = _category_for(membership, data)
     if add_sale:
-        _check_add_sale(membership, data)
+        _check_add_sale(data)
     with transaction.atomic():
         entry = _locked(membership, entry_id)
         _not_a_linked_sale(entry)
-        old_method = entry.payment_method
         before = entry.snapshot()
         entry.category = category
         entry.kind = data.kind
@@ -257,11 +254,8 @@ def correct_entry(
                 after=entry.snapshot(),
                 reason=reason,
             )
-        keeps_sale = entry.kind == Kind.EXPENSE and (
-            entry.payment_method == old_method or _adds_sale(membership, entry.kind, entry.payment_method)
-        )
-        if sale and not keeps_sale:
-            # It no longer adds a sale (now it is cash, for example), so the sale has no reason to be there.
+        if sale and not _can_add_sale(entry.kind, entry.payment_method):
+            # Now it is cash (or not a cost): the sale has no reason to be there.
             _void(membership, sale, f"El gasto ya no suma venta. {reason}"[:200])
         elif sale:
             sale_before = sale.snapshot()
@@ -338,9 +332,9 @@ def create_category(membership: Membership, name: str, kind: str) -> tuple[Categ
 
 
 def set_sale_methods(membership: Membership, methods: list[str]) -> list[str]:
-    """The owner picks which payment methods add a sale in this shop (ADR-0013).
+    """The owner picks which payment methods come with the sale already ticked (ADR-0013, ADR-0014).
 
-    Only new loads and corrections follow it: sales already loaded stay as they are. Audited.
+    It only changes what the form proposes: any cost not in cash can still add its sale. Audited.
     """
     allowed = [value for value, _ in SALE_METHOD_CHOICES]
     if any(m not in allowed for m in methods):
