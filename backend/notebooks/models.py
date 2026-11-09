@@ -206,3 +206,13 @@ class ShopSettings(models.Model):
 def sale_methods_of(tenant: Tenant) -> list[str]:
     row = ShopSettings.objects.filter(tenant=tenant).only("sale_methods").first()
     return list(row.sale_methods) if row else default_sale_methods()
+
+
+class ShopNotebooks(Tenant):
+    """The notebooks of one shop, as the admin sees them: how many entries, and the action to empty
+    them. A proxy: no table of its own, it reads the shops."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "cuadernos de un local"
+        verbose_name_plural = "cuadernos por local"

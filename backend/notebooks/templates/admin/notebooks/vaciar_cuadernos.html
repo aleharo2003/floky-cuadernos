@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Vaciar los cuadernos de {{ shop.name }}{% endblock %}
+{% block content %}
+<h1>Vaciar los cuadernos de {{ shop.name }}</h1>
+
+<p><strong>Esto no se puede deshacer.</strong> Se borran para siempre:</p>
+<ul>
+  <li>{{ counts.entries }} movimientos (ingresos y gastos){% if counts.voided %}, y {{ counts.voided }} anulados{% endif %}.</li>
+  <li>{% if has_opening %}El haber inicial de la caja.{% else %}No tiene haber inicial cargado.{% endif %}</li>
+</ul>
+<p>Quedan como están: las categorías, las personas y sus permisos, y los ajustes del local.
+Queda anotado en la auditoría quién lo vació, cuándo, por qué y cuánto había.</p>
+<p>Si hay algo que guardar, bajá antes el Excel desde Reportes.</p>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <p>
+    {{ form.confirm_name.errors }}
+    <label for="{{ form.confirm_name.id_for_label }}">Para confirmar, escribí el nombre del local tal cual: <strong>{{ shop.name }}</strong></label><br>
+    {{ form.confirm_name }}
+  </p>
+  <p>
+    {{ form.reason.errors }}
+    <label for="{{ form.reason.id_for_label }}">Motivo (queda en la auditoría)</label><br>
+    {{ form.reason }}
+  </p>
+  <input type="hidden" name="action" value="empty_notebooks">
+  <input type="hidden" name="_selected_action" value="{{ shop.pk }}">
+  <input type="hidden" name="confirmar" value="1">
+  <input type="submit" class="default" style="background: #ba2121" value="Vaciar los cuadernos">
+  <a href="{{ volver }}" class="button cancel-link">Cancelar</a>
+</form>
+{% endblock %}
