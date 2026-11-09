@@ -72,8 +72,6 @@ const tarjeta = (p, titulo) => p.locator(`.tarjeta:has(h2:text-is("${titulo}"))`
   await ingresar(p, 'lucia', 'Local Centro');
   await reportes(p);
   const caja = p.locator('.tarjeta:has(h2:text("Caja en efectivo"))');
-  await caja.locator('input[type=date]').fill('2026-10-31');
-  await caja.locator('.segmentado button:text-is("Noche")').click();
   await caja.locator('input[inputmode=decimal]').fill('850.000');
   await foto(caja, 'haber-inicial');
 

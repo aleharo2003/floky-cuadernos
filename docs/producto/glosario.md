@@ -13,7 +13,7 @@ Si una palabra significa una cosa en una reunión y otra en el código, tarde o 
 | Ingreso | Movimiento que suma. Incluye las ventas que se anotan a mano | `kind = income` |
 | Gasto | Movimiento que resta | `kind = expense` |
 | Haber | El efectivo que hay en la caja al cerrar un turno: haber anterior más ventas en efectivo, menos gastos en efectivo. No se guarda: se calcula (ADR-0008) | `notebooks.cash` |
-| Haber inicial | El último haber anotado en papel, con su fecha y turno. La caja del sistema arranca de ahí. Lo carga el dueño | `CashOpening` |
+| Haber inicial | La plata en efectivo con la que arranca la caja del sistema. Un solo monto, sin fecha ni turno: cada movimiento en efectivo que se carga, de la fecha que sea, lo suma o lo resta (ADR-0016). Lo carga el dueño | `CashOpening` |
 | Cobrado sin efectivo | Ventas cobradas con débito, tarjeta, Mercado Pago o transferencia. Son venta, pero esa plata no está en la caja. En Comedor TJ son las ventas de los gastos con D (ADR-0010) | `sales_not_cash` |
 | D (débito) | Marca al final de algunos gastos del cuaderno de Costos: se pagaron con tarjeta de débito. El dueño anota cada uno dos veces: el gasto y una venta por el mismo monto, en un renglón aparte. En el sistema se carga el gasto con Débito y el tilde "Sumarlo también a la venta" crea la venta (ADR-0010). Los gastos por transferencia funcionan igual (ADR-0013) | `from_expense` |
 | Cuentas personales | Los cuadernos son las cuentas del dueño, no la contabilidad del local. Las ventas del local están en iCOM y no se cruzan con los cuadernos (ADR-0009, ADR-0010) | |

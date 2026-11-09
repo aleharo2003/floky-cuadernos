@@ -1,7 +1,7 @@
 import { accion, cargarMovimiento, CELULAR, expect, ingresar, irACargar, irAReportes, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
 import type { Page } from '@playwright/test';
 
-// Caja en efectivo por turno (ADR-0008). El seed arranca con haber inicial de $ 500.000 la noche del 8/3.
+// Caja en efectivo por turno (ADR-0008, ADR-0016). El seed arranca con haber inicial de $ 500.000.
 test.beforeEach(reiniciarDatos);
 
 const caja = (p: Page) => p.locator('.tarjeta', { has: p.getByRole('heading', { name: /Caja en efectivo/ }) });
@@ -65,8 +65,7 @@ test('sin haber inicial, consulta lo ve dicho; la dueña lo carga y lo cambia co
   await ingresar(page, 'lucia', { local: 'Local Centro' });
   await irAReportes(page);
   const c = caja(page);
-  await c.locator('input[type=date]').fill('2026-03-01');
-  await c.getByRole('button', { name: 'Noche' }).click();
+  await expect(c.locator('input[type=date]'), 'solo el monto: sin fecha ni turno').toHaveCount(0);
   await c.locator('input[inputmode=decimal]').fill('1.234.567,89');
   await c.getByRole('button', { name: /Guardar haber inicial/ }).click();
   await expect(c).toContainText('Arranca con $ 1.234.567,89');

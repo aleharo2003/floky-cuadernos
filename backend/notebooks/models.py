@@ -126,16 +126,19 @@ class Entry(models.Model):
 
 
 class CashOpening(models.Model):
-    """The cash on hand when the shop starts using the system: the last haber written on paper (P-01).
-
-    Only entries after that shift count for the cash box. One per shop; changing it is audited.
+    """The cash on hand when the shop starts using the system (P-01). One amount per shop: every
+    cash entry loaded, of any date, adds to it or takes from it (ADR-0016). Changing it is audited.
     """
 
     tenant = models.OneToOneField(
         Tenant, on_delete=models.PROTECT, primary_key=True, related_name="cash_opening", verbose_name="local"
     )
-    date = models.DateField("fecha")
-    shift = models.CharField("turno", max_length=10, choices=Shift.choices)
+    # No longer used (ADR-0016): the opening has no date or shift. Kept nullable for one version so
+    # going back to the previous one still works; a later migration drops them.
+    date = models.DateField("fecha (ya no se usa)", null=True, blank=True)
+    shift = models.CharField(  # noqa: DJ001 - null means "no shift" until the column is dropped
+        "turno (ya no se usa)", max_length=10, choices=Shift.choices, null=True, blank=True
+    )
     amount = models.DecimalField("haber", max_digits=14, decimal_places=2)
     updated_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+", verbose_name="cargado por"
@@ -152,10 +155,10 @@ class CashOpening(models.Model):
         ]
 
     def __str__(self) -> str:
-        return f"{self.tenant} {self.date} {self.get_shift_display()} {self.amount}"
+        return f"{self.tenant} {self.amount}"
 
     def snapshot(self) -> dict:
-        return {"date": self.date.isoformat(), "shift": self.shift, "amount": str(self.amount)}
+        return {"amount": str(self.amount)}
 
 
 # The methods a cost can add its sale with. Cash cannot: a cash cost and a cash sale would both move the box.

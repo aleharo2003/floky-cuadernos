@@ -378,11 +378,7 @@ def empty_notebooks(tenant: Tenant, actor, reason: str) -> dict:
         opening = CashOpening.objects.filter(tenant=tenant).first()
         before = dict(counts)
         if opening:
-            before["cash_opening"] = {
-                "date": opening.date.isoformat(),
-                "shift": opening.shift,
-                "amount": str(opening.amount),
-            }
+            before["cash_opening"] = opening.snapshot()
         # The sales first: they point to their cost, and that link does not let the cost go first.
         entries.exclude(from_expense=None).delete()
         entries.delete()

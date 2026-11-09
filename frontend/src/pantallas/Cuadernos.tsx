@@ -21,7 +21,7 @@ import { useSesion } from '../estado/Sesion';
 import { rangoDelMes, rangoEsteMes, rangoValido } from '../lib/fechas';
 import { MONTO_ILEGIBLE, diaConNombre, diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros, problemaDeMonto } from '../lib/formato';
 import { recordarTurno, turnoSugerido } from '../lib/turno';
-import { useConsulta } from '../lib/useConsulta';
+import { REFRESCO_MS, useConsulta } from '../lib/useConsulta';
 import { useDemorado } from '../lib/useDemorado';
 import { servicios } from '../services';
 import {
@@ -307,6 +307,8 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
         ? servicios.cuadernos.movimientos({ desde: dia, hasta: dia }, SIN_FILTROS, 1000).then((p) => p.movimientos)
         : Promise.resolve([]),
     [dia, vuelta],
+    // Igual que la caja de arriba: si otra persona carga en el mismo día, aparece solo.
+    { cadaMs: REFRESCO_MS },
   );
   const ingresos = (delDia ?? []).filter((m) => m.tipo === 'ingreso').reduce((t, m) => t + m.monto, 0);
   const gastos = (delDia ?? []).filter((m) => m.tipo === 'egreso').reduce((t, m) => t + m.monto, 0);

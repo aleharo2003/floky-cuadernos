@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Caja, CierreCaja } from '../types';
 import { cajaDelTurno } from './caja';
 
-const inicial = { fecha: '2026-11-01', turno: 'night' as const, monto: 500000, cargadoPor: 'Lucía', cargadoEl: '2026-11-01T22:00:00' };
+const inicial = { monto: 500000, cargadoPor: 'Lucía', cargadoEl: '2026-11-01T22:00:00' };
 
 const cierre = (fecha: string, turno: 'morning' | 'night', antes: number, despues: number): CierreCaja => ({
   fecha,
@@ -21,10 +21,6 @@ const caja = (cierres: CierreCaja[], haberAlFinal: number | null): Caja => ({ in
 describe('cajaDelTurno', () => {
   it('sin haber inicial no hay caja', () => {
     expect(cajaDelTurno({ inicial: null, cierres: [], haberAlFinal: null }, '2026-11-05', 'night')).toEqual({ estado: 'sinInicial' });
-  });
-
-  it('antes del haber inicial tampoco', () => {
-    expect(cajaDelTurno(caja([], null), '2026-10-20', 'night')).toEqual({ estado: 'antesDelInicial' });
   });
 
   it('con movimientos en el turno, es su cierre', () => {

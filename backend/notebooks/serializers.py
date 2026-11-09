@@ -107,8 +107,6 @@ class CashOpeningSerializer(serializers.ModelSerializer):
 
 
 class CashOpeningInputSerializer(serializers.Serializer):
-    date = serializers.DateField()
-    shift = serializers.ChoiceField(choices=Shift.choices)
     amount = serializers.DecimalField(
         max_digits=14, decimal_places=2, min_value=Decimal("0"), error_messages=AMOUNT_ERRORS
     )

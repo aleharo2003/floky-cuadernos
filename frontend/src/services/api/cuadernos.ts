@@ -82,7 +82,7 @@ const cuerpo = (m: MovimientoNuevo) => ({
 });
 
 interface CashApi {
-  opening: { date: string; shift: Turno; amount: string; updated_by: string; updated_at: string } | null;
+  opening: { amount: string; updated_by: string; updated_at: string } | null;
   haber_at_end: string | null;
   closes: {
     date: string;
@@ -99,8 +99,6 @@ interface CashApi {
 
 const aCaja = (c: CashApi): Caja => ({
   inicial: c.opening && {
-    fecha: c.opening.date,
-    turno: c.opening.shift,
     monto: Number(c.opening.amount),
     cargadoPor: c.opening.updated_by,
     cargadoEl: c.opening.updated_at,
@@ -177,8 +175,8 @@ export const cuadernosApi: CuadernosService = {
     return aCaja(await pedir<CashApi>('GET', `/notebooks/cash/?from=${rango.desde}&to=${rango.hasta}`));
   },
 
-  async cargarHaberInicial(fecha, turno, monto, motivo) {
-    await pedir('PUT', '/notebooks/cash/opening/', { date: fecha, shift: turno, amount: monto.toFixed(2), reason: motivo });
+  async cargarHaberInicial(monto, motivo) {
+    await pedir('PUT', '/notebooks/cash/opening/', { amount: monto.toFixed(2), reason: motivo });
   },
 
   async descripciones(tipo, texto) {

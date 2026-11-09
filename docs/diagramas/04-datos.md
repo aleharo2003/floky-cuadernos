@@ -53,9 +53,9 @@ erDiagram
     }
     CASH_OPENING {
         uuid tenant_id PK "uno por local"
-        date date
-        string shift
-        numeric amount "último haber en papel"
+        date date "ya no se usa, ADR-0016"
+        string shift "ya no se usa, ADR-0016"
+        numeric amount "plata con la que arranca la caja"
         uuid updated_by FK
     }
     NOTEBOOK_CATEGORY {
@@ -82,4 +82,4 @@ erDiagram
 
 **Archivos DAT-01:** [SVG](svg/DAT-01.svg) · [PNG](png/DAT-01.png) · [Mermaid](fuentes/DAT-01.mmd).
 
-**Lectura:** `MEMBERSHIP` es la única puerta a un local. Todas las tablas de negocio tienen `tenant_id` y Row Level Security (ADR-0003). El haber (efectivo en la caja) no se guarda: se calcula desde `CASH_OPENING`, el último haber anotado en papel, sumando las ventas en efectivo y restando los gastos en efectivo, turno por turno (ADR-0008). Por eso no hay filas espejo. `AUDIT_ENTRY` es de solo agregar: la app no tiene permiso para modificarla ni borrarla, y de ahí sale el historial que ve la persona. `idempotency_key` evita que un doble toque cree dos movimientos.
+**Lectura:** `MEMBERSHIP` es la única puerta a un local. Todas las tablas de negocio tienen `tenant_id` y Row Level Security (ADR-0003). El haber (efectivo en la caja) no se guarda: se calcula desde `CASH_OPENING`, la plata con la que arranca la caja (un solo monto, ADR-0016), sumando las ventas en efectivo y restando los gastos en efectivo, turno por turno (ADR-0008). Por eso no hay filas espejo. `AUDIT_ENTRY` es de solo agregar: la app no tiene permiso para modificarla ni borrarla, y de ahí sale el historial que ve la persona. `idempotency_key` evita que un doble toque cree dos movimientos.

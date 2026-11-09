@@ -39,7 +39,7 @@ def loaded(as_role, categories, norte, centro):
     owner.post(f"{ENTRIES}{voided}/void/", {"reason": "cargado dos veces"}, format="json")
     owner.put(
         "/api/notebooks/cash/opening/",
-        {"date": "2026-10-01", "shift": "night", "amount": "500000"},
+        {"amount": "500000"},
         format="json",
     )
     owner.put("/api/notebooks/settings/", {"sale_methods": ["debit"]}, format="json")
@@ -78,7 +78,7 @@ def test_it_deletes_entries_and_opening_and_keeps_the_rest(loaded, norte, centro
     assert row.before == {
         "entries": 2,
         "voided": 1,
-        "cash_opening": {"date": "2026-10-01", "shift": "night", "amount": "500000.00"},
+        "cash_opening": {"amount": "500000.00"},
     }
 
 

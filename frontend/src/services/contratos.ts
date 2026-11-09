@@ -12,7 +12,6 @@ import type {
   ResumenCuadernos,
   Sesion,
   TipoMovimiento,
-  Turno,
 } from '../types';
 
 /** Ingreso, salida y local activo. Cada método devuelve la sesión como quedó. */
@@ -40,7 +39,7 @@ export interface CuadernosService {
   /** La caja por turno en el período. No sigue los filtros: es la caja entera. */
   caja(rango: RangoFechas): Promise<Caja>;
   /** Solo el dueño. Cambiarlo pide motivo, porque mueve todos los haberes siguientes. */
-  cargarHaberInicial(fecha: string, turno: Turno, monto: number, motivo: string): Promise<void>;
+  cargarHaberInicial(monto: number, motivo: string): Promise<void>;
   /** Descripciones ya usadas en el local para ese tipo, para sugerirlas al cargar (HU-030). */
   descripciones(tipo: TipoMovimiento, texto: string): Promise<string[]>;
   /** Lo ve todo el que entra al local: la carga lo necesita para saber cuándo proponer la venta. */

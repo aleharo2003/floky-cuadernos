@@ -2,19 +2,13 @@ import { useState } from 'react';
 import { Tecla } from '../atajos/Atajos';
 import { diaLegible, fechaHora, leerMonto, pesos, problemaDeMonto } from '../lib/formato';
 import { servicios } from '../services';
-import { NOMBRE_TURNO, type Caja, type CierreCaja, type HaberInicial, type Turno } from '../types';
+import { NOMBRE_TURNO, type Caja, type CierreCaja, type HaberInicial } from '../types';
 import Badge from './Badge';
 import Button from './Button';
 import { CampoMonto } from './Campos';
 import Card from './Card';
 import DataTable from './DataTable';
 import Modal from './Modal';
-import SegmentedControl from './SegmentedControl';
-
-const TURNOS: { valor: Turno; etiqueta: string }[] = [
-  { valor: 'morning', etiqueta: 'Mañana' },
-  { valor: 'night', etiqueta: 'Noche' },
-];
 
 interface Props {
   /** La pide la pantalla, porque también la usa el indicador de caja. */
@@ -51,7 +45,8 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
         {puedeCargarInicial ? (
           <>
             <p className="nota nota-inicial">
-              Para calcular la caja hace falta el punto de partida: el último haber anotado en el cuaderno, con su fecha y su turno.
+              Para calcular la caja hace falta el punto de partida: cuánta plata en efectivo hay en la caja. Desde ahí, cada movimiento en efectivo
+              que se cargue la suma o la resta.
             </p>
             <FormularioInicial onGuardado={guardado} />
           </>
@@ -128,14 +123,10 @@ export default function TarjetaCaja({ caja, error, puedeCargarInicial, onCambio 
 }
 
 const textoInicial = (i: HaberInicial) =>
-  `Arranca con ${pesos(i.monto)} al cierre del turno ${NOMBRE_TURNO[i.turno].toLowerCase()} del ${diaLegible(i.fecha)}. Lo cargó ${
-    i.cargadoPor
-  } el ${fechaHora(i.cargadoEl)}.`;
+  `Arranca con ${pesos(i.monto)}; cada movimiento en efectivo la suma o la resta. Lo cargó ${i.cargadoPor} el ${fechaHora(i.cargadoEl)}.`;
 
-/** Fecha, turno y monto del haber inicial. El motivo se pide solo al cambiarlo. */
+/** El monto del haber inicial: uno solo, sin fecha ni turno (ADR-0016). El motivo se pide solo al cambiarlo. */
 function useFormularioInicial(inicial?: HaberInicial) {
-  const [fecha, setFecha] = useState(inicial?.fecha ?? '');
-  const [turno, setTurno] = useState<Turno>(inicial?.turno ?? 'night');
   const [monto, setMonto] = useState(inicial ? inicial.monto.toLocaleString('es-AR', { minimumFractionDigits: 2 }) : '');
   const [motivo, setMotivo] = useState('');
   const [aviso, setAviso] = useState('');
@@ -143,13 +134,12 @@ function useFormularioInicial(inicial?: HaberInicial) {
 
   const guardar = async (onGuardado: () => void) => {
     if (guardando) return;
-    if (!fecha) return setAviso('Elegí la fecha del último haber anotado.');
     const problema = problemaDeMonto(monto, { permitirCero: true });
     if (problema) return setAviso(problema);
     const importe = leerMonto(monto);
     setGuardando(true);
     try {
-      await servicios.cuadernos.cargarHaberInicial(fecha, turno, importe, motivo);
+      await servicios.cuadernos.cargarHaberInicial(importe, motivo);
     } catch (err) {
       setAviso((err as Error).message);
       return;
@@ -161,15 +151,7 @@ function useFormularioInicial(inicial?: HaberInicial) {
 
   const campos = (
     <>
-      <label className="campo">
-        <span>Fecha del último haber anotado</span>
-        <input className="campo-texto" type="date" required value={fecha} onChange={(e) => setFecha(e.target.value)} />
-      </label>
-      <div className="campo">
-        <span>Turno</span>
-        <SegmentedControl etiqueta="Turno" opciones={TURNOS} valor={turno} onChange={setTurno} bloque />
-      </div>
-      <CampoMonto rotulo="Haber (efectivo en la caja)" valor={monto} onChange={setMonto} />
+      <CampoMonto rotulo="Haber inicial (efectivo en la caja)" valor={monto} onChange={setMonto} />
     </>
   );
 

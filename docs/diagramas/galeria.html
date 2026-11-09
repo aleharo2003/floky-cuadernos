@@ -229,9 +229,9 @@
     }
     CASH_OPENING {
         uuid tenant_id PK &quot;uno por local&quot;
-        date date
-        string shift
-        numeric amount &quot;último haber en papel&quot;
+        date date &quot;ya no se usa, ADR-0016&quot;
+        string shift &quot;ya no se usa, ADR-0016&quot;
+        numeric amount &quot;plata con la que arranca la caja&quot;
         uuid updated_by FK
     }
     NOTEBOOK_CATEGORY {

@@ -68,7 +68,7 @@ def test_a_debit_cost_with_add_sale_creates_both_in_one_go(as_role, categories):
 def test_the_pair_does_not_move_the_haber_and_matches_the_paper(as_role, categories, norte):
     api = as_role(Role.OWNER)
     owner = Membership.objects.get(user__username="u-owner")
-    start = cash.set_opening(owner, day=date(2026, 10, 9), shift="night", amount=Decimal("500000"), reason="")
+    start = cash.set_opening(owner, amount=Decimal("500000"), reason="")
     api.post(
         URL,
         body(

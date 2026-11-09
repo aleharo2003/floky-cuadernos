@@ -46,9 +46,7 @@ class Command(BaseCommand):
             for kind, names in ((Kind.INCOME, INCOME), (Kind.EXPENSE, EXPENSES))
         }
         start = today - timedelta(days=days - 1)
-        set_opening(
-            membership, day=start - timedelta(days=1), shift=Shift.NIGHT, amount=Decimal("500000"), reason=""
-        )
+        set_opening(membership, amount=Decimal("500000"), reason="")
 
         rng = random.Random(2026)  # noqa: S311 - made up data, the same every time; not security
         methods = [PaymentMethod.CASH] * 6 + [PaymentMethod.DEBIT, PaymentMethod.QR, PaymentMethod.TRANSFER]

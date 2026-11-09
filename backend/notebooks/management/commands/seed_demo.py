@@ -67,14 +67,8 @@ class Command(BaseCommand):
         def day_for(days_ago: int) -> date:
             return max(today - timedelta(days=days_ago), first_of_month)
 
-        # The last haber written on paper, the night before the first sample (P-01).
-        set_opening(
-            lucia_norte,
-            day=day_for(2) - timedelta(days=1),
-            shift=Shift.NIGHT,
-            amount=Decimal("500000"),
-            reason="",
-        )
+        # The cash the shop starts with (P-01, ADR-0016).
+        set_opening(lucia_norte, amount=Decimal("500000"), reason="")
         for days_ago, shift, kind, category, description, amount, method in samples:
             create_entry(
                 lucia_norte,

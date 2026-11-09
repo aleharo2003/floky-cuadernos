@@ -15,7 +15,7 @@ def test_seed_can_pin_today_so_browser_tests_do_not_depend_on_the_calendar():
     call_command("seed_demo", today=date(2026, 3, 11), stdout=StringIO())
     days = sorted({e.date for e in Entry.objects.all()})
     assert days == [date(2026, 3, 9), date(2026, 3, 10), date(2026, 3, 11)]
-    assert CashOpening.objects.get().date == date(2026, 3, 8)
+    assert CashOpening.objects.get().amount == 500000
 
 
 def test_seed_keeps_every_sample_inside_the_month_on_the_first_day():
