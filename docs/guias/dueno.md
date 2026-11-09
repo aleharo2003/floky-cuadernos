@@ -16,15 +16,15 @@ Cada local tiene sus movimientos, sus categorías y su caja. Lo de un local nunc
 
 ## Antes de empezar: el haber inicial
 
-La caja del sistema arranca del **último haber que anotaste en el cuaderno**. Se carga una sola vez por local, en la solapa **Reportes**: la fecha, el turno (mañana o noche) y el monto.
+La caja del sistema arranca del **efectivo que hay en la caja cuando empezás a usarlo**. Se carga una sola vez por local, en la solapa **Reportes**: solo el monto.
 
 <img src="img/haber-inicial.png" width="460" alt="Cargar el haber inicial">
 
-Desde ese turno en adelante, la caja se calcula sola con lo que se carga. Si después ves que lo copiaste mal, usá **Cambiar haber inicial**: te pide el motivo, porque cambia el haber de todos los turnos siguientes, y queda anotado quién lo cambió.
+Desde ahí, cada movimiento en efectivo que se carga la suma o la resta, sea de la fecha que sea. Si después ves que lo copiaste mal, usá **Cambiar haber inicial**: te pide el motivo, porque cambia el haber de todos los turnos siguientes, y queda anotado quién lo cambió.
 
 ## Cómo se lee la caja
 
-En Reportes, arriba de todo, la burbuja **Caja hoy** muestra el efectivo que hay ahora, sin importar qué período o filtro estés mirando. Con el ojito la tapás. En Cargar se ve la caja del turno que estás cargando.
+En Reportes, arriba de todo, la burbuja **Caja hoy** muestra el efectivo que hay ahora, sin importar qué período o filtro estés mirando. Con el ojito la tapás. Se actualiza sola cada 15 segundos, así ves también lo que cargan otros desde otra compu o celular. En Cargar se ve la caja del turno que estás cargando.
 
 Es la misma cuenta que hacés en el cuaderno, turno por turno:
 

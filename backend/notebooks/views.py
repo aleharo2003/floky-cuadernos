@@ -311,8 +311,6 @@ def opening_payload(opening: CashOpening | None) -> dict | None:
     if opening is None:
         return None
     return {
-        "date": opening.date,
-        "shift": opening.shift,
         "amount": money(opening.amount),
         "updated_by": opening.updated_by.get_full_name() or opening.updated_by.get_username(),
         "updated_at": opening.updated_at,
@@ -339,8 +337,6 @@ class CashView(TenantView):
         rows = cash.closes(request.membership.tenant, opening, until=end)
         # The haber when the period ends: the last close up to the end, or the opening if none yet.
         haber_at_end = rows[-1].after if rows else opening.amount
-        if opening.date > end:
-            haber_at_end = None
         return Response(
             {
                 "opening": opening_payload(opening),
@@ -374,9 +370,7 @@ class CashOpeningView(TenantView):
         data.is_valid(raise_exception=True)
         v = data.validated_data
         try:
-            opening = cash.set_opening(
-                request.membership, day=v["date"], shift=v["shift"], amount=v["amount"], reason=v["reason"]
-            )
+            opening = cash.set_opening(request.membership, amount=v["amount"], reason=v["reason"])
         except services.RuleError as exc:
             raise rule_error(exc) from exc
         return Response(opening_payload(opening))

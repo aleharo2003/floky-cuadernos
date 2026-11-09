@@ -48,15 +48,14 @@ def _key(day: date, shift: str) -> tuple[date, int]:
 
 
 def closes(tenant: Tenant, opening: CashOpening, until: date) -> list[Close]:
-    """Every shift with entries after the opening, up to `until`, with the haber carried forward."""
-    after_opening = Q(date__gt=opening.date)
-    if SHIFT_ORDER[opening.shift] == SHIFT_ORDER["morning"]:
-        after_opening |= Q(date=opening.date, shift="night")
+    """Every shift with entries up to `until`, with the haber carried forward from the opening.
+
+    Every entry counts, whatever its date (ADR-0017): the opening is one amount, not a moment.
+    """
     cash = Q(payment_method=PaymentMethod.CASH)
     income, expense = Q(kind=Kind.INCOME), Q(kind=Kind.EXPENSE)
     rows = (
         Entry.objects.filter(tenant=tenant, is_voided=False, date__lte=until)
-        .filter(after_opening)
         .values("date", "shift")
         .annotate(
             sales=Sum("amount", filter=income, default=ZERO),
@@ -85,9 +84,7 @@ def closes(tenant: Tenant, opening: CashOpening, until: date) -> list[Close]:
     return result
 
 
-def set_opening(
-    membership: Membership, *, day: date, shift: str, amount: Decimal, reason: str
-) -> CashOpening:
+def set_opening(membership: Membership, *, amount: Decimal, reason: str) -> CashOpening:
     """Load or change the opening haber. Changing it moves every haber after it, so it needs a reason."""
     if amount < 0:
         raise RuleError("El haber inicial no puede ser negativo.")
@@ -99,7 +96,7 @@ def set_opening(
             raise RuleError("Escribí por qué cambiás el haber inicial.")
         opening, _ = CashOpening.objects.update_or_create(
             tenant=membership.tenant,
-            defaults={"date": day, "shift": shift, "amount": amount, "updated_by": membership.user},
+            defaults={"date": None, "shift": None, "amount": amount, "updated_by": membership.user},
         )
         if before == opening.snapshot():
             raise RuleError("No cambiaste nada.")

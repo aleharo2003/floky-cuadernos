@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { fechaIso, pesos } from '../lib/formato';
-import { useConsulta } from '../lib/useConsulta';
+import { REFRESCO_MS, useConsulta } from '../lib/useConsulta';
 import { servicios } from '../services';
 
 const CLAVE_OCULTA = 'cuadernos:caja-oculta';
@@ -30,7 +30,8 @@ function guardarOculta(oculta: boolean) {
  */
 export default function BurbujaCaja({ vuelta }: { vuelta: number }) {
   const hoy = fechaIso(new Date());
-  const { datos: caja, error } = useConsulta(() => servicios.cuadernos.caja({ desde: hoy, hasta: hoy }), [hoy, vuelta]);
+  // Cada 15 segundos: así se ve lo que cargan otras personas, sin recargar la página (ADR-0017).
+  const { datos: caja, error } = useConsulta(() => servicios.cuadernos.caja({ desde: hoy, hasta: hoy }), [hoy, vuelta], { cadaMs: REFRESCO_MS });
   const [oculta, setOculta] = useState(ocultaGuardada);
 
   const alternar = () => {
@@ -43,8 +44,7 @@ export default function BurbujaCaja({ vuelta }: { vuelta: number }) {
   let valor: string;
   if (error) valor = 'No se pudo calcular';
   else if (!caja) valor = '…';
-  else if (!caja.inicial) valor = 'Falta el haber inicial';
-  else if (haber === null) valor = 'Todavía no empezó';
+  else if (!caja.inicial || haber === null) valor = 'Falta el haber inicial';
   else valor = pesos(haber);
   const conNumero = haber !== null && !error;
 

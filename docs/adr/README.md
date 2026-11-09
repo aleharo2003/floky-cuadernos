@@ -19,7 +19,7 @@ Un ADR registra una decisión importante: el contexto, las opciones que se mirar
 | [0005](0005-analisis-estatico-seguridad.md) | Análisis estático de seguridad (SAST) en CI | Aceptada | ADR-0009 |
 | [0006](0006-react-servido-por-django.md) | El portal React lo sirve Django, con sesión por cookie | Propuesta | Nueva |
 | [0007](0007-deploy-r1a.md) | Cómo se publica R1a: San Pablo, un solo entorno, tag con aprobación | Propuesta | Nueva |
-| [0008](0008-haber-calculado-sin-espejo.md) | El haber se calcula desde el medio de pago, sin ventas espejo | Propuesta | Nueva |
+| [0008](0008-haber-calculado-sin-espejo.md) | El haber se calcula desde el medio de pago, sin ventas espejo | Propuesta (el punto de partida cambiado por ADR-0017) | Nueva |
 | [0009](0009-cuadernos-como-en-el-papel.md) | Los cuadernos son las cuentas personales del dueño y se cargan como están en el papel | Reemplazada por ADR-0010 en cómo se cargan los D | Nueva |
 | [0010](0010-gasto-con-debito-suma-su-venta.md) | Un gasto con débito suma también su venta con débito, y el sistema la crea | Aceptada (un punto cambiado por ADR-0012, ampliada por ADR-0013) | Nueva |
 | [0011](0011-limite-de-ingresos-fallidos.md) | Límite de ingresos fallidos: en la base, por usuario y por IP confiable | Aceptada | Nueva |
@@ -27,6 +27,7 @@ Un ADR registra una decisión importante: el contexto, las opciones que se mirar
 | [0013](0013-medios-que-suman-venta.md) | Los gastos por transferencia también suman su venta, y el dueño elige los medios | Aceptada (un punto cambiado por ADR-0014) | Nueva |
 | [0014](0014-tilde-de-venta-en-todo-gasto-sin-efectivo.md) | Todo gasto que no sea en efectivo puede sumar su venta; los ajustes eligen cuáles vienen marcados | Aceptada | Nueva |
 | [0015](0015-vaciar-los-cuadernos-de-un-local.md) | Vaciar los cuadernos de un local desde el admin | Aceptada | Nueva |
+| [0017](0017-haber-inicial-sin-fecha-y-caja-en-vivo.md) | El haber inicial es un solo monto, sin fecha ni turno, y la caja se refresca sola | Aceptada | Nueva |
 
 
 ## Cómo escribir uno nuevo

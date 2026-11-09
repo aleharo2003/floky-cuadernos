@@ -51,8 +51,8 @@ def add(norte, categories, owner):
     return add
 
 
-def opening(owner, day=1, shift="night", amount="1000000.00"):
-    return cash.set_opening(owner, day=date(2026, 1, day), shift=shift, amount=D(amount), reason="")
+def opening(owner, amount="1000000.00"):
+    return cash.set_opening(owner, amount=D(amount), reason="")
 
 
 # ---------- the rule ----------
@@ -75,9 +75,9 @@ def test_haber_counts_only_cash(owner, add):
 
 
 def test_shifts_carry_forward_in_order(owner, add):
-    start = opening(owner, day=6, shift="morning", amount="100.00")
+    start = opening(owner, amount="100.00")
     add(7, "morning", Kind.INCOME, "10.00")
-    add(6, "night", Kind.INCOME, "1.00")  # same day as the opening, later shift: counts
+    add(6, "night", Kind.INCOME, "1.00")
     add(7, "night", Kind.EXPENSE, "5.00")
     add(8, "morning", Kind.INCOME, "1000.00")
 
@@ -91,13 +91,16 @@ def test_shifts_carry_forward_in_order(owner, add):
     ]
 
 
-def test_entries_up_to_the_opening_shift_are_already_in_the_opening(owner, add):
-    start = opening(owner, day=6, shift="night", amount="100.00")
-    add(5, "night", Kind.INCOME, "999.00")
-    add(6, "morning", Kind.INCOME, "999.00")
-    add(6, "night", Kind.INCOME, "999.00")  # the opening is this shift's close
+def test_every_entry_counts_whatever_its_date(owner, add):
+    """The opening is one amount, not a moment (ADR-0017): what was loaded the same day it was set,
+    or earlier, also moves the box. That was the "nunca resta nada" of 09/11/2026."""
+    start = opening(owner, amount="100.00")
+    add(5, "night", Kind.EXPENSE, "10.00")
+    add(6, "morning", Kind.INCOME, "50.00")
 
-    assert cash.closes(owner.tenant, start, until=date(2026, 1, 31)) == []
+    rows = cash.closes(owner.tenant, start, until=date(2026, 1, 31))
+
+    assert [(r.date.day, r.after) for r in rows] == [(5, D("90.00")), (6, D("140.00"))]
 
 
 def test_voided_entries_and_other_shops_do_not_count(owner, add, centro, categories):
@@ -128,8 +131,8 @@ def test_changing_the_opening_needs_a_reason_and_is_audited(owner):
     opening(owner, amount="100.00")
 
     with pytest.raises(RuleError, match="por qué"):
-        cash.set_opening(owner, day=date(2026, 1, 1), shift="night", amount=D("120.00"), reason="")
-    cash.set_opening(owner, day=date(2026, 1, 1), shift="night", amount=D("120.00"), reason="mal copiado")
+        cash.set_opening(owner, amount=D("120.00"), reason="")
+    cash.set_opening(owner, amount=D("120.00"), reason="mal copiado")
 
     rows = AuditEntry.objects.filter(entity="cash_opening").order_by("created_at")
     assert [r.reason for r in rows] == ["", "mal copiado"]
@@ -142,7 +145,7 @@ def test_same_opening_again_is_rejected(owner):
     opening(owner, amount="100.00")
 
     with pytest.raises(RuleError, match="No cambiaste"):
-        cash.set_opening(owner, day=date(2026, 1, 1), shift="night", amount=D("100.00"), reason="igual")
+        cash.set_opening(owner, amount=D("100.00"), reason="igual")
 
 
 # ---------- API ----------
@@ -162,7 +165,7 @@ def test_only_the_owner_sets_the_opening(as_role, role):
 
     response = api.put(
         "/api/notebooks/cash/opening/",
-        {"date": "2026-01-01", "shift": "night", "amount": "10"},
+        {"amount": "10"},
         format="json",
     )
 
@@ -174,7 +177,7 @@ def test_owner_sets_the_opening_and_everyone_sees_the_box(api, owner, add, make_
     log_in(api, "duena")
     response = api.put(
         "/api/notebooks/cash/opening/",
-        {"date": "2026-01-01", "shift": "night", "amount": "1000.50"},
+        {"amount": "1000.50"},
         format="json",
     )
     assert response.status_code == 200, response.content
@@ -201,7 +204,7 @@ def test_opening_cannot_be_negative(api, owner):
 
     response = api.put(
         "/api/notebooks/cash/opening/",
-        {"date": "2026-01-01", "shift": "night", "amount": "-1"},
+        {"amount": "-1"},
         format="json",
     )
 
@@ -222,7 +225,7 @@ def test_period_shows_its_closes_but_the_haber_comes_from_the_opening(as_role, o
     ]
     assert body["haber_at_end"] == "111.00"
     assert before_any["closes"] == []
-    assert before_any["haber_at_end"] is None
+    assert before_any["haber_at_end"] == "100.00"  # nothing loaded yet: the opening itself
 
 
 def test_an_entry_needs_a_shift(as_role, categories):
