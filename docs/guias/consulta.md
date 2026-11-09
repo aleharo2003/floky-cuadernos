@@ -10,6 +10,8 @@ Tocando tu nombre, arriba a la derecha, podés cambiar tu contraseña, elegir el
 
 ## La caja de hoy
 
+<img src="img/burbuja-caja.png" width="300" alt="Burbuja con la caja de hoy y el ojito para taparla">
+
 Arriba de Reportes, en una burbuja, está **Caja hoy**: el efectivo que hay ahora en la caja. No cambia con el período ni con los filtros, y queda a la vista aunque bajes por la lista. Cuenta todo hasta hoy; lo cargado con fecha futura todavía no. Con el ojito tapás el número por si alguien mira la pantalla, y queda tapado en ese dispositivo hasta que lo vuelvas a tocar.
 
 ## Elegir el período y filtrar

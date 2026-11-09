@@ -144,9 +144,13 @@ const tarjeta = (p, titulo) => p.locator(`.tarjeta:has(h2:text-is("${titulo}"))`
   await reportes(p);
   await foto(p.locator('.indicadores-compactos'), 'totales');
   await foto(p.locator('.tarjeta:has(h2:text("Caja en efectivo"))'), 'caja');
+  await p.evaluate(() => window.scrollTo(0, 0));
+  await foto(p.locator('.burbuja-caja'), 'burbuja-caja');
   await p.selectOption('.filtros-panel select >> nth=0', 'egreso');
   await p.waitForTimeout(600);
   await p.evaluate(() => window.scrollTo(0, 0));
+  // La burbuja queda pegada arriba y su sombra se mete en el recorte: se esconde solo para esta foto.
+  await p.addStyleTag({ content: '.burbuja-caja { visibility: hidden; }' });
   const [desde, hasta] = await p.evaluate(() => [
     Math.round(document.querySelector('.reportes-periodo').getBoundingClientRect().top - 8),
     Math.round(document.querySelector('.filtros-panel').getBoundingClientRect().bottom + 8),
