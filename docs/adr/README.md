@@ -26,6 +26,7 @@ Un ADR registra una decisión importante: el contexto, las opciones que se mirar
 | [0012](0012-venta-del-debito-al-corregir.md) | Al corregir un gasto con débito sin venta, se ofrece sumarla | Aceptada (ampliada por ADR-0013) | Nueva |
 | [0013](0013-medios-que-suman-venta.md) | Los gastos por transferencia también suman su venta, y el dueño elige los medios | Aceptada (un punto cambiado por ADR-0014) | Nueva |
 | [0014](0014-tilde-de-venta-en-todo-gasto-sin-efectivo.md) | Todo gasto que no sea en efectivo puede sumar su venta; los ajustes eligen cuáles vienen marcados | Aceptada | Nueva |
+| [0015](0015-vaciar-los-cuadernos-de-un-local.md) | Vaciar los cuadernos de un local desde el admin | Aceptada | Nueva |
 
 
 ## Cómo escribir uno nuevo

@@ -188,6 +188,20 @@ Es inmediato, y no hace falta pasar por GitHub.
 
 > **Ojo:** volver atrás cambia el código, **no** deshace las migraciones. Por eso un PR con una migración que borra o transforma datos tiene que explicar cómo se vuelve atrás antes de mergearse.
 
+## Vaciar los cuadernos de un local
+
+Para borrar lo de prueba antes de cargar datos de verdad (ADR-0015). **No se puede deshacer.**
+
+1. Antes: que el backup de anoche haya salido bien (paso 9), y bajá el Excel de todo el período desde Reportes por las dudas.
+2. Avisá que nadie cargue mientras tanto.
+3. En `/admin/`, con un usuario superusuario: **Cuadernos → Cuadernos por local**.
+4. Tildá **un** local, elegí **Vaciar los cuadernos (movimientos y caja)** y tocá **Ejecutar**.
+5. Revisá lo que dice que se va a borrar, escribí el nombre del local tal cual y un motivo, y confirmá.
+
+Se borran los movimientos (también los anulados) y el haber inicial. Quedan las categorías, las personas, sus permisos y los ajustes del local. En **Registros de auditoría** queda una fila `notebooks.empty` con quién lo hizo, cuándo, por qué y cuánto había.
+
+Después, el dueño vuelve a cargar el haber inicial desde Reportes.
+
 ## Si algo falla
 
 | Qué pasa | Dónde mirar |

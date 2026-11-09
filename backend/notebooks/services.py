@@ -12,9 +12,10 @@ from decimal import Decimal
 from django.db import IntegrityError, transaction
 
 from accounts.models import Membership
-from core.models import record
+from core.models import Tenant, record
 from notebooks.models import (
     SALE_METHOD_CHOICES,
+    CashOpening,
     Category,
     Entry,
     Kind,
@@ -358,3 +359,43 @@ def set_sale_methods(membership: Membership, methods: list[str]) -> list[str]:
             after={"sale_methods": chosen},
         )
     return chosen
+
+
+def empty_notebooks(tenant: Tenant, actor, reason: str) -> dict:
+    """Delete every entry and the opening haber of one shop, to start from zero (ADR-0015).
+
+    Categories, people, memberships and settings stay. The audit is not deleted (the database does
+    not allow it): one more row records who emptied the notebooks, when, why and how much there was.
+    Recent changes start again from that row.
+    """
+    reason = _reason(reason)
+    with transaction.atomic():
+        entries = Entry.objects.filter(tenant=tenant)
+        counts = {
+            "entries": entries.filter(is_voided=False).count(),
+            "voided": entries.filter(is_voided=True).count(),
+        }
+        opening = CashOpening.objects.filter(tenant=tenant).first()
+        before = dict(counts)
+        if opening:
+            before["cash_opening"] = {
+                "date": opening.date.isoformat(),
+                "shift": opening.shift,
+                "amount": str(opening.amount),
+            }
+        # The sales first: they point to their cost, and that link does not let the cost go first.
+        entries.exclude(from_expense=None).delete()
+        entries.delete()
+        if opening:
+            opening.delete()
+        record(
+            tenant=tenant,
+            actor=actor,
+            action="notebooks.empty",
+            entity="shop",
+            entity_id=tenant.id,
+            before=before,
+            after={"entries": 0, "voided": 0},
+            reason=reason[:200],
+        )
+    return {**counts, "cash_opening": opening is not None}
