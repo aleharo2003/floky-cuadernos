@@ -1,4 +1,4 @@
-import { cargarMovimiento, CELULAR, expect, formulario, ingresar, irACargar, irAReportes, reiniciarDatos, sinDesborde, test } from './ayuda';
+import { accion, cargarMovimiento, CELULAR, expect, formulario, ingresar, irACargar, irAReportes, reiniciarDatos, sinDesborde, test } from './ayuda';
 
 // Emanuel carga en el momento, de cualquier turno: el turno se elige como Gasto o Ingreso, sin
 // abrir nada, y la caja de hoy se ve mientras carga. Hoy es el miércoles 11/3 al mediodía (ver ayuda.ts).
@@ -62,4 +62,24 @@ test.describe('en el celular', () => {
     await expect(page.locator('.burbuja-caja')).toContainText('$ •••••');
   });
 
+  test('una ventana abierta queda por encima de la burbuja', async ({ page }) => {
+    await ingresar(page, 'tomas');
+    for (const solapa of ['Cargar', 'Reportes']) {
+      if (solapa === 'Reportes') await irAReportes(page);
+      await accion(page, 'Verdura', 'Corregir');
+      const ventana = page.getByRole('dialog');
+      await expect(ventana).toBeVisible();
+      // Lo que se ve en cada punto del borde de arriba de la ventana es la ventana, no la burbuja.
+      const tapada = await ventana.evaluate((v) => {
+        const r = v.getBoundingClientRect();
+        return [0.1, 0.3, 0.5, 0.7, 0.9].some((x) => {
+          const arriba = document.elementFromPoint(r.left + r.width * x, r.top + 12);
+          return !arriba || !v.contains(arriba);
+        });
+      });
+      expect(tapada, `en ${solapa}`).toBe(false);
+      await page.keyboard.press('Escape');
+      await expect(ventana).toBeHidden();
+    }
+  });
 });

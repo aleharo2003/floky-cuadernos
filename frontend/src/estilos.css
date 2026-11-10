@@ -744,7 +744,8 @@ textarea:focus-visible {
 .modal-fondo {
   position: fixed;
   inset: 0;
-  z-index: 10;
+  /* Por encima de la burbuja de la caja (15) y de las sugerencias (20): una ventana tapa todo lo de atrás. */
+  z-index: 25;
   display: grid;
   place-items: center;
   padding: var(--esp-4);
