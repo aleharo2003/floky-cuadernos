@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Copiar {{ shop.name }} a un local de pruebas{% endblock %}
+{% block content %}
+<h1>Copiar {{ shop.name }} a un local de pruebas</h1>
+
+<p>Sirve para ver un problema con los mismos datos que tiene el local, sin tocarlo. {{ shop.name }} no cambia: solo se lee.</p>
+
+<p>Se copia:</p>
+<ul>
+  <li>{{ counts.entries }} movimientos (ingresos y gastos){% if counts.voided %}, y {{ counts.voided }} anulados con su motivo{% endif %}, con quién cargó cada uno y cuándo.</li>
+  <li>Las categorías, también las desactivadas.</li>
+  <li>{% if has_opening %}El haber inicial de la caja.{% else %}No tiene haber inicial cargado.{% endif %}</li>
+  <li>Los ajustes del local (qué medios vienen marcados para sumar la venta).</li>
+</ul>
+<p>No se copian las personas ni sus permisos: nadie del local gana acceso al local de pruebas.</p>
+
+{% if targets %}
+<p><strong>Esto borra todo lo que tenga el local de pruebas que elijas</strong> (movimientos, caja, categorías y ajustes) y no se puede deshacer:</p>
+<table>
+  <thead><tr><th>Local de pruebas</th><th>Movimientos</th><th>Anulados</th></tr></thead>
+  <tbody>
+  {% for t in targets %}<tr><td>{{ t.name }}</td><td>{{ t.live }}</td><td>{{ t.voided }}</td></tr>{% endfor %}
+  </tbody>
+</table>
+<p>Queda anotado en la auditoría de los dos locales quién lo copió, cuándo y por qué.</p>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  <p>
+    {{ form.target.errors }}
+    <label for="{{ form.target.id_for_label }}">Copiar a</label><br>
+    {{ form.target }}
+  </p>
+  <p>
+    {{ form.reason.errors }}
+    <label for="{{ form.reason.id_for_label }}">Motivo (queda en la auditoría)</label><br>
+    {{ form.reason }}
+  </p>
+  <input type="hidden" name="action" value="clone_notebooks">
+  <input type="hidden" name="_selected_action" value="{{ shop.pk }}">
+  <input type="hidden" name="confirmar" value="1">
+  <input type="submit" class="default" value="Copiar">
+  <a href="{{ volver }}" class="button cancel-link">Cancelar</a>
+</form>
+{% else %}
+<p><strong>No hay ningún local marcado como de pruebas.</strong> Marcá uno en
+<a href="{% url 'admin:core_tenant_changelist' %}">Locales</a> (casilla "Local de pruebas") y volvé a intentar.</p>
+<p><a href="{{ volver }}" class="button cancel-link">Volver</a></p>
+{% endif %}
+{% endblock %}

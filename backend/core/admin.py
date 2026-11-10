@@ -5,7 +5,8 @@ from core.models import AuditEntry, Tenant
 
 @admin.register(Tenant)
 class TenantAdmin(admin.ModelAdmin):
-    list_display = ["name", "timezone", "created_at"]
+    list_display = ["name", "is_test", "timezone", "created_at"]
+    list_filter = ["is_test"]
     search_fields = ["name"]
 
 

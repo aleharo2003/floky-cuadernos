@@ -186,12 +186,15 @@ class RecentChangesView(TenantView):
     def get(self, request: Request) -> Response:
         tenant = request.membership.tenant
         rows = AuditEntry.objects.filter(tenant=tenant, entity="entry").select_related("actor")
-        # After the notebooks were emptied, the changes of entries that no longer exist are not shown.
-        emptied = (
-            AuditEntry.objects.filter(tenant=tenant, action="notebooks.empty").order_by("-created_at").first()
+        # After the notebooks were emptied or replaced by a copy, the changes of entries that no
+        # longer exist are not shown.
+        reset = (
+            AuditEntry.objects.filter(tenant=tenant, action__in=services.NOTEBOOK_RESETS)
+            .order_by("-created_at")
+            .first()
         )
-        if emptied:
-            rows = rows.filter(created_at__gt=emptied.created_at)
+        if reset:
+            rows = rows.filter(created_at__gt=reset.created_at)
         return Response([audit_row(r) for r in rows.order_by("-created_at")[: self.LIMIT]])
 
 

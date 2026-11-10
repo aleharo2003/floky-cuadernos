@@ -3,6 +3,7 @@ from django.contrib import admin, messages
 from django.db.models import Count, Q
 from django.template.response import TemplateResponse
 
+from core.models import Tenant
 from notebooks import services
 from notebooks.models import CashOpening, Category, Entry, ShopNotebooks, ShopSettings
 
@@ -83,16 +84,29 @@ class EmptyNotebooksForm(forms.Form):
         return name
 
 
+class CloneNotebooksForm(forms.Form):
+    target = forms.ModelChoiceField(
+        label="Local de pruebas", queryset=Tenant.objects.none(), empty_label=None
+    )
+    reason = forms.CharField(label="Motivo", max_length=200)
+
+    def __init__(self, *args, shop, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only test shops can be chosen, and the service checks it again.
+        self.fields["target"].queryset = Tenant.objects.filter(is_test=True).exclude(pk=shop.pk)
+
+
 @admin.register(ShopNotebooks)
 class ShopNotebooksAdmin(admin.ModelAdmin):
-    """How many entries each shop has, and the action to empty them to start from zero (ADR-0015).
+    """How many entries each shop has, the action to empty them to start from zero (ADR-0015), and
+    the one to copy them into a test shop to reproduce a problem (ADR-0017).
 
     Only superusers see it. Nothing here is edited by hand: the action goes through the service,
     in one transaction and audited.
     """
 
-    list_display = ["name", "live_entries", "voided_entries", "has_opening"]
-    actions = ["empty_notebooks"]
+    list_display = ["name", "live_entries", "voided_entries", "has_opening", "is_test"]
+    actions = ["empty_notebooks", "clone_notebooks"]
 
     def get_queryset(self, request):
         return (
@@ -134,6 +148,9 @@ class ShopNotebooksAdmin(admin.ModelAdmin):
     def has_empty_permission(self, request) -> bool:
         return request.user.is_superuser
 
+    def has_clone_permission(self, request) -> bool:
+        return request.user.is_superuser
+
     @admin.action(description="Vaciar los cuadernos (movimientos y caja)", permissions=["empty"])
     def empty_notebooks(self, request, queryset):
         if queryset.count() != 1:
@@ -164,6 +181,51 @@ class ShopNotebooksAdmin(admin.ModelAdmin):
                 "form": form,
                 "counts": {"entries": shop.live, "voided": shop.voided},
                 "has_opening": self.has_opening(shop),
+                "volver": request.get_full_path(),
+                "opts": self.model._meta,
+            },
+        )
+
+    @admin.action(description="Copiar a un local de pruebas (para ver un problema)", permissions=["clone"])
+    def clone_notebooks(self, request, queryset):
+        if queryset.count() != 1:
+            self.message_user(request, "Elegí un solo local por vez.", messages.ERROR)
+            return None
+        shop = queryset.get()
+        data = request.POST if "confirmar" in request.POST else None
+        form = CloneNotebooksForm(data, shop=shop)
+        if form.is_valid():
+            target = form.cleaned_data["target"]
+            try:
+                done = services.clone_notebooks(shop, target, request.user, form.cleaned_data["reason"])
+            except services.RuleError as exc:
+                form.add_error(None, str(exc))
+            else:
+                self.message_user(
+                    request,
+                    f"{target.name} ahora es una copia de {shop.name}: {done['entries']} movimientos,"
+                    f" {done['voided']} anulados y {done['categories']} categorías.",
+                    messages.SUCCESS,
+                )
+                return None
+        targets = (
+            ShopNotebooks.objects.filter(is_test=True)
+            .exclude(pk=shop.pk)
+            .annotate(
+                live=Count("entries", filter=Q(entries__is_voided=False)),
+                voided=Count("entries", filter=Q(entries__is_voided=True)),
+            )
+        )
+        return TemplateResponse(
+            request,
+            "admin/notebooks/copiar_a_pruebas.html",
+            {
+                **self.admin_site.each_context(request),
+                "shop": shop,
+                "form": form,
+                "counts": {"entries": shop.live, "voided": shop.voided},
+                "has_opening": self.has_opening(shop),
+                "targets": targets,
                 "volver": request.get_full_path(),
                 "opts": self.model._meta,
             },

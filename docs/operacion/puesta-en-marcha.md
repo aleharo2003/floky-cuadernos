@@ -202,6 +202,23 @@ Se borran los movimientos (también los anulados) y el haber inicial. Quedan las
 
 Después, el dueño vuelve a cargar el haber inicial desde Reportes.
 
+## Copiar un local a uno de pruebas
+
+Para ver un problema de un cliente con sus mismos datos, sin tocar su local (ADR-0017). El local de pruebas queda igual al del cliente, y **lo que tenía se borra**.
+
+La primera vez, marcá el local de pruebas: en `/admin/`, **Locales**, entrá a AB-Sistemas, tildá **Local de pruebas** y guardá. Solo se puede copiar hacia locales marcados. Nunca marques un local de un cliente.
+
+Cada vez que haga falta:
+
+1. En `/admin/`, con un usuario superusuario: **Cuadernos → Cuadernos por local**.
+2. Tildá **el local del cliente** (no el de pruebas), elegí **Copiar a un local de pruebas (para ver un problema)** y tocá **Ejecutar**.
+3. Revisá lo que dice que se copia y que se borra, elegí el local de pruebas, escribí un motivo (por ejemplo, "Ema dice que la caja no le da") y confirmá.
+4. Entrá a la app con tu usuario y elegí el local de pruebas.
+
+Se copian los movimientos (también los anulados), quién cargó cada uno y cuándo, las categorías, el haber inicial y los ajustes. No se copian las personas: nadie del cliente gana acceso al local de pruebas. En **Registros de auditoría** quedan dos filas: `notebooks.clone` en el local de pruebas y `notebooks.copied` en el del cliente.
+
+Al local de pruebas solo entra el equipo de desarrollo: después de copiar, tiene los números reales del cliente.
+
 ## Si algo falla
 
 | Qué pasa | Dónde mirar |

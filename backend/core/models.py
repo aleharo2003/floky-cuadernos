@@ -10,6 +10,15 @@ class Tenant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField("nombre", max_length=120)
     timezone = models.CharField("zona horaria", max_length=64, default="America/Argentina/Buenos_Aires")
+    # A shop for the team to reproduce problems, never a real one. Only these can receive a copy of
+    # another shop's notebooks (ADR-0017).
+    is_test = models.BooleanField(
+        "local de pruebas",
+        default=False,
+        help_text=(
+            "Solo para el equipo. Se le pueden copiar los cuadernos de otro local, y eso borra lo que tenga."
+        ),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
