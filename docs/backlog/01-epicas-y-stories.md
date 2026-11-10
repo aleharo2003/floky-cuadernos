@@ -314,6 +314,7 @@ Como persona con acceso a un local, quiero exportar el reporte del período, par
 Como persona con acceso a un local, quiero filtrar por fechas, categoría y tipo, para encontrar movimientos y mirar cualquier período.
 
 - Dado la lista o el reporte, cuando elijo hoy, esta semana (desde el lunes) o este mes, entonces la lista, los totales y el resumen siguen la elección.
+- Dado Reportes, cuando entro (también al volver de Cargar), entonces el período es hoy. En el celular, el período está arriba, apenas abajo de la caja, y Excel y PDF van después (10/11/2026).
 - Dado dos fechas escritas a mano, cuando el rango es válido, entonces pasa lo mismo. Cuando no lo es, entonces queda en pantalla el último período válido.
 - Dado los filtros, cuando filtro por categoría, tipo (ingreso o gasto), medio de pago o texto de la descripción, entonces la lista, los totales y la exportación (HU-027) siguen los filtros.
 - Dado los filtros, cuando pido ver los anulados, entonces aparecen marcados; por defecto no se muestran.

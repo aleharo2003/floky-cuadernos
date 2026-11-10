@@ -18,7 +18,7 @@ import NuevaCategoria from '../componentes/NuevaCategoria';
 import ResumenAnual from '../componentes/ResumenAnual';
 import TarjetaCaja from '../componentes/TarjetaCaja';
 import { useSesion } from '../estado/Sesion';
-import { rangoDelMes, rangoEsteMes, rangoValido } from '../lib/fechas';
+import { rangoDelMes, rangoHoy, rangoValido } from '../lib/fechas';
 import { MONTO_ILEGIBLE, diaConNombre, diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros, problemaDeMonto } from '../lib/formato';
 import { recordarTurno, turnoSugerido } from '../lib/turno';
 import { REFRESCO_MS, useConsulta } from '../lib/useConsulta';
@@ -422,7 +422,8 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
   const { puede } = useSesion();
   const puedeExportar = puede('notebooks.export');
   const puedeCargarInicial = puede('notebooks.set_cash_opening');
-  const [rango, setRango] = useState<RangoFechas>(rangoEsteMes);
+  // Arranca siempre en hoy: es lo que se mira todos los días. Otro período se elige arriba.
+  const [rango, setRango] = useState<RangoFechas>(rangoHoy);
   const [filtros, setFiltros] = useState<Filtros>(SIN_FILTROS);
   // El texto se busca cuando se deja de tipear, no en cada tecla.
   const texto = useDemorado(filtros.texto);

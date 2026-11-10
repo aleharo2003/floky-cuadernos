@@ -3038,9 +3038,6 @@ textarea:focus-visible {
     flex: none;
   }
 
-  .reportes-exportar {
-    order: -1;
-  }
 }
 
 /* En el celular, fecha y turno siguen en una fila: así "Guardar movimiento" se ve sin bajar. Solo en

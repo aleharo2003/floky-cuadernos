@@ -77,6 +77,12 @@ export async function irAReportes(p: Page) {
   await expect(p.getByText('Movimientos del').first()).toBeVisible();
 }
 
+/** Reportes arranca siempre en "Hoy". Para mirar otro período, se elige con los botones de arriba. */
+export async function elegirPeriodo(p: Page, periodo: 'Hoy' | 'Esta semana' | 'Este mes' | 'Mes pasado') {
+  await p.locator('.filtro-fechas').getByRole('button', { name: periodo }).click();
+  await expect(p.locator('.filtro-fechas').getByRole('button', { name: periodo })).toHaveAttribute('aria-pressed', 'true');
+}
+
 export async function irACargar(p: Page) {
   await p.getByRole('tab', { name: 'Cargar' }).click();
   await expect(p.getByText('Cargados el').first()).toBeVisible();
