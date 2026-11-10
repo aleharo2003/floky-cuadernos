@@ -23,7 +23,6 @@ test('lo cargado el mismo día que el haber inicial también mueve la caja', asy
   await cargarMovimiento(page, { tipo: 'Gasto', categoria: 'Proveedores', descripcion: 'Carne', monto: '80.000', medio: 'Transferencia', turno: 'Noche' });
   // Un gasto de ayer, cargado tarde: también cuenta.
   const f = formulario(page);
-  if (!(await f.locator('input[type=date]').isVisible())) await f.getByRole('button', { name: 'Cambiar fecha o turno' }).click();
   await f.locator('input[type=date]').fill('2026-03-10');
   await cargarMovimiento(page, { tipo: 'Gasto', categoria: 'Proveedores', descripcion: 'Hielo', monto: '10.000', medio: 'Efectivo', turno: 'Noche' });
 

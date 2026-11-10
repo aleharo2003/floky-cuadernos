@@ -24,7 +24,7 @@ Desde ahí, cada movimiento en efectivo que se carga la suma o la resta, sea de 
 
 ## Cómo se lee la caja
 
-En Reportes, arriba de todo, la burbuja **Caja hoy** muestra el efectivo que hay ahora, sin importar qué período o filtro estés mirando. Con el ojito la tapás. Se actualiza sola cada 15 segundos, así ves también lo que cargan otros desde otra compu o celular. En Cargar se ve la caja del turno que estás cargando.
+En Reportes, arriba de todo, la burbuja **Caja hoy** muestra el efectivo que hay ahora, sin importar qué período o filtro estés mirando. Con el ojito la tapás. Se actualiza sola cada 15 segundos, así ves también lo que cargan otros desde otra compu o celular. En Cargar está la misma burbuja arriba, y además, al lado de lo cargado, la caja al cerrar el turno que estás cargando.
 
 Es la misma cuenta que hacés en el cuaderno, turno por turno:
 

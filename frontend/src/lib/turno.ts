@@ -10,8 +10,9 @@ interface Recordado {
 }
 
 /**
- * El turno que se propone al cargar. Si en este navegador ya se eligió uno hoy, se repite ese;
- * si no, decide la hora. El recuerdo vence al cambiar el día: "Noche" de anoche no se propone a la mañana.
+ * El turno que se propone al cargar. Si en este navegador ya se tocó uno hoy, se repite ese, aunque
+ * no se haya guardado nada; si no, decide la hora. El recuerdo vence al cambiar el día: "Noche" de
+ * anoche no se propone a la mañana.
  */
 export function turnoSugerido(ahora: Date = new Date(), almacen: Pick<Storage, 'getItem'> | null = guardado()): Turno {
   try {

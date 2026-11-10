@@ -16,9 +16,9 @@ Abrí la dirección que te pasamos, en el celular o en la compu, y escribí tu u
 
 <img src="img/cargar.png" width="230" alt="Formulario para cargar un movimiento" align="right">
 
-Al entrar estás en la solapa **Cargar**: el formulario arriba y, al lado (o abajo en el celular), lo que ya se cargó ese día.
+Al entrar estás en la solapa **Cargar**: arriba de todo la burbuja **Caja hoy** (el efectivo que hay ahora en la caja), después el formulario y, al lado (o abajo en el celular), lo que ya se cargó ese día. La burbuja baja o sube cada vez que guardás algo en efectivo, y con el ojito la tapás.
 
-1. **Fecha y turno.** Arriba del formulario dice qué día y qué turno se está cargando. Si hay que cambiarlo, tocá **Cambiar**. El turno noche que termina después de las 12 va con la fecha en que empezó. Si la fecha no es la de hoy, aparece el aviso **No es hoy**.
+1. **Fecha y turno.** Arriba del formulario, siempre a la vista. La fecha viene con la de hoy; el turno se elige tocando **Mañana** o **Noche**, igual que Gasto o Ingreso. No hace falta cerrar caja ni nada: podés cargar a cualquier hora lo de cualquier turno. El turno que tocás queda elegido ese día en ese celular o compu, aunque cierres la página. Al día siguiente se propone solo según la hora (antes de las 16, Mañana). El turno noche que termina después de las 12 va con la fecha en que empezó. Si la fecha no es la de hoy, aparece el aviso **No es hoy**.
 2. **Tipo:** gasto o ingreso (las ventas son ingresos).
 3. **Categoría** y, si querés, una **descripción** ("verdura", "ventas del turno"). Al escribir la descripción aparecen las que ya se usaron: elegí una con las flechas y Enter, o tocándola. Así los nombres quedan iguales y después se filtran mejor.
 4. **Monto.** Escribí solo los números: los puntos de los miles se ponen solos (`45000` queda `45.000`). Para los centavos, la coma; en la compu también sirve el punto del teclado numérico, que escribe la coma.
@@ -27,7 +27,7 @@ Al entrar estás en la solapa **Cargar**: el formulario arriba y, al lado (o aba
 
 Después de guardar, la fecha, el turno, el tipo y el medio de pago quedan como estaban, así pasás el cuaderno renglón por renglón sin volver a elegirlos. El movimiento nuevo aparece marcado en la lista del día, con el total de ingresos y gastos de ese día para comparar con el papel.
 
-Arriba de esa lista está **Caja al cerrar la noche** (o la mañana): el efectivo que debería haber en la caja al terminar el turno que estás cargando. Se actualiza cada vez que guardás. Sirve para contar la plata al cerrar y ver si coincide. Si aparece en rojo, quedó en negativo: casi siempre es un gasto cargado como efectivo que no lo era, o una venta que falta.
+Arriba de esa lista está **Caja al cerrar la noche** (o la mañana): el efectivo que debería haber en la caja al terminar el turno y el día que estás cargando. No es lo mismo que **Caja hoy**: si cargás un día atrasado, esta muestra cómo cerró ese turno, y la burbuja sigue mostrando la plata de ahora. Se actualiza cada vez que guardás. Sirve para contar la plata al cerrar y ver si coincide. Si aparece en rojo, quedó en negativo: casi siempre es un gasto cargado como efectivo que no lo era, o una venta que falta.
 
 <br clear="right">
 

@@ -1,4 +1,4 @@
-import { accion, cargarMovimiento, CELULAR, expect, ingresar, irACargar, irAReportes, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
+import { accion, cargarMovimiento, CELULAR, elegirPeriodo, expect, formulario, ingresar, irACargar, irAReportes, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
 import type { Page } from '@playwright/test';
 
 // Caja en efectivo por turno (ADR-0008, ADR-0016). El seed arranca con haber inicial de $ 500.000.
@@ -12,12 +12,14 @@ async function cargarYVolver(p: Page, m: Parameters<typeof cargarMovimiento>[1])
   await irACargar(p);
   await cargarMovimiento(p, m);
   await irAReportes(p);
+  await elegirPeriodo(p, 'Este mes');
   await expect(primeraTabla(p).locator('td', { hasText: m.descripcion }).first()).toBeVisible();
 }
 
 test('la caja suma efectivo, ignora lo cobrado sin efectivo, avisa si da negativa y no sigue los filtros', async ({ page }) => {
   await ingresar(page, 'tomas');
   await irAReportes(page);
+  await elegirPeriodo(page, 'Este mes');
   await expect(caja(page)).toContainText('Arranca con $ 500.000,00');
   // 500.000 + 600.000 de ventas en efectivo - 105.000 de gastos en efectivo (la luz fue con débito).
   await expect(cajaAlCierre(page)).toHaveText('$ 995.000');
@@ -30,7 +32,10 @@ test('la caja suma efectivo, ignora lo cobrado sin efectivo, avisa si da negativ
   await expect(noche).toContainText('520.000,00');
   await expect(noche).toContainText('-$ 200.000,00');
   await irACargar(page);
-  await expect(page.locator('.carga-contexto'), 'el formulario propone el turno usado hoy').toContainText('turno noche');
+  await expect(
+    formulario(page).getByRole('group', { name: 'Turno' }).getByRole('button', { name: 'Noche' }),
+    'el formulario propone el turno usado hoy',
+  ).toHaveAttribute('aria-pressed', 'true');
   await irAReportes(page);
 
   // Un gasto en efectivo enorme deja la caja negativa: avisa, no bloquea. Al anularlo vuelve.

@@ -1,6 +1,6 @@
-import { useState, type FormEvent, type ReactNode, type Ref } from 'react';
+import { type FormEvent, type ReactNode, type Ref } from 'react';
 import { Tecla } from '../atajos/Atajos';
-import { diaConNombre, fechaIso } from '../lib/formato';
+import { fechaIso } from '../lib/formato';
 import { MEDIO_EN_FRASE, NOMBRE_MEDIO, type Categoria, type MedioPago, type TipoMovimiento, type Turno } from '../types';
 import Badge from './Badge';
 import Button from './Button';
@@ -31,7 +31,6 @@ const TURNOS: { valor: Turno; etiqueta: string }[] = [
   { valor: 'night', etiqueta: 'Noche' },
 ];
 
-const mayuscula = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
 /** Valor de la opción "+ Nueva categoría…" del desplegable: nunca es el id de una categoría. */
 const NUEVA = '__nueva__';
@@ -43,10 +42,10 @@ interface Props {
   /** Solo el dueño ve "+ Nueva categoría…" al final de la lista. */
   onNuevaCategoria?(): void;
   /**
-   * "resumen": fecha y turno en una línea, con un botón para cambiarlos (la carga del día a día).
-   * "campos": a la vista desde el principio (una corrección, donde suelen ser lo que se corrige).
+   * Al cargar, avisa "No es hoy" al lado de la fecha, para no pasar un día atrasado sin querer.
+   * Al corregir no hace falta: la fecha de un movimiento viejo casi nunca es hoy.
    */
-  fechaYTurno: 'resumen' | 'campos';
+  avisarSiNoEsHoy?: boolean;
   /** Corrección: pide el motivo. */
   correccion?: boolean;
   /**
@@ -73,7 +72,7 @@ export default function FormMovimiento({
   onCambio,
   categorias,
   onNuevaCategoria,
-  fechaYTurno,
+  avisarSiNoEsHoy = false,
   correccion = false,
   ofrecerVenta = !correccion,
   mediosVenta,
@@ -85,42 +84,24 @@ export default function FormMovimiento({
   onGuardar,
   acciones,
 }: Props) {
-  const [cambiando, setCambiando] = useState(false);
-  const verCampos = fechaYTurno === 'campos' || cambiando;
-  const esHoy = borrador.fecha === fechaIso(new Date());
-  const turno = TURNOS.find((t) => t.valor === borrador.turno)?.etiqueta.toLowerCase();
+  const noEsHoy = avisarSiNoEsHoy && borrador.fecha !== fechaIso(new Date());
 
   return (
     <form className="formulario" onSubmit={onGuardar}>
-      {fechaYTurno === 'resumen' && (
-        <div className="carga-contexto">
-          <p>
-            <strong>{borrador.fecha ? mayuscula(diaConNombre(borrador.fecha)) : 'Sin fecha'}</strong>, turno {turno}
-          </p>
-          {!esHoy && <Badge tono="aviso">No es hoy</Badge>}
-          <Button
-            tamano="chico"
-            variante="texto"
-            aria-expanded={cambiando}
-            aria-label={cambiando ? 'Listo, ocultar fecha y turno' : 'Cambiar fecha o turno'}
-            onClick={() => setCambiando((c) => !c)}
-          >
-            {cambiando ? 'Listo' : 'Cambiar'}
-          </Button>
+      {/* Siempre a la vista, como Gasto e Ingreso: se carga en el momento, de cualquier turno. */}
+      <div className="carga-fecha-turno">
+        <label className="campo">
+          <span className="campo-rotulo-con-aviso">
+            Fecha
+            {noEsHoy && <Badge tono="aviso">No es hoy</Badge>}
+          </span>
+          <input className="campo-texto" type="date" required value={borrador.fecha} onChange={(e) => onCambio({ fecha: e.target.value })} />
+        </label>
+        <div className="campo">
+          <span>Turno</span>
+          <SegmentedControl etiqueta="Turno" opciones={TURNOS} valor={borrador.turno} onChange={(turno) => onCambio({ turno })} bloque />
         </div>
-      )}
-      {verCampos && (
-        <div className="carga-fecha-turno">
-          <label className="campo">
-            <span>Fecha</span>
-            <input className="campo-texto" type="date" required value={borrador.fecha} onChange={(e) => onCambio({ fecha: e.target.value })} />
-          </label>
-          <div className="campo">
-            <span>Turno</span>
-            <SegmentedControl etiqueta="Turno" opciones={TURNOS} valor={borrador.turno} onChange={(turno) => onCambio({ turno })} bloque />
-          </div>
-        </div>
-      )}
+      </div>
       <div className="campo">
         <span>Tipo</span>
         <SegmentedControl etiqueta="Tipo" opciones={TIPOS} valor={borrador.tipo} onChange={(tipo) => onCambio({ tipo, categoriaId: '' })} bloque />

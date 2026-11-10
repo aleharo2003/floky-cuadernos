@@ -18,7 +18,7 @@ Arriba de Reportes, en una burbuja, está **Caja hoy**: el efectivo que hay ahor
 
 <img src="img/filtros-y-exportar.png" alt="Período, filtros y botones para exportar">
 
-- **Período:** Hoy, Esta semana, Este mes, Mes pasado, o las fechas que quieras en Desde y Hasta.
+- **Período:** Hoy, Esta semana, Este mes, Mes pasado, o las fechas que quieras en Desde y Hasta. Reportes arranca siempre en **Hoy**; si elegís otro período y cambiás de solapa, al volver está otra vez en Hoy.
 - **Filtros:** tipo (ingresos o gastos), categoría, medio de pago, o una palabra de la descripción. Con **Ver anulados** aparecen también los movimientos anulados, marcados; nunca suman.
 - Los totales, la lista y el Excel siguen el período y los filtros.
 - El período puede ser de hasta un año. En períodos largos, la lista aparece de a 200 renglones, con el botón **Ver más** al pie; los totales y el Excel siempre incluyen todo.

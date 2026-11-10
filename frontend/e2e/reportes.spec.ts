@@ -1,4 +1,4 @@
-import { accion, CELULAR, expect, ingresar, irAReportes, opciones, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
+import { accion, CELULAR, elegirPeriodo, expect, ingresar, irAReportes, opciones, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
 
 // La solapa Reportes: período, filtros, totales, exportar, año y PDF. El seed tiene 5 movimientos en marzo.
 test.beforeEach(reiniciarDatos);
@@ -6,9 +6,40 @@ test.beforeEach(reiniciarDatos);
 const filas = (p: import('@playwright/test').Page) => primeraTabla(p).locator('tbody tr');
 const kpi = (p: import('@playwright/test').Page, titulo: string) => p.locator('.kpi', { hasText: titulo }).locator('.kpi-valor');
 
+test('arranca en hoy, también al volver de Cargar', async ({ page }) => {
+  await ingresar(page, 'tomas');
+  await irAReportes(page);
+  await expect(page.locator('.filtro-fechas').getByRole('button', { name: 'Hoy' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText('Movimientos del 11/03/2026')).toBeVisible();
+  await expect(filas(page)).toHaveCount(2);
+
+  await elegirPeriodo(page, 'Este mes');
+  await expect(filas(page)).toHaveCount(5);
+  await page.getByRole('tab', { name: 'Cargar' }).click();
+  await irAReportes(page);
+  await expect(page.locator('.filtro-fechas').getByRole('button', { name: 'Hoy' })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test.describe('en el celular', () => {
+  test.use(CELULAR);
+
+  test('el período está arriba, apenas abajo de la caja, y después Excel y PDF', async ({ page }) => {
+    // Lucía es dueña: ve los botones de exportar (Tomás, de carga, no).
+    await ingresar(page, 'lucia', { local: 'Local Norte' });
+    await irAReportes(page);
+    const caja = (await page.locator('.burbuja-caja').boundingBox())!;
+    const periodo = (await page.locator('.filtro-fechas').boundingBox())!;
+    const excel = (await page.getByRole('link', { name: /Bajar Excel/ }).boundingBox())!;
+    expect(periodo.y).toBeGreaterThan(caja.y + caja.height - 1);
+    expect(excel.y, 'Excel y PDF van abajo del período').toBeGreaterThan(periodo.y + periodo.height - 1);
+    await sinDesborde(page);
+  });
+});
+
 test('filtros: tipo, medio, texto y anulados; los totales los siguen', async ({ page }) => {
   await ingresar(page, 'tomas');
   await irAReportes(page);
+  await elegirPeriodo(page, 'Este mes');
   await expect(filas(page)).toHaveCount(5);
   await expect(page.locator('details.filtros-panel')).toHaveJSProperty('open', true);
 
@@ -72,6 +103,7 @@ test('resumen del año: solo meses con movimientos; tocar uno muestra el mes ent
 test('el PDF lleva local, filtros y fecha, sin formulario ni botones', async ({ page }) => {
   await ingresar(page, 'tomas');
   await irAReportes(page);
+  await elegirPeriodo(page, 'Este mes');
   await page.locator('.filtros-panel select').nth(0).selectOption('egreso');
   await expect(filas(page)).toHaveCount(3);
   await expect(kpi(page, 'Ingresos del período')).toHaveText('$ 0');

@@ -744,7 +744,8 @@ textarea:focus-visible {
 .modal-fondo {
   position: fixed;
   inset: 0;
-  z-index: 10;
+  /* Por encima de la burbuja de la caja (15) y de las sugerencias (20): una ventana tapa todo lo de atrás. */
+  z-index: 25;
   display: grid;
   place-items: center;
   padding: var(--esp-4);
@@ -2980,20 +2981,6 @@ textarea:focus-visible {
   align-items: start;
 }
 
-.carga-contexto {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--esp-2) var(--esp-3);
-  padding: var(--esp-2) var(--esp-3);
-  border-radius: var(--r);
-  background: var(--superficie-2);
-}
-
-.carga-contexto p {
-  margin-right: auto;
-}
-
 .carga-fecha-turno {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -3051,12 +3038,11 @@ textarea:focus-visible {
     flex: none;
   }
 
-  .reportes-exportar {
-    order: -1;
-  }
 }
 
-@media (max-width: 420px) {
+/* En el celular, fecha y turno siguen en una fila: así "Guardar movimiento" se ve sin bajar. Solo en
+   pantallas muy angostas van uno abajo del otro. */
+@media (max-width: 359px) {
   .carga-fecha-turno {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3396,4 +3382,27 @@ textarea:focus-visible {
 
 .burbuja-caja-negativa {
   background: var(--negativo-fondo-fuerte);
+}
+
+/* El aviso "No es hoy" va al lado del rótulo Fecha. */
+.campo-rotulo-con-aviso .badge {
+  margin-left: var(--esp-2);
+}
+
+/* En el celular la burbuja es más baja, para que la carga entre en la pantalla. */
+@media (max-width: 700px) {
+  .burbuja-caja {
+    margin-bottom: var(--esp-3);
+    padding: var(--esp-2) var(--esp-3);
+  }
+}
+
+/* Fecha y turno a la misma altura, y la fecha no empuja al turno en una pantalla angosta. */
+.carga-fecha-turno .campo {
+  grid-template-rows: auto 1fr;
+}
+
+.carga-fecha-turno input[type='date'] {
+  min-width: 0;
+  height: 100%;
 }

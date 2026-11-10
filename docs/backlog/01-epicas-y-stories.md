@@ -223,6 +223,9 @@ Como persona con rol carga o dueño, quiero anotar un movimiento desde el celula
 - Dado un celular de 390 px, cuando cargo un movimiento, entonces el formulario entra sin desplazarse hacia el costado y en el importe aparece el teclado numérico.
 - Dado una PC, cuando cargo un movimiento, entonces lo puedo hacer sin el mouse.
 - Dado el alta, cuando ocurre, entonces se escribe la auditoría en la misma transacción (HU-014).
+- Dado Cargar, cuando entro, entonces la fecha (hoy) y el turno están a la vista, y el turno se elige con dos botones como Gasto e Ingreso, sin abrir nada. Si la fecha no es hoy, aparece "No es hoy" (10/11/2026).
+- Dado un turno que toqué, cuando vuelvo a Cargar ese mismo día en el mismo dispositivo, entonces sigue elegido aunque no haya guardado. Al día siguiente se propone por la hora: Mañana antes de las 16 y Noche después (10/11/2026).
+- Dado un celular de 390 px, cuando entro a Cargar, entonces la caja de hoy, la fecha, el turno y el botón "Guardar movimiento" se ven sin bajar (10/11/2026).
 
 ### HU-022. Administrar categorías
 **Prioridad:** Should · **Etiquetas:** `backend`, `frontend`, `cuadernos` · **Diagramas:** CLA-01, CU-01
@@ -271,6 +274,7 @@ Como dueño, quiero ver cuánto efectivo hay en la caja al cerrar cada turno, co
 - Dado los filtros de la lista, cuando filtro, entonces la caja no cambia: es la caja entera del local.
 - Dado la pantalla Cargar, cuando elijo fecha y turno, entonces veo el efectivo que debería haber al cerrar ese turno, y se actualiza al guardar, corregir o anular. Si queda en negativo, aparece en rojo con el aviso (06/11/2026).
 - Dado Reportes, cuando entro, entonces arriba de todo veo una burbuja con la caja de hoy (todo hasta hoy, nada futuro), que no cambia con el período ni los filtros y queda fija al bajar. Un ojito la tapa y el dispositivo se acuerda (09/11/2026).
+- Dado Cargar, cuando entro, entonces arriba de todo veo la misma burbuja de la caja de hoy, que baja al guardar un gasto en efectivo. Si la tapé en Reportes, también está tapada en Cargar (10/11/2026).
 - Dado el Excel, cuando exporto con haber inicial, entonces hay una hoja "Caja" con los cierres del período.
 - Dado un gasto con débito, cuando lo cargo con el tilde "Sumarlo también a la venta", entonces se crea una venta con débito por el mismo monto, en la misma operación. Corregir el gasto la actualiza, anularlo la anula, y la venta no se puede corregir ni anular sola (ADR-0010).
 - Dado un gasto que pasa de débito a efectivo y otra vez a débito, cuando lo corrijo, entonces se ofrece el tilde y la venta vuelve, como una venta nueva (ADR-0012).
@@ -310,6 +314,7 @@ Como persona con acceso a un local, quiero exportar el reporte del período, par
 Como persona con acceso a un local, quiero filtrar por fechas, categoría y tipo, para encontrar movimientos y mirar cualquier período.
 
 - Dado la lista o el reporte, cuando elijo hoy, esta semana (desde el lunes) o este mes, entonces la lista, los totales y el resumen siguen la elección.
+- Dado Reportes, cuando entro (también al volver de Cargar), entonces el período es hoy. En el celular, el período está arriba, apenas abajo de la caja, y Excel y PDF van después (10/11/2026).
 - Dado dos fechas escritas a mano, cuando el rango es válido, entonces pasa lo mismo. Cuando no lo es, entonces queda en pantalla el último período válido.
 - Dado los filtros, cuando filtro por categoría, tipo (ingreso o gasto), medio de pago o texto de la descripción, entonces la lista, los totales y la exportación (HU-027) siguen los filtros.
 - Dado los filtros, cuando pido ver los anulados, entonces aparecen marcados; por defecto no se muestran.

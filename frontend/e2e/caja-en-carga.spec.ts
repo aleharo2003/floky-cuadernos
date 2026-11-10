@@ -7,7 +7,6 @@ test.beforeEach(reiniciarDatos);
 
 const elegirTurno = async (page: import('@playwright/test').Page, turno: 'Mañana' | 'Noche') => {
   const f = formulario(page);
-  if (!(await f.locator('input[type=date]').isVisible())) await f.getByRole('button', { name: 'Cambiar fecha o turno' }).click();
   await f.getByRole('group', { name: 'Turno' }).getByRole('button', { name: turno }).click();
 };
 

@@ -6,12 +6,19 @@ test.beforeEach(reiniciarDatos);
 test('se entra en Cargar, con lo cargado hoy al lado', async ({ page }) => {
   await ingresar(page, 'tomas');
   await expect(page.getByRole('tab', { name: 'Cargar' })).toHaveAttribute('aria-selected', 'true');
-  await expect(page.locator('.carga-contexto')).toContainText('Miércoles 11/3, turno mañana');
+  // Fecha y turno siempre a la vista, como Gasto e Ingreso: no hay que tocar nada para verlos.
+  const f = formulario(page);
+  await expect(f.locator('input[type=date]')).toHaveValue('2026-03-11');
+  await expect(f.getByRole('group', { name: 'Turno' }).getByRole('button', { name: 'Mañana' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(f.getByRole('button', { name: /Cambiar/ })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Cargados el miércoles 11/3' })).toBeVisible();
   await expect(primeraTabla(page).locator('tbody tr')).toHaveCount(2);
   await expect(page.locator('.carga-dia .nota')).toContainText('Ingresos $ 320.000,00, gastos $ 45.000,00');
-  // El formulario arranca arriba, no abajo de los reportes.
-  expect((await formulario(page).boundingBox())!.y).toBeLessThan(250);
+  // El formulario arranca arriba, apenas abajo de la caja, no abajo de los reportes.
+  const caja = (await page.locator('.burbuja-caja').boundingBox())!;
+  const form = (await formulario(page).boundingBox())!;
+  expect(form.y).toBeGreaterThan(caja.y + caja.height - 1);
+  expect(form.y).toBeLessThan(350);
 });
 
 test('doble clic en guardar guarda uno solo', async ({ page }) => {
@@ -49,9 +56,8 @@ test('carga en serie: quedan fecha, turno, tipo y medio; el cursor vuelve a Cate
 test('para pasar un día atrasado, la fecha queda y avisa que no es hoy', async ({ page }) => {
   await ingresar(page, 'tomas');
   const f = formulario(page);
-  await f.getByRole('button', { name: 'Cambiar fecha o turno' }).click();
+  await expect(f.locator('.badge', { hasText: 'No es hoy' })).toHaveCount(0);
   await f.locator('input[type=date]').fill('2026-03-10');
-  await f.getByRole('button', { name: /Listo/ }).click();
   await expect(f.locator('.badge', { hasText: 'No es hoy' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Cargados el martes 10/3' })).toBeVisible();
   await expect(primeraTabla(page).locator('tbody tr')).toHaveCount(2);

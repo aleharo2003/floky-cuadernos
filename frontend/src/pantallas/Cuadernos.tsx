@@ -18,7 +18,7 @@ import NuevaCategoria from '../componentes/NuevaCategoria';
 import ResumenAnual from '../componentes/ResumenAnual';
 import TarjetaCaja from '../componentes/TarjetaCaja';
 import { useSesion } from '../estado/Sesion';
-import { rangoDelMes, rangoEsteMes, rangoValido } from '../lib/fechas';
+import { rangoDelMes, rangoHoy, rangoValido } from '../lib/fechas';
 import { MONTO_ILEGIBLE, diaConNombre, diaLegible, fechaHora, fechaIso, leerMonto, pesos, pesosEnteros, problemaDeMonto } from '../lib/formato';
 import { recordarTurno, turnoSugerido } from '../lib/turno';
 import { REFRESCO_MS, useConsulta } from '../lib/useConsulta';
@@ -314,6 +314,8 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
   const gastos = (delDia ?? []).filter((m) => m.tipo === 'egreso').reduce((t, m) => t + m.monto, 0);
 
   const cambiar = (parte: Partial<Borrador>) => {
+    // El turno tocado queda para la próxima vez que se abra la carga en este dispositivo, ese día.
+    if (parte.turno) recordarTurno(parte.turno);
     setBorrador((b) => ({ ...b, ...parte }));
     setAviso('');
     setAvisoOk('');
@@ -339,7 +341,6 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
       setGuardando(false);
     }
     clave.current = crypto.randomUUID();
-    recordarTurno(datos.turno);
     const categoria = categorias[datos.tipo].find((c) => c.id === datos.categoriaId)?.nombre ?? '';
     const yVenta = nuevo.ventaId ? `, y su venta ${MEDIO_EN_FRASE[datos.medioPago]}` : '';
     setAvisoOk(`Guardado: ${nombreTipo(datos.tipo).toLowerCase()} de ${categoria}, ${pesos(datos.monto)}${yVenta}.`);
@@ -352,55 +353,59 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
   };
 
   return (
-    <div className="carga">
-      <Card titulo="Cargar movimiento" className="carga-form no-imprimir">
-        <FormMovimiento
-          borrador={borrador}
-          onCambio={cambiar}
-          categorias={categorias}
-          mediosVenta={mediosVenta}
-          onNuevaCategoria={puedeCrearCategorias ? () => setCreandoCategoria(true) : undefined}
-          fechaYTurno="resumen"
-          campoCategoria={campoCategoria}
-          aviso={aviso}
-          avisoOk={avisoOk}
-          guardando={guardando}
-          textoGuardar="Guardar movimiento"
-          onGuardar={guardar}
-        />
-      </Card>
+    <>
+      {/* La misma caja de Reportes: mientras se carga se ve cómo queda, sin cambiar de solapa. */}
+      <BurbujaCaja vuelta={vuelta} />
+      <div className="carga">
+        <Card titulo="Cargar movimiento" className="carga-form no-imprimir">
+          <FormMovimiento
+            borrador={borrador}
+            onCambio={cambiar}
+            categorias={categorias}
+            mediosVenta={mediosVenta}
+            onNuevaCategoria={puedeCrearCategorias ? () => setCreandoCategoria(true) : undefined}
+            avisarSiNoEsHoy
+            campoCategoria={campoCategoria}
+            aviso={aviso}
+            avisoOk={avisoOk}
+            guardando={guardando}
+            textoGuardar="Guardar movimiento"
+            onGuardar={guardar}
+          />
+        </Card>
 
-      <Card
-        titulo={dia ? `Cargados el ${diaConNombre(dia)}` : 'Cargados'}
-        nota={delDia && delDia.length > 0 ? `Ingresos ${pesos(ingresos)}, gastos ${pesos(gastos)}. Los anulados no se muestran.` : undefined}
-        className="carga-dia"
-      >
-        {dia && <CajaDelTurno dia={dia} turno={borrador.turno} vuelta={vuelta} />}
-        {!delDia ? (
-          <p className="cargando">Cargando…</p>
-        ) : (
-          <DataTable<Movimiento>
-            filas={delDia}
-            clave={(m) => m.id}
-            seleccionada={ultimo}
-            vacio="Todavía no hay nada cargado en esta fecha."
-            columnas={columnasMovimiento(false, acciones)}
+        <Card
+          titulo={dia ? `Cargados el ${diaConNombre(dia)}` : 'Cargados'}
+          nota={delDia && delDia.length > 0 ? `Ingresos ${pesos(ingresos)}, gastos ${pesos(gastos)}. Los anulados no se muestran.` : undefined}
+          className="carga-dia"
+        >
+          {dia && <CajaDelTurno dia={dia} turno={borrador.turno} vuelta={vuelta} />}
+          {!delDia ? (
+            <p className="cargando">Cargando…</p>
+          ) : (
+            <DataTable<Movimiento>
+              filas={delDia}
+              clave={(m) => m.id}
+              seleccionada={ultimo}
+              vacio="Todavía no hay nada cargado en esta fecha."
+              columnas={columnasMovimiento(false, acciones)}
+            />
+          )}
+        </Card>
+
+        {creandoCategoria && (
+          <NuevaCategoria
+            tipo={borrador.tipo}
+            onCerrar={() => setCreandoCategoria(false)}
+            onCreada={(c) => {
+              setCreandoCategoria(false);
+              recargarCategorias();
+              cambiar({ categoriaId: c.id });
+            }}
           />
         )}
-      </Card>
-
-      {creandoCategoria && (
-        <NuevaCategoria
-          tipo={borrador.tipo}
-          onCerrar={() => setCreandoCategoria(false)}
-          onCreada={(c) => {
-            setCreandoCategoria(false);
-            recargarCategorias();
-            cambiar({ categoriaId: c.id });
-          }}
-        />
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -417,7 +422,8 @@ function SolapaReportes({ categorias, local, vuelta, onCambio, acciones }: Props
   const { puede } = useSesion();
   const puedeExportar = puede('notebooks.export');
   const puedeCargarInicial = puede('notebooks.set_cash_opening');
-  const [rango, setRango] = useState<RangoFechas>(rangoEsteMes);
+  // Arranca siempre en hoy: es lo que se mira todos los días. Otro período se elige arriba.
+  const [rango, setRango] = useState<RangoFechas>(rangoHoy);
   const [filtros, setFiltros] = useState<Filtros>(SIN_FILTROS);
   // El texto se busca cuando se deja de tipear, no en cada tecla.
   const texto = useDemorado(filtros.texto);
@@ -654,7 +660,6 @@ function Correccion({
         }}
         categorias={categorias}
         mediosVenta={mediosVenta}
-        fechaYTurno="campos"
         correccion
         ofrecerVenta={!movimiento.ventaId}
         aviso={aviso}
