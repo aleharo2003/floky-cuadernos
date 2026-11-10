@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError, connection, transaction
 
 from accounts.models import Membership
 from core.models import Tenant, record
@@ -361,6 +361,14 @@ def set_sale_methods(membership: Membership, methods: list[str]) -> list[str]:
     return chosen
 
 
+def _delete_entries_and_opening(tenant: Tenant) -> None:
+    entries = Entry.objects.filter(tenant=tenant)
+    # The sales first: they point to their cost, and that link does not let the cost go first.
+    entries.exclude(from_expense=None).delete()
+    entries.delete()
+    CashOpening.objects.filter(tenant=tenant).delete()
+
+
 def empty_notebooks(tenant: Tenant, actor, reason: str) -> dict:
     """Delete every entry and the opening haber of one shop, to start from zero (ADR-0015).
 
@@ -379,11 +387,7 @@ def empty_notebooks(tenant: Tenant, actor, reason: str) -> dict:
         before = dict(counts)
         if opening:
             before["cash_opening"] = opening.snapshot()
-        # The sales first: they point to their cost, and that link does not let the cost go first.
-        entries.exclude(from_expense=None).delete()
-        entries.delete()
-        if opening:
-            opening.delete()
+        _delete_entries_and_opening(tenant)
         record(
             tenant=tenant,
             actor=actor,
@@ -395,3 +399,141 @@ def empty_notebooks(tenant: Tenant, actor, reason: str) -> dict:
             reason=reason[:200],
         )
     return {**counts, "cash_opening": opening is not None}
+
+
+# After these, "recent changes" only lists what came later: the entries before them no longer exist.
+NOTEBOOK_RESETS = ("notebooks.empty", "notebooks.clone")
+_BATCH = 1000
+
+
+def _keep_when_loaded(copies: dict, originals: list) -> None:
+    """Creating the copies stamps "now". Put back when each original was loaded and last changed.
+
+    One UPDATE with the values as arrays. Django's bulk_update writes a CASE per batch, and with
+    65.000 entries that took 19 of the 30 seconds of a copy. The values go as parameters, never
+    pasted into the SQL.
+    """
+    table = connection.ops.quote_name(Entry._meta.db_table)
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"UPDATE {table} AS e SET created_at = v.created_at, updated_at = v.updated_at"  # noqa: S608 - the table name comes from the model
+            " FROM unnest(%s::uuid[], %s::timestamptz[], %s::timestamptz[]) AS v(id, created_at, updated_at)"
+            " WHERE e.id = v.id",
+            [
+                [copies[e.id].id for e in originals],
+                [e.created_at for e in originals],
+                [e.updated_at for e in originals],
+            ],
+        )
+
+
+def clone_notebooks(source: Tenant, target: Tenant, actor, reason: str) -> dict:
+    """Make a test shop an exact copy of another shop's notebooks, to reproduce a problem (ADR-0017).
+
+    Only into a shop marked as a test shop, and what it had is deleted first: entries, opening haber,
+    categories and settings. People and memberships are not copied, and nobody gets access to the
+    test shop through this. Each entry keeps who loaded it and when. The source is only read.
+    Both shops get an audit row: the test shop says what it had and where the copy came from, and
+    the source says who copied it, when and why.
+    """
+    reason = _reason(reason)
+    if source.pk == target.pk:
+        raise RuleError("Elegí un local de pruebas distinto del que copiás.")
+    with transaction.atomic():
+        # Locked, so two copies into the same test shop cannot mix.
+        target = Tenant.objects.select_for_update().get(pk=target.pk)
+        if not target.is_test:
+            raise RuleError(f"{target.name} no está marcado como local de pruebas. No se copió nada.")
+
+        had = Entry.objects.filter(tenant=target)
+        before = {
+            "entries": had.filter(is_voided=False).count(),
+            "voided": had.filter(is_voided=True).count(),
+            "categories": Category.objects.filter(tenant=target).count(),
+        }
+        _delete_entries_and_opening(target)
+        Category.objects.filter(tenant=target).delete()
+        ShopSettings.objects.filter(tenant=target).delete()
+
+        categories = {
+            c.id: Category(
+                tenant=target, name=c.name, kind=c.kind, is_active=c.is_active, is_system=c.is_system
+            )
+            for c in Category.objects.filter(tenant=source)
+        }
+        Category.objects.bulk_create(categories.values())
+
+        originals = list(Entry.objects.filter(tenant=source).order_by("created_at"))
+        copies = {
+            e.id: Entry(
+                tenant=target,
+                category=categories[e.category_id],
+                kind=e.kind,
+                date=e.date,
+                description=e.description,
+                amount=e.amount,
+                payment_method=e.payment_method,
+                shift=e.shift,
+                is_voided=e.is_voided,
+                void_reason=e.void_reason,
+                created_by_id=e.created_by_id,
+            )
+            for e in originals
+        }
+        # The costs before their sales: a sale points to its cost.
+        sales = [e for e in originals if e.from_expense_id]
+        Entry.objects.bulk_create(
+            [copies[e.id] for e in originals if not e.from_expense_id], batch_size=_BATCH
+        )
+        for e in sales:
+            copies[e.id].from_expense = copies[e.from_expense_id]
+        Entry.objects.bulk_create([copies[e.id] for e in sales], batch_size=_BATCH)
+        _keep_when_loaded(copies, originals)
+
+        # The opening haber and the settings keep who set them and when, like the entries.
+        opening = CashOpening.objects.filter(tenant=source).first()
+        if opening:
+            CashOpening.objects.create(
+                tenant=target, amount=opening.amount, updated_by_id=opening.updated_by_id
+            )
+            CashOpening.objects.filter(tenant=target).update(updated_at=opening.updated_at)
+        shop_settings = ShopSettings.objects.filter(tenant=source).first()
+        if shop_settings:
+            ShopSettings.objects.create(
+                tenant=target,
+                sale_methods=list(shop_settings.sale_methods),
+                updated_by_id=shop_settings.updated_by_id,
+            )
+            ShopSettings.objects.filter(tenant=target).update(updated_at=shop_settings.updated_at)
+
+        done = {
+            "entries": sum(1 for e in originals if not e.is_voided),
+            "voided": sum(1 for e in originals if e.is_voided),
+            "categories": len(categories),
+            "cash_opening": opening is not None,
+            "settings": shop_settings is not None,
+        }
+        record(
+            tenant=target,
+            actor=actor,
+            action="notebooks.clone",
+            entity="shop",
+            entity_id=target.id,
+            before=before,
+            after={
+                **done,
+                "from": source.name,
+                "cash_opening": opening.snapshot() if opening else None,
+            },
+            reason=reason[:200],
+        )
+        record(
+            tenant=source,
+            actor=actor,
+            action="notebooks.copied",
+            entity="shop",
+            entity_id=source.id,
+            after={"to": target.name},
+            reason=reason[:200],
+        )
+    return done

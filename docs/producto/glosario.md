@@ -7,6 +7,7 @@ Si una palabra significa una cosa en una reunión y otra en el código, tarde o 
 | Término | Significado | En el código |
 |---|---|---|
 | Local | Un comercio que usa el sistema. Tiene sus cuadernos, sus categorías y su gente | `Tenant` |
+| Local de pruebas | Un local del equipo, no de un cliente. Se le puede copiar el local de un cliente para ver un problema con sus mismos datos (ADR-0017) | `Tenant.is_test` |
 | Cuaderno | Lo que el local anotaba en papel. Comedor TJ lleva dos: "Costos" (cada gasto) y el anual (ventas y haber por turno) | app `notebooks` |
 | Movimiento | Cada anotación: fecha, turno, tipo, categoría, descripción, importe y medio de pago | `Entry` |
 | Turno | Mañana o noche. La caja se cierra al final de cada uno. El turno noche que termina después de medianoche conserva la fecha en que empezó | `shift` |

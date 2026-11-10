@@ -28,6 +28,7 @@ Un ADR registra una decisión importante: el contexto, las opciones que se mirar
 | [0014](0014-tilde-de-venta-en-todo-gasto-sin-efectivo.md) | Todo gasto que no sea en efectivo puede sumar su venta; los ajustes eligen cuáles vienen marcados | Aceptada | Nueva |
 | [0015](0015-vaciar-los-cuadernos-de-un-local.md) | Vaciar los cuadernos de un local desde el admin | Aceptada | Nueva |
 | [0016](0016-haber-inicial-sin-fecha-y-caja-en-vivo.md) | El haber inicial es un solo monto, sin fecha ni turno, y la caja se refresca sola | Aceptada | Nueva |
+| [0017](0017-copiar-un-local-a-uno-de-pruebas.md) | Copiar los cuadernos de un local a un local de pruebas | Aceptada | Nueva |
 
 
 ## Cómo escribir uno nuevo

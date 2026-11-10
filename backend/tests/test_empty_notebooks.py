@@ -4,57 +4,16 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.test import Client
 
-from accounts.models import Membership, Role
+from accounts.models import Membership
 from core.models import AuditEntry
 from notebooks import services
-from notebooks.models import CashOpening, Category, Entry, Kind, ShopNotebooks, ShopSettings
-from tests.conftest import PASSWORD
+from notebooks.models import CashOpening, Category, Entry, ShopNotebooks, ShopSettings
+from tests.conftest import PASSWORD, entry
 
 pytestmark = pytest.mark.django_db
 
 ENTRIES = "/api/notebooks/entries/"
 ADMIN = "/admin/notebooks/shopnotebooks/"
-
-
-def entry(categories, shop="Local Norte", **overrides):
-    data = {
-        "date": "2026-10-10",
-        "kind": Kind.EXPENSE,
-        "category_id": str(categories[shop, Kind.EXPENSE].id),
-        "description": "algo",
-        "amount": "1000.00",
-        "payment_method": "cash",
-        "shift": "night",
-    }
-    return data | overrides
-
-
-@pytest.fixture
-def loaded(as_role, categories, norte, centro):
-    """Local Norte with a debit cost and its sale, a voided entry, an opening haber and settings.
-    Local Centro with one entry of its own."""
-    owner = as_role(Role.OWNER)
-    owner.post(ENTRIES, entry(categories, payment_method="debit", add_sale=True), format="json")
-    voided = owner.post(ENTRIES, entry(categories, description="mal"), format="json").data["id"]
-    owner.post(f"{ENTRIES}{voided}/void/", {"reason": "cargado dos veces"}, format="json")
-    owner.put(
-        "/api/notebooks/cash/opening/",
-        {"amount": "500000"},
-        format="json",
-    )
-    owner.put("/api/notebooks/settings/", {"sale_methods": ["debit"]}, format="json")
-    user = get_user_model().objects.get(memberships__tenant=norte)
-    Entry.objects.create(
-        tenant=centro,
-        category=categories["Local Centro", Kind.EXPENSE],
-        kind=Kind.EXPENSE,
-        date="2026-10-10",
-        amount="5.00",
-        payment_method="cash",
-        shift="night",
-        created_by=user,
-    )
-    return owner, user
 
 
 def test_it_deletes_entries_and_opening_and_keeps_the_rest(loaded, norte, centro):
@@ -109,14 +68,6 @@ def test_the_box_starts_with_no_opening(loaded, norte):
 
 
 # ---------- the admin page ----------
-
-
-@pytest.fixture
-def admin_client(db):
-    user = get_user_model().objects.create_superuser("admin", password=PASSWORD)
-    client = Client()
-    client.force_login(user)
-    return client
 
 
 def act(client, shop, **extra):

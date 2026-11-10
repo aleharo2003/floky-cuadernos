@@ -22,7 +22,7 @@ Opción 2.
 - Solo la ven los **superusuarios**. Un local por vez.
 - Antes de borrar muestra qué se va a perder y pide **escribir el nombre del local tal cual** y un **motivo**. Con el nombre mal escrito no borra nada.
 - Todo en una transacción. La auditoría **no se borra** (la base no lo permite, ADR de auditoría): se agrega un registro `notebooks.empty` con quién, cuándo, el motivo, cuántos movimientos había y el haber inicial que tenía.
-- "Cambios recientes" muestra solo lo posterior al último vaciado, para no listar movimientos que ya no existen.
+- "Cambios recientes" muestra solo lo posterior al último vaciado, para no listar movimientos que ya no existen. Desde [ADR-0017](0017-copiar-un-local-a-uno-de-pruebas.md), también lo posterior a la última copia a un local de pruebas.
 
 ## Consecuencias
 

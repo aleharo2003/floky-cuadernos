@@ -29,6 +29,7 @@ erDiagram
         uuid id PK
         string name
         string timezone
+        bool is_test "local de pruebas, ADR-0017"
     }
     MEMBERSHIP {
         uuid user_id FK
