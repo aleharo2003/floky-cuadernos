@@ -106,7 +106,6 @@ export async function cargarMovimiento(
 ) {
   const f = formulario(p);
   if (m.turno) {
-    if (!(await f.locator('input[type=date]').isVisible())) await f.getByRole('button', { name: 'Cambiar fecha o turno' }).click();
     await f.getByRole('group', { name: 'Turno' }).getByRole('button', { name: m.turno }).click();
   }
   await f.getByRole('group', { name: 'Tipo' }).getByRole('button', { name: m.tipo }).click();

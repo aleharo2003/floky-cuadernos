@@ -28,7 +28,6 @@ test('se actualiza con lo que se carga hoy, y lo de mañana todavía no cuenta',
   await cargarMovimiento(page, { tipo: 'Gasto', categoria: 'Proveedores', descripcion: 'Hielo', monto: '5.000', medio: 'Efectivo' });
   // Un gasto con fecha de mañana (se puede cargar por adelantado, P-13).
   const f = formulario(page);
-  await f.getByRole('button', { name: 'Cambiar fecha o turno' }).click();
   await f.locator('input[type=date]').fill('2026-03-12');
   await cargarMovimiento(page, { tipo: 'Gasto', categoria: 'Proveedores', descripcion: 'Para mañana', monto: '100.000', medio: 'Efectivo' });
   await irAReportes(page);

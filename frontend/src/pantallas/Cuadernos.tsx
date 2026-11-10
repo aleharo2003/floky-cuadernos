@@ -314,6 +314,8 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
   const gastos = (delDia ?? []).filter((m) => m.tipo === 'egreso').reduce((t, m) => t + m.monto, 0);
 
   const cambiar = (parte: Partial<Borrador>) => {
+    // El turno tocado queda para la próxima vez que se abra la carga en este dispositivo, ese día.
+    if (parte.turno) recordarTurno(parte.turno);
     setBorrador((b) => ({ ...b, ...parte }));
     setAviso('');
     setAvisoOk('');
@@ -339,7 +341,6 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
       setGuardando(false);
     }
     clave.current = crypto.randomUUID();
-    recordarTurno(datos.turno);
     const categoria = categorias[datos.tipo].find((c) => c.id === datos.categoriaId)?.nombre ?? '';
     const yVenta = nuevo.ventaId ? `, y su venta ${MEDIO_EN_FRASE[datos.medioPago]}` : '';
     setAvisoOk(`Guardado: ${nombreTipo(datos.tipo).toLowerCase()} de ${categoria}, ${pesos(datos.monto)}${yVenta}.`);
@@ -352,55 +353,59 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
   };
 
   return (
-    <div className="carga">
-      <Card titulo="Cargar movimiento" className="carga-form no-imprimir">
-        <FormMovimiento
-          borrador={borrador}
-          onCambio={cambiar}
-          categorias={categorias}
-          mediosVenta={mediosVenta}
-          onNuevaCategoria={puedeCrearCategorias ? () => setCreandoCategoria(true) : undefined}
-          fechaYTurno="resumen"
-          campoCategoria={campoCategoria}
-          aviso={aviso}
-          avisoOk={avisoOk}
-          guardando={guardando}
-          textoGuardar="Guardar movimiento"
-          onGuardar={guardar}
-        />
-      </Card>
+    <>
+      {/* La misma caja de Reportes: mientras se carga se ve cómo queda, sin cambiar de solapa. */}
+      <BurbujaCaja vuelta={vuelta} />
+      <div className="carga">
+        <Card titulo="Cargar movimiento" className="carga-form no-imprimir">
+          <FormMovimiento
+            borrador={borrador}
+            onCambio={cambiar}
+            categorias={categorias}
+            mediosVenta={mediosVenta}
+            onNuevaCategoria={puedeCrearCategorias ? () => setCreandoCategoria(true) : undefined}
+            avisarSiNoEsHoy
+            campoCategoria={campoCategoria}
+            aviso={aviso}
+            avisoOk={avisoOk}
+            guardando={guardando}
+            textoGuardar="Guardar movimiento"
+            onGuardar={guardar}
+          />
+        </Card>
 
-      <Card
-        titulo={dia ? `Cargados el ${diaConNombre(dia)}` : 'Cargados'}
-        nota={delDia && delDia.length > 0 ? `Ingresos ${pesos(ingresos)}, gastos ${pesos(gastos)}. Los anulados no se muestran.` : undefined}
-        className="carga-dia"
-      >
-        {dia && <CajaDelTurno dia={dia} turno={borrador.turno} vuelta={vuelta} />}
-        {!delDia ? (
-          <p className="cargando">Cargando…</p>
-        ) : (
-          <DataTable<Movimiento>
-            filas={delDia}
-            clave={(m) => m.id}
-            seleccionada={ultimo}
-            vacio="Todavía no hay nada cargado en esta fecha."
-            columnas={columnasMovimiento(false, acciones)}
+        <Card
+          titulo={dia ? `Cargados el ${diaConNombre(dia)}` : 'Cargados'}
+          nota={delDia && delDia.length > 0 ? `Ingresos ${pesos(ingresos)}, gastos ${pesos(gastos)}. Los anulados no se muestran.` : undefined}
+          className="carga-dia"
+        >
+          {dia && <CajaDelTurno dia={dia} turno={borrador.turno} vuelta={vuelta} />}
+          {!delDia ? (
+            <p className="cargando">Cargando…</p>
+          ) : (
+            <DataTable<Movimiento>
+              filas={delDia}
+              clave={(m) => m.id}
+              seleccionada={ultimo}
+              vacio="Todavía no hay nada cargado en esta fecha."
+              columnas={columnasMovimiento(false, acciones)}
+            />
+          )}
+        </Card>
+
+        {creandoCategoria && (
+          <NuevaCategoria
+            tipo={borrador.tipo}
+            onCerrar={() => setCreandoCategoria(false)}
+            onCreada={(c) => {
+              setCreandoCategoria(false);
+              recargarCategorias();
+              cambiar({ categoriaId: c.id });
+            }}
           />
         )}
-      </Card>
-
-      {creandoCategoria && (
-        <NuevaCategoria
-          tipo={borrador.tipo}
-          onCerrar={() => setCreandoCategoria(false)}
-          onCreada={(c) => {
-            setCreandoCategoria(false);
-            recargarCategorias();
-            cambiar({ categoriaId: c.id });
-          }}
-        />
-      )}
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -654,7 +659,6 @@ function Correccion({
         }}
         categorias={categorias}
         mediosVenta={mediosVenta}
-        fechaYTurno="campos"
         correccion
         ofrecerVenta={!movimiento.ventaId}
         aviso={aviso}

@@ -1,4 +1,4 @@
-import { accion, cargarMovimiento, CELULAR, expect, ingresar, irACargar, irAReportes, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
+import { accion, cargarMovimiento, CELULAR, expect, formulario, ingresar, irACargar, irAReportes, primeraTabla, reiniciarDatos, sinDesborde, test } from './ayuda';
 import type { Page } from '@playwright/test';
 
 // Caja en efectivo por turno (ADR-0008, ADR-0016). El seed arranca con haber inicial de $ 500.000.
@@ -30,7 +30,10 @@ test('la caja suma efectivo, ignora lo cobrado sin efectivo, avisa si da negativ
   await expect(noche).toContainText('520.000,00');
   await expect(noche).toContainText('-$ 200.000,00');
   await irACargar(page);
-  await expect(page.locator('.carga-contexto'), 'el formulario propone el turno usado hoy').toContainText('turno noche');
+  await expect(
+    formulario(page).getByRole('group', { name: 'Turno' }).getByRole('button', { name: 'Noche' }),
+    'el formulario propone el turno usado hoy',
+  ).toHaveAttribute('aria-pressed', 'true');
   await irAReportes(page);
 
   // Un gasto en efectivo enorme deja la caja negativa: avisa, no bloquea. Al anularlo vuelve.

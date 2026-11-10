@@ -79,9 +79,7 @@ const tarjeta = (p, titulo) => p.locator(`.tarjeta:has(h2:text-is("${titulo}"))`
   p = await abrir(browser, celular);
   await ingresar(p, 'tomas');
   const form = p.locator('form.formulario').first();
-  await form.locator('button:has-text("Cambiar")').click();
   await form.locator('.segmentado button:text-is("Noche")').click();
-  await form.locator('button:has-text("Listo")').click();
   await form.locator('.segmentado button:text-is("Ingreso")').click();
   await form.locator('select').first().selectOption({ label: 'Ventas' });
   await form.locator('input[placeholder="Por ejemplo: verdura"]').fill('Cobrado por Mercado Pago');
