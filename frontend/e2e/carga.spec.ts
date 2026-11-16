@@ -33,6 +33,38 @@ test('doble clic en guardar guarda uno solo', async ({ page }) => {
   await expect(primeraTabla(page).locator('td', { hasText: 'Hielo' })).toHaveCount(1);
 });
 
+test('mientras guarda no se puede empezar el renglón siguiente', async ({ page }) => {
+  // Con la red lenta del celular, lo que se cargaba durante la espera se borraba al volver la respuesta.
+  let soltar = () => {};
+  const respuesta = new Promise<void>((r) => (soltar = r));
+  await page.route('**/api/notebooks/entries/', async (route) => {
+    if (route.request().method() === 'POST') await respuesta;
+    await route.continue();
+  });
+  await ingresar(page, 'tomas');
+  const f = formulario(page);
+  await f.locator('select').first().selectOption({ label: 'Proveedores' });
+  await f.getByPlaceholder('Por ejemplo: verdura').fill('Hielo');
+  await f.locator('input[inputmode=decimal]').fill('4000');
+  await f.getByRole('button', { name: /Guardar movimiento/ }).click();
+
+  await expect(f.getByRole('button', { name: /Guardando…/ })).toBeDisabled();
+  await expect(f.locator('select').first()).toBeDisabled();
+  await expect(f.getByPlaceholder('Por ejemplo: verdura')).toBeDisabled();
+  await expect(f.locator('input[inputmode=decimal]')).toBeDisabled();
+
+  soltar();
+  await expect(f.locator('.aviso-ok')).toContainText('Guardado: gasto de Proveedores');
+  await expect(f.locator('select').first()).toBeEnabled();
+  await expect(f.locator('select').first()).toBeFocused();
+  // Lo que se elige ahora es del renglón siguiente y queda.
+  await f.locator('select').first().selectOption({ label: 'Proveedores' });
+  await f.getByPlaceholder('Por ejemplo: verdura').fill('Carbón');
+  await page.waitForTimeout(500);
+  await expect(f.locator('select').first()).toHaveValue(/.+/);
+  await expect(f.getByPlaceholder('Por ejemplo: verdura')).toHaveValue('Carbón');
+});
+
 test('carga en serie: quedan fecha, turno, tipo y medio; el cursor vuelve a Categoría', async ({ page }) => {
   await ingresar(page, 'tomas');
   const f = formulario(page);

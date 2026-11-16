@@ -87,88 +87,94 @@ export default function FormMovimiento({
   const noEsHoy = avisarSiNoEsHoy && borrador.fecha !== fechaIso(new Date());
 
   return (
-    <form className="formulario" onSubmit={onGuardar}>
-      {/* Siempre a la vista, como Gasto e Ingreso: se carga en el momento, de cualquier turno. */}
-      <div className="carga-fecha-turno">
-        <label className="campo">
-          <span className="campo-rotulo-con-aviso">
-            Fecha
-            {noEsHoy && <Badge tono="aviso">No es hoy</Badge>}
-          </span>
-          <input className="campo-texto" type="date" required value={borrador.fecha} onChange={(e) => onCambio({ fecha: e.target.value })} />
-        </label>
-        <div className="campo">
-          <span>Turno</span>
-          <SegmentedControl etiqueta="Turno" opciones={TURNOS} valor={borrador.turno} onChange={(turno) => onCambio({ turno })} bloque />
+    <form className="formulario" onSubmit={onGuardar} aria-busy={guardando}>
+      {/*
+        Mientras se guarda no se puede tocar nada: si se empezara el renglón siguiente, la limpieza
+        que llega con la respuesta lo borraría (pasaba con la red lenta del celular).
+      */}
+      <fieldset className="formulario-campos" disabled={guardando}>
+        {/* Siempre a la vista, como Gasto e Ingreso: se carga en el momento, de cualquier turno. */}
+        <div className="carga-fecha-turno">
+          <label className="campo">
+            <span className="campo-rotulo-con-aviso">
+              Fecha
+              {noEsHoy && <Badge tono="aviso">No es hoy</Badge>}
+            </span>
+            <input className="campo-texto" type="date" required value={borrador.fecha} onChange={(e) => onCambio({ fecha: e.target.value })} />
+          </label>
+          <div className="campo">
+            <span>Turno</span>
+            <SegmentedControl etiqueta="Turno" opciones={TURNOS} valor={borrador.turno} onChange={(turno) => onCambio({ turno })} bloque />
+          </div>
         </div>
-      </div>
-      <div className="campo">
-        <span>Tipo</span>
-        <SegmentedControl etiqueta="Tipo" opciones={TIPOS} valor={borrador.tipo} onChange={(tipo) => onCambio({ tipo, categoriaId: '' })} bloque />
-      </div>
-      <label className="campo">
-        <span>Categoría</span>
-        <select
-          ref={campoCategoria}
-          required
-          value={borrador.categoriaId}
-          onChange={(e) => {
-            // La última opción no es una categoría: abre la ventana para crear una nueva.
-            if (e.target.value === NUEVA) onNuevaCategoria?.();
-            else onCambio({ categoriaId: e.target.value });
-          }}
-        >
-          <option value="">Elegí una categoría</option>
-          {categorias[borrador.tipo].map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.nombre}
-            </option>
-          ))}
-          {onNuevaCategoria && <option value={NUEVA}>+ Nueva categoría…</option>}
-        </select>
-      </label>
-      <CampoDescripcion tipo={borrador.tipo} valor={borrador.descripcion} onChange={(descripcion) => onCambio({ descripcion })} />
-      <CampoMonto rotulo="Monto" valor={borrador.monto} onChange={(monto) => onCambio({ monto })} />
-      <label className="campo">
-        <span>Medio de pago</span>
-        <select
-          value={borrador.medioPago}
-          onChange={(e) => {
-            const medioPago = e.target.value as MedioPago;
-            // El tilde de la venta viene marcado o no según el medio, como lo ajustó el dueño (ADR-0014).
-            onCambio({ medioPago, sumarAVenta: mediosVenta.includes(medioPago) });
-          }}
-        >
-          {MEDIOS.map((m) => (
-            <option key={m} value={m}>
-              {NOMBRE_MEDIO[m]}
-            </option>
-          ))}
-        </select>
-      </label>
-      {ofrecerVenta && borrador.tipo === 'egreso' && borrador.medioPago !== 'cash' && (
-        <label className="campo-tilde">
-          <input type="checkbox" checked={borrador.sumarAVenta} onChange={(e) => onCambio({ sumarAVenta: e.target.checked })} />
-          <span>
-            Sumarlo también a la venta, {MEDIO_EN_FRASE[borrador.medioPago]}
-            <small>Como en el cuaderno: se carga una venta por el mismo monto.</small>
-          </span>
-        </label>
-      )}
-      {correccion && (
+        <div className="campo">
+          <span>Tipo</span>
+          <SegmentedControl etiqueta="Tipo" opciones={TIPOS} valor={borrador.tipo} onChange={(tipo) => onCambio({ tipo, categoriaId: '' })} bloque />
+        </div>
         <label className="campo">
-          <span>Motivo de la corrección</span>
-          <input
-            className="campo-texto"
-            type="text"
+          <span>Categoría</span>
+          <select
+            ref={campoCategoria}
             required
-            maxLength={200}
-            value={borrador.motivo}
-            placeholder="Por ejemplo: el monto era otro"
-            onChange={(e) => onCambio({ motivo: e.target.value })}
-          />
+            value={borrador.categoriaId}
+            onChange={(e) => {
+              // La última opción no es una categoría: abre la ventana para crear una nueva.
+              if (e.target.value === NUEVA) onNuevaCategoria?.();
+              else onCambio({ categoriaId: e.target.value });
+            }}
+          >
+            <option value="">Elegí una categoría</option>
+            {categorias[borrador.tipo].map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+            {onNuevaCategoria && <option value={NUEVA}>+ Nueva categoría…</option>}
+          </select>
         </label>
-      )}
+        <CampoDescripcion tipo={borrador.tipo} valor={borrador.descripcion} onChange={(descripcion) => onCambio({ descripcion })} />
+        <CampoMonto rotulo="Monto" valor={borrador.monto} onChange={(monto) => onCambio({ monto })} />
+        <label className="campo">
+          <span>Medio de pago</span>
+          <select
+            value={borrador.medioPago}
+            onChange={(e) => {
+              const medioPago = e.target.value as MedioPago;
+              // El tilde de la venta viene marcado o no según el medio, como lo ajustó el dueño (ADR-0014).
+              onCambio({ medioPago, sumarAVenta: mediosVenta.includes(medioPago) });
+            }}
+          >
+            {MEDIOS.map((m) => (
+              <option key={m} value={m}>
+                {NOMBRE_MEDIO[m]}
+              </option>
+            ))}
+          </select>
+        </label>
+        {ofrecerVenta && borrador.tipo === 'egreso' && borrador.medioPago !== 'cash' && (
+          <label className="campo-tilde">
+            <input type="checkbox" checked={borrador.sumarAVenta} onChange={(e) => onCambio({ sumarAVenta: e.target.checked })} />
+            <span>
+              Sumarlo también a la venta, {MEDIO_EN_FRASE[borrador.medioPago]}
+              <small>Como en el cuaderno: se carga una venta por el mismo monto.</small>
+            </span>
+          </label>
+        )}
+        {correccion && (
+          <label className="campo">
+            <span>Motivo de la corrección</span>
+            <input
+              className="campo-texto"
+              type="text"
+              required
+              maxLength={200}
+              value={borrador.motivo}
+              placeholder="Por ejemplo: el monto era otro"
+              onChange={(e) => onCambio({ motivo: e.target.value })}
+            />
+          </label>
+        )}
+      </fieldset>
       {/* Los dos avisos existen siempre (vacíos no ocupan lugar) para que el lector de pantalla los anuncie al aparecer. */}
       <div className="formulario-mensajes">
         <p className="login-error" role="alert">
@@ -180,7 +186,7 @@ export default function FormMovimiento({
       </div>
       <div className="acciones">
         <Button type="submit" variante="primario" disabled={guardando}>
-          {textoGuardar} <Tecla id="confirmar" />
+          {guardando ? 'Guardando…' : textoGuardar} <Tecla id="confirmar" />
         </Button>
         {acciones}
       </div>
