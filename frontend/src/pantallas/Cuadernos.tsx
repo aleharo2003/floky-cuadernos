@@ -296,6 +296,14 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
   const [ultimo, setUltimo] = useState<string>();
   const [creandoCategoria, setCreandoCategoria] = useState(false);
   const campoCategoria = useRef<HTMLSelectElement>(null);
+  // Después de guardar, el cursor vuelve a Categoría. Recién se puede cuando los campos se
+  // desbloquean: un campo deshabilitado no toma el foco.
+  const volverACategoria = useRef(false);
+  useEffect(() => {
+    if (guardando || !volverACategoria.current) return;
+    volverACategoria.current = false;
+    campoCategoria.current?.focus();
+  }, [guardando]);
   // Una clave por intento de carga: si el mismo envío llega dos veces, se guarda uno solo (HU-021).
   const clave = useRef(crypto.randomUUID());
 
@@ -349,7 +357,7 @@ function SolapaCargar({ categorias, mediosVenta, puedeCrearCategorias, recargarC
     // la venta vuelve a lo que diga el local para ese medio.
     setBorrador((b) => ({ ...b, categoriaId: '', descripcion: '', monto: '', motivo: '', sumarAVenta: mediosVenta.includes(b.medioPago) }));
     onGuardado();
-    campoCategoria.current?.focus();
+    volverACategoria.current = true;
   };
 
   return (

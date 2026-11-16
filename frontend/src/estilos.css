@@ -491,6 +491,16 @@ a {
   gap: var(--esp-4);
 }
 
+/* Agrupa los campos para poder bloquearlos juntos mientras se guarda: no se ve como un recuadro. */
+.formulario-campos {
+  display: grid;
+  gap: var(--esp-4);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
 .campo {
   display: grid;
   gap: var(--esp-2);
