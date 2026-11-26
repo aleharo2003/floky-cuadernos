@@ -5,8 +5,8 @@ flowchart LR
         PG[("PostgreSQL<br/>Neon, con RLS")]
     end
     GA["GitHub Actions<br/>backup nocturno"]
-    R2[("Cloudflare R2<br/>backups cifrados")]
+    GCS[("Cloud Storage del dueño<br/>backups cifrados")]
     Nav -->|"HTTPS, sesión con cookie"| App
     App --> PG
     GA -->|"pg_dump"| PG
-    GA --> R2
+    GA --> GCS

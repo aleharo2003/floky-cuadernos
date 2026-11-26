@@ -8,9 +8,8 @@ Paso a paso para publicar los cuadernos por primera vez, y cómo se publica cada
 
 | Cuenta | Para qué | Costo esperado |
 |---|---|---|
-| Google Cloud | Correr la app (Cloud Run) y guardar los secretos | USD 0 dentro del cupo gratis. Pide tarjeta |
+| Google Cloud | Correr la app (Cloud Run), guardar los secretos y los backups | USD 0 dentro del cupo gratis, más centavos por los backups. Pide tarjeta |
 | Neon | La base de datos | USD 0 en el plan Free |
-| Cloudflare | Guardar los backups (R2) | USD 0 hasta 10 GB. Pide tarjeta para activar R2 |
 | GitHub | Ya está: corre los chequeos, publica y hace el backup | USD 0 |
 
 Tiempo estimado la primera vez: una hora y media.
@@ -26,7 +25,7 @@ Tiempo estimado la primera vez: una hora y media.
 ## 2. Neon: la base
 
 1. Creá un proyecto en Neon con región **AWS South America (São Paulo)**.
-2. Anotá la **versión de Postgres** que eligió (por ejemplo 17). La vas a cargar en GitHub como `PG_MAJOR`.
+2. Anotá la **versión de Postgres** que eligió (por ejemplo 18). La vas a cargar en GitHub como `PG_MAJOR`.
 3. Creá una base llamada `cuadernos` (o usá la que viene, `neondb`, da igual: lo que importa es que la cadena de conexión apunte a ella).
 4. En **Connect**, copiá la cadena de conexión **directa** (con "Connection pooling" apagado). Termina en `?sslmode=require`. No la pegues en ningún lado todavía: la pide el script del paso 3.
 5. Creá el usuario de solo lectura para los backups. En el **SQL Editor** de Neon, con un password largo generado por el gestor de contraseñas:
@@ -68,27 +67,38 @@ Al final imprime seis valores (`GCP_PROJECT_ID`, `GCP_PROJECT_NUMBER`, etc.). **
 
 Si lo corrés de nuevo, no rompe nada: saltea lo que ya existe.
 
-## 4. Cloudflare R2: dónde viven los backups
+## 4. Google Cloud: el bucket de los backups (script)
 
-1. En Cloudflare, activá **R2** y creá un bucket llamado `cuadernos-backups`.
-2. En el bucket, agregá una regla de ciclo de vida: **borrar los objetos con prefijo `daily/` a los 35 días**. Esa es la retención documentada.
-3. Creá un token de API de R2 con permiso **Object Read & Write**, limitado a ese bucket. Te da un **Access Key ID** y un **Secret Access Key**: van al gestor de contraseñas y después a GitHub.
-4. Anotá el **Account ID** de Cloudflare (aparece en la página de R2).
+En el mismo Cloud Shell del paso 3:
+
+```bash
+bash tools/gcp_backup_setup.sh ID-DEL-PROYECTO
+```
+
+El script:
+
+- Crea un bucket privado, `ID-DEL-PROYECTO-backups`, que borra solo los backups de más de 30 días.
+- Deja que la cuenta de servicio de deploy **solo cree archivos** en ese bucket. No puede leer, pisar ni borrar backups.
+- Deja que GitHub entre desde `main`, pero solo para el workflow de backup. Para todo lo demás sigue haciendo falta un tag `v...`.
+
+Al final imprime `GCS_BACKUP_BUCKET`. No es secreto: va a GitHub en el paso 6.
 
 ## 5. La clave para cifrar los backups
 
-Los backups se cifran con [age](https://github.com/FiloSottile/age). GitHub tiene solo la clave **pública**: puede cifrar, pero no leer. La privada queda con el equipo.
+Los backups se cifran con [age](https://github.com/FiloSottile/age) para **dos claves**: la del equipo y la del dueño. Cualquiera de las dos abre el backup, así el dueño puede recuperar sus datos aunque el equipo no esté. GitHub tiene solo las claves **públicas**: puede cifrar, pero no leer.
 
 En tu PC:
 
 ```bash
 # Windows: winget install FiloSottile.age   macOS: brew install age   Linux: apt install age
 age-keygen -o cuadernos-backup.key
+age-keygen -o cuadernos-backup-duenio.key
 ```
 
-- Muestra la clave pública, empieza con `age1...`. Va a GitHub como `BACKUP_AGE_RECIPIENT`.
-- El archivo `cuadernos-backup.key` es la clave privada. **Guardalo en el gestor de contraseñas.** Sin ese archivo, los backups no se pueden abrir: perderlo es como no tener backups.
-- Nunca lo subas al repo.
+- Cada comando muestra una clave pública, empieza con `age1...`. Las dos van a GitHub en `BACKUP_AGE_RECIPIENTS`, separadas por un espacio.
+- `cuadernos-backup.key` es la clave privada del equipo. **Guardala en el gestor de contraseñas.**
+- `cuadernos-backup-duenio.key` es la del dueño. **Imprimila y dásela en un sobre cerrado**, junto con una hoja que diga qué es y que se la dé a un programador si algún día hace falta restaurar. Después borrá el archivo de tu PC.
+- Sin las claves privadas los backups no se pueden abrir: perder las dos es como no tener backups. Nunca las subas al repo.
 
 ## 6. GitHub: environments, variables y secretos
 
@@ -106,18 +116,15 @@ En el repo, **Settings**:
 | Variable | Valor |
 |---|---|
 | `GCP_PROJECT_ID`, `GCP_PROJECT_NUMBER`, `GCP_REGION`, `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SA`, `GCP_RUNTIME_SA` | Los que imprimió el script del paso 3 |
-| `R2_ACCOUNT_ID` | El Account ID de Cloudflare |
-| `R2_BUCKET` | `cuadernos-backups` |
-| `BACKUP_AGE_RECIPIENT` | La clave pública `age1...` |
-| `PG_MAJOR` | La versión de Postgres de Neon, por ejemplo `17` |
+| `GCS_BACKUP_BUCKET` | El que imprimió el script del paso 4 |
+| `BACKUP_AGE_RECIPIENTS` | Las dos claves públicas `age1...`, separadas por un espacio |
+| `PG_MAJOR` | La versión de Postgres de Neon, por ejemplo `18`. Si falta, el backup usa 18 |
 
 **Secretos del environment `backup`** (dentro del environment, no a nivel repo):
 
 | Secreto | Valor |
 |---|---|
 | `BACKUP_DATABASE_URL` | La cadena de conexión con `cuadernos_backup` |
-| `R2_ACCESS_KEY_ID` | Del token de R2 |
-| `R2_SECRET_ACCESS_KEY` | Del token de R2 |
 
 ## 7. Primera publicación
 
@@ -153,7 +160,7 @@ Después, en `https://LA-DIRECCIÓN/admin/`, cargá los locales, las personas, s
 ## 9. Primer backup y primera restauración
 
 1. En **Actions > Backup > Run workflow**, correlo a mano. Tiene que terminar en verde y mostrar el tamaño del archivo.
-2. Bajá ese archivo desde el bucket de R2.
+2. Bajá ese archivo desde el bucket de Cloud Storage (`daily/`).
 3. Restauralo en una base vacía de tu PC, siguiendo [backups](backups.md#restaurar).
 4. Si los números coinciden con producción, anotalo en la tabla de [backups](backups.md#registro-de-restauraciones).
 

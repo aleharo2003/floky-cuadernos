@@ -19,7 +19,7 @@ Las cuentas son del equipo hasta que se resuelva P-04 (a nombre de quién quedan
 | Migraciones | Un job de Cloud Run (`cuadernos-migrate`) que corre antes de cada despliegue, con la misma imagen | Una sola vez por versión y antes de recibir tráfico, nunca al arrancar cada contenedor |
 | Tamaño | De 0 a 2 instancias, 1 vCPU y 512 MiB | Cuesta cero sin uso. El tope de 2 evita que un error o un ataque genere una factura |
 | Dirección | La fija de Cloud Run: `cuadernos-NÚMERO.southamerica-east1.run.app` | San Pablo no permite conectar un dominio propio directo. Para R1a alcanza |
-| Backup | Nocturno con `pg_dump`, cifrado con `age` (solo la clave pública en GitHub), a Cloudflare R2. Retención: 35 días con una regla del bucket | Otro proveedor que la base. Si alguien entra a GitHub, no puede leer los backups |
+| Backup | Nocturno con `pg_dump`, cifrado con `age` (solo la clave pública en GitHub), a Cloudflare R2. Retención: 35 días con una regla del bucket. **Cambiado por [ADR-0018](0018-backups-en-cloud-storage-del-duenio.md): ahora va a Cloud Storage en el proyecto del dueño, cifrado para dos claves, y se guarda 30 días** | Otro proveedor que la base. Si alguien entra a GitHub, no puede leer los backups |
 | Restauración | Manual, con `tools/restore_backup.sh`, una vez por mes y antes de la entrega | El backlog dejó la automática para R1 (HU-016) |
 
 ## Opciones que se miraron

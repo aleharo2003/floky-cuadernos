@@ -34,11 +34,11 @@
         PG[(&quot;PostgreSQL&lt;br/&gt;Neon, con RLS&quot;)]
     end
     GA[&quot;GitHub Actions&lt;br/&gt;backup nocturno&quot;]
-    R2[(&quot;Cloudflare R2&lt;br/&gt;backups cifrados&quot;)]
+    GCS[(&quot;Cloud Storage del dueño&lt;br/&gt;backups cifrados&quot;)]
     Nav --&gt;|&quot;HTTPS, sesión con cookie&quot;| App
     App --&gt; PG
     GA --&gt;|&quot;pg_dump&quot;| PG
-    GA --&gt; R2</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
+    GA --&gt; GCS</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section>
 <section id="ARQ-03"><header><p>01-arquitectura.md · diseño objetivo o propuesta, sin implementación comprobada · HU-001, HU-003, HU-020</p><h2>ARQ-03. Capas y apps del backend</h2><nav><a href="01-arquitectura.md#arq-03">Explicación y escenarios</a><a href="png/ARQ-03.png">PNG</a><a href="svg/ARQ-03.svg">SVG</a><a href="fuentes/ARQ-03.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/ARQ-03.svg" alt="ARQ-03. Capas y apps del backend" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart TB
     subgraph Front[&quot;frontend: React&quot;]
         direction LR
@@ -350,10 +350,10 @@
 <section id="OPS-01"><header><p>08-operacion.md · diseño objetivo o propuesta, sin implementación comprobada · HU-016, HU-029</p><h2>OPS-01. Backups y restauración probada</h2><nav><a href="08-operacion.md#ops-01">Explicación y escenarios</a><a href="png/OPS-01.png">PNG</a><a href="svg/OPS-01.svg">SVG</a><a href="fuentes/OPS-01.mmd">Fuente Mermaid</a></nav></header><div class="drawing"><img src="svg/OPS-01.svg" alt="OPS-01. Backups y restauración probada" loading="lazy"></div><details><summary>Ver Mermaid editable</summary><pre><code>flowchart LR
     PG[(&quot;PostgreSQL de producción&quot;)]
     GA[&quot;GitHub Actions nocturno&lt;br/&gt;pg_dump cifrado&quot;]
-    R2[(&quot;Cloudflare R2&lt;br/&gt;retención documentada&quot;)]
+    GCS[(&quot;Cloud Storage del dueño&lt;br/&gt;30 días&quot;)]
     Prueba[(&quot;Base aislada de prueba&quot;)]
     Aviso[&quot;Aviso al equipo&quot;]
-    PG --&gt; GA --&gt; R2
-    R2 --&gt;|&quot;restauración mensual&quot;| Prueba
+    PG --&gt; GA --&gt; GCS
+    GCS --&gt;|&quot;restauración mensual&quot;| Prueba
     GA -.-&gt;|&quot;si falla&quot;| Aviso
     Prueba -.-&gt;|&quot;si no levanta&quot;| Aviso</code></pre></details><a class="back" href="#inicio">Volver al índice</a></section></main></body></html>

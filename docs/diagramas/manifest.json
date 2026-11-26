@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-10T02:17:08.095Z",
+  "generatedAt": "2026-11-26T20:43:38.608Z",
   "renderer": "Mermaid 11.12.0",
   "diagrams": [
     {
@@ -26,8 +26,8 @@
         "HU-005",
         "HU-016"
       ],
-      "width": 948,
-      "height": 325
+      "width": 1005,
+      "height": 332
     },
     {
       "id": "ARQ-03",
@@ -223,8 +223,8 @@
         "HU-016",
         "HU-029"
       ],
-      "width": 1409,
-      "height": 157
+      "width": 1419,
+      "height": 158
     }
   ],
   "failures": []

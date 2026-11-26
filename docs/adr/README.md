@@ -18,7 +18,7 @@ Un ADR registra una decisión importante: el contexto, las opciones que se mirar
 | [0004](0004-entornos-hosting-ci-cd.md) | Entornos, hosting de bajo costo y CI/CD | Aceptada | ADR-0008, sin servidor local ni ARCA |
 | [0005](0005-analisis-estatico-seguridad.md) | Análisis estático de seguridad (SAST) en CI | Aceptada | ADR-0009 |
 | [0006](0006-react-servido-por-django.md) | El portal React lo sirve Django, con sesión por cookie | Propuesta | Nueva |
-| [0007](0007-deploy-r1a.md) | Cómo se publica R1a: San Pablo, un solo entorno, tag con aprobación | Propuesta | Nueva |
+| [0007](0007-deploy-r1a.md) | Cómo se publica R1a: San Pablo, un solo entorno, tag con aprobación | Propuesta (la fila del backup cambiada por ADR-0018) | Nueva |
 | [0008](0008-haber-calculado-sin-espejo.md) | El haber se calcula desde el medio de pago, sin ventas espejo | Propuesta (el punto de partida cambiado por ADR-0016) | Nueva |
 | [0009](0009-cuadernos-como-en-el-papel.md) | Los cuadernos son las cuentas personales del dueño y se cargan como están en el papel | Reemplazada por ADR-0010 en cómo se cargan los D | Nueva |
 | [0010](0010-gasto-con-debito-suma-su-venta.md) | Un gasto con débito suma también su venta con débito, y el sistema la crea | Aceptada (un punto cambiado por ADR-0012, ampliada por ADR-0013) | Nueva |
@@ -29,6 +29,7 @@ Un ADR registra una decisión importante: el contexto, las opciones que se mirar
 | [0015](0015-vaciar-los-cuadernos-de-un-local.md) | Vaciar los cuadernos de un local desde el admin | Aceptada | Nueva |
 | [0016](0016-haber-inicial-sin-fecha-y-caja-en-vivo.md) | El haber inicial es un solo monto, sin fecha ni turno, y la caja se refresca sola | Aceptada | Nueva |
 | [0017](0017-copiar-un-local-a-uno-de-pruebas.md) | Copiar los cuadernos de un local a un local de pruebas | Aceptada | Nueva |
+| [0018](0018-backups-en-cloud-storage-del-duenio.md) | Los backups van a Cloud Storage, en el proyecto del dueño, cifrados para dos claves | Propuesta | Nueva |
 
 
 ## Cómo escribir uno nuevo
