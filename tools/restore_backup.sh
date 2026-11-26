@@ -4,7 +4,7 @@
 #
 #   bash tools/restore_backup.sh BACKUP_FILE AGE_KEY_FILE [TARGET_DATABASE_URL]
 #
-# BACKUP_FILE   a cuadernos-*.dump.age downloaded from the R2 bucket
+# BACKUP_FILE   a cuadernos-*.dump.age downloaded from the Cloud Storage bucket
 # AGE_KEY_FILE  the private key (kept outside GitHub, in the team's password manager)
 # TARGET        defaults to a "restore_test" database in the local Docker Compose Postgres.
 #               Never point it at production.

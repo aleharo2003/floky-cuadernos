@@ -1,8 +1,9 @@
 # Nightly backup of the production database (HU-016, OPS-01).
 #
-# pg_dump -> encrypted with age (public key only, the private key never touches GitHub)
-# -> uploaded to Cloudflare R2, a different provider than the database.
-# Retention is a lifecycle rule on the bucket (see docs/operacion/puesta-en-marcha.md).
+# pg_dump -> encrypted with age for two keys (team and owner; public keys only,
+# the private keys never touch GitHub) -> uploaded to a Cloud Storage bucket in the
+# owner's Google Cloud project. The database lives in Neon, so the copy is with another provider.
+# Retention is a lifecycle rule on the bucket (tools/gcp_backup_setup.sh).
 #
 # If it fails, GitHub emails whoever last changed this file. Check the Actions tab weekly.
 name: Backup
@@ -14,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write # to log in to Google Cloud without key files
 
 concurrency:
   group: backup
@@ -21,13 +23,13 @@ concurrency:
 
 jobs:
   backup:
-    # Skipped until the backup variables are set (docs/operacion/puesta-en-marcha.md, step 6).
-    if: vars.R2_BUCKET != '' && vars.BACKUP_AGE_RECIPIENT != ''
+    # Skipped until the backup variables are set (docs/operacion/backups.md).
+    if: vars.GCS_BACKUP_BUCKET != '' && vars.BACKUP_AGE_RECIPIENTS != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: backup
     env:
-      PG_MAJOR: ${{ vars.PG_MAJOR || '17' }}
+      PG_MAJOR: ${{ vars.PG_MAJOR || '18' }}
     steps:
       - name: Install the PostgreSQL client and age
         run: |
@@ -42,29 +44,49 @@ jobs:
       - name: Dump and encrypt
         env:
           DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
-          AGE_RECIPIENT: ${{ vars.BACKUP_AGE_RECIPIENT }}
+          # Public keys separated by spaces: the team key and the owner key.
+          AGE_RECIPIENTS: ${{ vars.BACKUP_AGE_RECIPIENTS }}
         run: |
           set -euo pipefail
+          args=()
+          keys=0
+          for key in $AGE_RECIPIENTS; do args+=(--recipient "$key"); keys=$((keys + 1)); done
+          if [ "$keys" -lt 2 ]; then
+            echo "BACKUP_AGE_RECIPIENTS needs two keys (team and owner), separated by a space." >&2
+            exit 1
+          fi
           name="cuadernos-$(date -u +%Y%m%d-%H%M%S).dump.age"
           pg_dump --format=custom --no-owner --no-privileges "$DATABASE_URL" \
-            | age --recipient "$AGE_RECIPIENT" > "$name"
+            | age "${args[@]}" > "$name"
           size=$(stat -c %s "$name")
           if [ "$size" -lt 1024 ]; then echo "The backup is too small ($size bytes)." >&2; exit 1; fi
           echo "FILE=$name" >> "$GITHUB_ENV"
-          echo "Backup $name, $size bytes" >> "$GITHUB_STEP_SUMMARY"
+          echo "Backup $name, $size bytes, encrypted for $keys keys" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload to R2
+      - name: Log in to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+          token_format: access_token
+
+      - name: Upload to Cloud Storage
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          # R2 does not take every checksum header that new AWS CLI versions send by default.
-          AWS_REQUEST_CHECKSUM_CALCULATION: WHEN_REQUIRED
-          AWS_RESPONSE_CHECKSUM_VALIDATION: WHEN_REQUIRED
-          ENDPOINT: https://${{ vars.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-          BUCKET: ${{ vars.R2_BUCKET }}
+          TOKEN: ${{ steps.auth.outputs.access_token }}
+          BUCKET: ${{ vars.GCS_BACKUP_BUCKET }}
         run: |
           set -euo pipefail
-          aws s3 cp "$FILE" "s3://$BUCKET/daily/$FILE" --endpoint-url "$ENDPOINT" --only-show-errors
-          # Read it back: an upload that cannot be listed does not count.
-          aws s3 ls "s3://$BUCKET/daily/$FILE" --endpoint-url "$ENDPOINT"
+          size=$(stat -c %s "$FILE")
+          # ifGenerationMatch=0: never overwrite an existing backup.
+          # The service account can only create objects in this bucket, not read or delete them.
+          response=$(curl -fsS -X POST --data-binary @"$FILE" \
+            -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/octet-stream" \
+            "https://storage.googleapis.com/upload/storage/v1/b/${BUCKET}/o?uploadType=media&ifGenerationMatch=0&name=daily%2F${FILE}")
+          # Check what Cloud Storage says it stored: an upload we cannot confirm does not count.
+          stored=$(echo "$response" | jq -r '.size')
+          if [ "$stored" != "$size" ]; then
+            echo "Cloud Storage stored $stored bytes, expected $size." >&2
+            exit 1
+          fi
+          echo "Uploaded to gs://${BUCKET}/daily/${FILE}" >> "$GITHUB_STEP_SUMMARY"

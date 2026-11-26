@@ -45,16 +45,16 @@ flowchart LR
         PG[("PostgreSQL<br/>Neon, con RLS")]
     end
     GA["GitHub Actions<br/>backup nocturno"]
-    R2[("Cloudflare R2<br/>backups cifrados")]
+    GCS[("Cloud Storage del dueño<br/>backups cifrados")]
     Nav -->|"HTTPS, sesión con cookie"| App
     App --> PG
     GA -->|"pg_dump"| PG
-    GA --> R2
+    GA --> GCS
 ```
 
 **Archivos ARQ-02:** [SVG](svg/ARQ-02.svg) · [PNG](png/ARQ-02.png) · [Mermaid](fuentes/ARQ-02.mmd).
 
-**Lectura:** dos piezas en la nube (el servicio que sirve la API y el portal, y la base) y un backup que vive en otro proveedor (ADR-0006). La base es la única copia de los cuadernos (ADR-0004): por eso el backup no está en Neon sino en R2.
+**Lectura:** dos piezas en la nube (el servicio que sirve la API y el portal, y la base) y un backup que vive en otro proveedor (ADR-0006). La base es la única copia de los cuadernos (ADR-0004): por eso el backup no está en Neon sino en Cloud Storage, en el proyecto del dueño (ADR-0018).
 
 <a id="arq-03"></a>
 

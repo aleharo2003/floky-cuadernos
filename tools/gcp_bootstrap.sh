@@ -75,7 +75,7 @@ for secret in database-url django-secret-key; do
     --role roles/secretmanager.secretAccessor --quiet >/dev/null
 done
 
-say "Workload Identity Federation: GitHub logs in without key files, only from $REPO"
+say "Workload Identity Federation: GitHub logs in without key files, only from $REPO (v* tags, or the backup workflow on main)"
 exists gcloud iam workload-identity-pools describe "$POOL" --location global ||
   gcloud iam workload-identity-pools create "$POOL" --location global --display-name "GitHub Actions"
 exists gcloud iam workload-identity-pools providers describe "$PROVIDER" --location global --workload-identity-pool "$POOL" ||
@@ -83,7 +83,7 @@ exists gcloud iam workload-identity-pools providers describe "$PROVIDER" --locat
     --display-name "GitHub OIDC" \
     --issuer-uri "https://token.actions.githubusercontent.com" \
     --attribute-mapping "google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref" \
-    --attribute-condition "assertion.repository == '${REPO}' && assertion.ref.startsWith('refs/tags/v')"
+    --attribute-condition "assertion.repository == '${REPO}' && (assertion.ref.startsWith('refs/tags/v') || (assertion.ref == 'refs/heads/main' && assertion.workflow_ref == '${REPO}/.github/workflows/backup.yml@refs/heads/main'))"
 gcloud iam service-accounts add-iam-policy-binding "$DEPLOY_SA" \
   --role roles/iam.workloadIdentityUser \
   --member "principalSet://iam.googleapis.com/projects/${NUMBER}/locations/global/workloadIdentityPools/${POOL}/attribute.repository/${REPO}" \
